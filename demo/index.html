@@ -89,7 +89,7 @@
 	&quot;custom3&quot;: { fontSize: &quot;14px&quot;, valign: 25 }
 });</code></pre>
 
-			<h2>Line Spacing</h2>
+			<h2>Spacing</h2>
 			<pre><code class="js">
 let lineSpacing = new MultiStyleText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
 {
@@ -98,6 +98,7 @@ fontFamily: "Arial",
 fontSize: "24px",
 fill: "#cccccc",
 lineSpacing: 20,
+letterSpacing: 10,
 wordWrap: true,
 wordWrapWidth: 500,
 },
@@ -323,23 +324,24 @@ requestAnimationFrame(animate);</code></pre>
 				stage.addChild(valign);
 
 
-				// Line Spacing 
-				let lineSpacing = new MultiStyleText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
+				// Spacing 
+				let spacing = new MultiStyleText("You can set line and letter spacing to give your text some drama. Note that lineSpacing can only be set on the default style.",
 					{
 						"default": {
 							fontFamily: "Arial",
 							fontSize: "24px",
 							fill: "#cccccc",
-							lineSpacing: 20,
+							lineSpacing: 10,
+							letterSpacing: 10,
 							wordWrap: true,
 							wordWrapWidth: 500,
 						},
 					});
 
-				lineSpacing.x = 300 - lineSpacing.width / 2;
+				spacing.x = 300 - spacing.width / 2;
 				yPosition += 330;
-				lineSpacing.y = yPosition;
-				stage.addChild(lineSpacing);
+				spacing.y = yPosition;
+				stage.addChild(spacing);
 
 
 				// Wrapping and Alignment

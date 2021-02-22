@@ -12,6 +12,7 @@
 - Merged PR for Pixi 5.3 support thanks to @st0nerhat
 - Updated the prereqs to newer versions suggested by dependabot.
 - Merged word tokenizer by @LuckyRabbitFeet.
+- Fixed letterSpacing when used in combination with wordWrap thanks to George Drayer.
 
 ---
 

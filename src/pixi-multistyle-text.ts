@@ -206,7 +206,7 @@ function tokenize(text: string): string[] {
 
 	for (let i = 0; i < text.length; i++) {
 		const char = text[i]
-		if (!/[a-z'-]/i.test(char)) {
+		if (!/[a-z'-\.,]/i.test(char)) {
 			if (token !== '') {
 				tokens.push(token)
 				token = ''
@@ -934,6 +934,7 @@ export default class MultiStyleText extends PIXI.Text {
 
 		const lines = text.split("\n");
 		const wordWrapWidth = this.withPrivateMembers()._style.wordWrapWidth;
+		const letterSpacing = this.withPrivateMembers()._style.letterSpacing;
 		let styleStack = [{ ...this.defaultTextStyle }];
 		this.context.font = this.getFontString(this.textStyles["default"]);
 
@@ -958,14 +959,23 @@ export default class MultiStyleText extends PIXI.Text {
 					const words = tokenize(tagSplit[j]);
 
 					for (let k = 0; k < words.length; k++) {
-						const wordWidth = this.context.measureText(words[k]).width;
+						let cw: number = 0;
+						if (letterSpacing > 0) {
+							const chars = words[k].split('');
+							for (let c = 0; c < chars.length; c++) {
+								cw += this.context.measureText(chars[c]).width + letterSpacing;
+							}
+						} else {
+							cw = this.context.measureText(words[k]).width;
+						}
+						const wordWidth = cw;
 
 						if (this.withPrivateMembers()._style.breakWords && wordWidth > spaceLeft) {
 							// Part should be split in the middle
 							const characters = words[k].split('');
 
 							for (let c = 0; c < characters.length; c++) {
-								const characterWidth = this.context.measureText(characters[c]).width;
+								const characterWidth = this.context.measureText(characters[c]).width + letterSpacing;
 
 								if (characterWidth > spaceLeft) {
 									result += `\n${characters[c]}`;
@@ -979,7 +989,7 @@ export default class MultiStyleText extends PIXI.Text {
 							result += words[k];
 							spaceLeft -= wordWidth;
 						} else {
-							const paddedWordWidth = wordWidth;
+							const paddedWordWidth = wordWidth + letterSpacing;
 
 							if (paddedWordWidth > spaceLeft) {
 								// Skip printing the newline if it's the first word of the line that is
