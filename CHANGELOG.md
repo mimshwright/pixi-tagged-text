@@ -9,6 +9,7 @@
 - Merged prettier PR from @mimshwright
 - Made demo y position a variable so new demos can be inserted easily.
 - Added support for **lineSpacing** on default styles.
+- Merged PR for Pixi 5.3 support thanks to @st0nerhat
 
 ---
 

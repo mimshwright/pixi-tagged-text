@@ -146,7 +146,7 @@ export interface MstDebugOptions {
 	};
 }
 
-export interface MstInteractionEvent extends PIXI.interaction.InteractionEvent {
+export interface MstInteractionEvent extends PIXI.InteractionEvent {
 	targetTag: TagData | undefined;
 }
 
@@ -189,7 +189,7 @@ const TAG = {
 	xml: ["<", ">"],
 };
 
-interface TextWithPrivateMembers extends PIXI.Text {
+interface TextWithPrivateMembers {
 	dirty: boolean;
 	_texture: PIXI.Texture;
 	_style: PIXI.TextStyle;
@@ -295,14 +295,14 @@ export default class MultiStyleText extends PIXI.Text {
 
 		this.setStyles(styles);
 
-		const migrateEvent = (e: PIXI.interaction.InteractionEvent) => this.handleInteraction(e);
+		const migrateEvent = (e: PIXI.InteractionEvent) => this.handleInteraction(e);
 
 		INTERACTION_EVENTS.forEach((event) => {
 			this.on(event, migrateEvent);
 		});
 	}
 
-	private handleInteraction(e: PIXI.interaction.InteractionEvent) {
+	private handleInteraction(e: PIXI.InteractionEvent) {
 		let ev = e as MstInteractionEvent;
 
 		let localPoint = e.data.getLocalPosition(this);
