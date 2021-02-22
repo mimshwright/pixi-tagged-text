@@ -141,7 +141,7 @@ export interface MstDebugOptions {
 		enabled?: boolean;
 		bounding?: string;
 		text?: boolean;
-	}
+	};
 }
 
 export interface MstInteractionEvent extends PIXI.interaction.InteractionEvent {
@@ -174,17 +174,17 @@ const INTERACTION_EVENTS = [
 	"touchup",
 	"touchcancel",
 	"touchout",
-	"touchleave"
+	"touchleave",
 ];
 
 const TAG_STYLE = {
 	bbcode: "bbcode",
-	xml: "xml"
+	xml: "xml",
 };
 
 const TAG = {
 	bbcode: ["[", "]"],
-	xml: ["<", ">"]
+	xml: ["<", ">"],
 };
 
 interface TextWithPrivateMembers extends PIXI.Text {
