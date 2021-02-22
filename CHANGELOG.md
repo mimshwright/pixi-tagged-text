@@ -11,6 +11,7 @@
 - Added support for **lineSpacing** on default styles.
 - Merged PR for Pixi 5.3 support thanks to @st0nerhat
 - Updated the prereqs to newer versions suggested by dependabot.
+- Merged word tokenizer by @LuckyRabbitFeet.
 
 ---
 
