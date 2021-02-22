@@ -1,3 +1,22 @@
+# Change Log
+
+## 2021-02-21
+
+* Merged strict-typescript pull request from @mimshwright
+* Fixed the animation bug in the demo caused by the strict-typescript PR.
+* Fixed the bbcode [spacing] bug caused by the strict-typescript PR.
+* Fixed the debug bug in the demo caused by the strict-typescript PR.
+
+
+
+---
+
+# Old Change Log
+
+Everything below this point is the original change log before Plain Black forked.
+
+---
+
 # Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
