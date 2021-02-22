@@ -197,6 +197,33 @@ interface TextWithPrivateMembers {
 	_generateFillStyle(style: object, lines: string[]): string | number | CanvasGradient;
 }
 
+function tokenize(text: string): string[] {
+	const tokens: string[] = []
+	let token = ''
+	if (typeof text !== 'string') {
+		return tokens
+	}
+
+	for (let i = 0; i < text.length; i++) {
+		const char = text[i]
+		if (!/[a-z'-]/i.test(char)) {
+			if (token !== '') {
+				tokens.push(token)
+				token = ''
+			}
+			tokens.push(char)
+		} else {
+			token += char
+		}
+	}
+
+	if (token !== '') {
+		tokens.push(token)
+	}
+
+	return tokens
+}
+
 export default class MultiStyleText extends PIXI.Text {
 	private static DEFAULT_TAG_STYLE: TextStyleExtendedWithDefault = {
 		align: "left",
@@ -928,7 +955,7 @@ export default class MultiStyleText extends PIXI.Text {
 					}
 					this.context.font = this.getFontString(styleStack[styleStack.length - 1]);
 				} else {
-					const words = tagSplit[j].split(" ");
+					const words = tokenize(tagSplit[j]);
 
 					for (let k = 0; k < words.length; k++) {
 						const wordWidth = this.context.measureText(words[k]).width;
@@ -936,11 +963,6 @@ export default class MultiStyleText extends PIXI.Text {
 						if (this.withPrivateMembers()._style.breakWords && wordWidth > spaceLeft) {
 							// Part should be split in the middle
 							const characters = words[k].split('');
-
-							if (k > 0) {
-								result += " ";
-								spaceLeft -= this.context.measureText(" ").width;
-							}
 
 							for (let c = 0; c < characters.length; c++) {
 								const characterWidth = this.context.measureText(characters[c]).width;
@@ -957,8 +979,7 @@ export default class MultiStyleText extends PIXI.Text {
 							result += words[k];
 							spaceLeft -= wordWidth;
 						} else {
-							const paddedWordWidth =
-								wordWidth + (k > 0 ? this.context.measureText(" ").width : 0);
+							const paddedWordWidth = wordWidth;
 
 							if (paddedWordWidth > spaceLeft) {
 								// Skip printing the newline if it's the first word of the line that is
@@ -971,11 +992,6 @@ export default class MultiStyleText extends PIXI.Text {
 								spaceLeft = wordWrapWidth - wordWidth;
 							} else {
 								spaceLeft -= paddedWordWidth;
-
-								if (k > 0) {
-									result += " ";
-								}
-
 								result += words[k];
 							}
 						}
@@ -989,6 +1005,7 @@ export default class MultiStyleText extends PIXI.Text {
 			}
 		}
 
+		result = result.replace(/(\s\n\s)|(\s\n)|(\n\s)/g, '\n')
 		return result;
 	}
 
