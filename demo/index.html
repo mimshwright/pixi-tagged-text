@@ -201,6 +201,7 @@ requestAnimationFrame(animate);</code></pre>
 		</div>
 		<div id="pixi-container">
 			<script>
+				let yPosition = 0;
 				PIXI.settings.RESOLUTION = 2;
 				let renderer = PIXI.autoDetectRenderer({
 					width: 600,
@@ -234,7 +235,8 @@ requestAnimationFrame(animate);</code></pre>
 					});
 
 				text.x = 300 - text.width / 2;
-				text.y = 150;
+				yPosition += 150;
+				text.y = yPosition;
 				stage.addChild(text);
 
 				// Tag Styles
@@ -248,7 +250,8 @@ requestAnimationFrame(animate);</code></pre>
 					});
 
 				bbcode.x = 300 - bbcode.width / 2;
-				bbcode.y = 550;
+				yPosition += 400;
+				bbcode.y = yPosition;
 				stage.addChild(bbcode);
 
 				// Nesting Tags
@@ -269,7 +272,8 @@ requestAnimationFrame(animate);</code></pre>
 					});
 
 				nested.x = 300 - nested.width / 2;
-				nested.y = 960;
+				yPosition += 410;
+				nested.y = yPosition;
 				stage.addChild(nested);
 
 				// Vertical Alignment
@@ -295,7 +299,8 @@ requestAnimationFrame(animate);</code></pre>
 					});
 
 				valign.x = 300 - valign.width / 2;
-				valign.y = 1280;
+				yPosition += 320;
+				valign.y = yPosition;
 				stage.addChild(valign);
 
 				// Wrapping and Alignment
@@ -312,7 +317,8 @@ requestAnimationFrame(animate);</code></pre>
 					});
 
 				wrapping.x = 550 - wrapping.width;
-				wrapping.y = 1600;
+				yPosition += 320;
+				wrapping.y = yPosition;
 				stage.addChild(wrapping);
 
 				// Wrapping and Alignment II
@@ -332,7 +338,8 @@ requestAnimationFrame(animate);</code></pre>
 					});
 
 				wrapping2.x = 440 - wrapping2.width;
-				wrapping2.y = 2100;
+				yPosition += 500;
+				wrapping2.y = yPosition;
 				stage.addChild(wrapping2);
 
 				// Debug Mode
@@ -360,7 +367,8 @@ requestAnimationFrame(animate);</code></pre>
 				MultiStyleText.debugOptions.objects.enabled = true;
 
 				debug.x = 300 - debug.width / 2;
-				debug.y = 2400;
+				yPosition += 300;
+				debug.y = yPosition;
 				stage.addChild(debug);
 
 				MultiStyleText.debugOptions.spans.enabled = false;
@@ -383,7 +391,8 @@ requestAnimationFrame(animate);</code></pre>
 					});
 
 				interaction.x = 300 - interaction.width / 2;
-				interaction.y = 2800;
+				yPosition += 400;
+				interaction.y = yPosition;
 				stage.addChild(interaction);
 
 				interaction.interactive = true;
@@ -413,7 +422,8 @@ requestAnimationFrame(animate);</code></pre>
 				let fun = new MultiStyleText("Now have fun making some <blue>beautiful</blue> <red>multistyle</red> text!", funStyles);
 
 				fun.x = 300 - fun.width / 2;
-				fun.y = 3250;
+				yPosition += 450;
+				fun.y = yPosition;
 				stage.addChild(fun);
 
 				// Animate

@@ -2,12 +2,12 @@
 
 ## 2021-02-21
 
-* Merged strict-typescript pull request from @mimshwright
-* Fixed the animation bug in the demo caused by the strict-typescript PR.
-* Fixed the bbcode [spacing] bug caused by the strict-typescript PR.
-* Fixed the debug bug in the demo caused by the strict-typescript PR.
-* Merged prettier PR from @mimshwright
-
+- Merged strict-typescript pull request from @mimshwright
+- Fixed the animation bug in the demo caused by the strict-typescript PR.
+- Fixed the bbcode [spacing] bug caused by the strict-typescript PR.
+- Fixed the debug bug in the demo caused by the strict-typescript PR.
+- Merged prettier PR from @mimshwright
+- Made demo y position a variable so new demos can be inserted easily.
 
 ---
 
