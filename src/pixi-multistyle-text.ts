@@ -41,6 +41,7 @@ interface TextStyle {
 	leading?: number;
 	letterSpacing?: number;
 	lineHeight?: number;
+	lineSpacing?: number;
 	lineJoin?: string;
 	miterLimit?: number;
 	padding?: number;
@@ -82,6 +83,7 @@ export interface TextStyleExtendedWithDefault extends TextStyleExtended {
 	fontWeight: string;
 	letterSpacing: number;
 	lineHeight: number;
+	lineSpacing: number,
 	lineJoin: string;
 	miterLimit: number;
 	padding: number;
@@ -213,6 +215,7 @@ export default class MultiStyleText extends PIXI.Text {
 		fontWeight: "normal",
 		letterSpacing: 0,
 		lineHeight: 0,
+		lineSpacing: 0,
 		lineJoin: "miter",
 		miterLimit: 10,
 		padding: 0,
@@ -549,6 +552,7 @@ export default class MultiStyleText extends PIXI.Text {
 		let lineYMins: number[] = [];
 		let lineYMaxs: number[] = [];
 		let maxLineWidth = 0;
+		let lineSpacing = textStyles["default"].lineSpacing;
 
 		for (let i = 0; i < lines.length; i++) {
 			let lineWidth = 0;
@@ -610,6 +614,11 @@ export default class MultiStyleText extends PIXI.Text {
 			lineWidths[i] = lineWidth;
 			lineYMins[i] = lineYMin;
 			lineYMaxs[i] = lineYMax;
+
+			if (i > 0 && lineSpacing) {
+				lineYMaxs[i] += lineSpacing;
+			}
+
 			maxLineWidth = Math.max(maxLineWidth, lineWidth);
 		}
 

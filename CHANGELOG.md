@@ -8,6 +8,7 @@
 - Fixed the debug bug in the demo caused by the strict-typescript PR.
 - Merged prettier PR from @mimshwright
 - Made demo y position a variable so new demos can be inserted easily.
+- Added support for **lineSpacing** on default styles.
 
 ---
 

@@ -89,6 +89,25 @@
 	&quot;custom3&quot;: { fontSize: &quot;14px&quot;, valign: 25 }
 });</code></pre>
 
+			<h2>Line Spacing</h2>
+			<pre><code class="js">
+let lineSpacing = new MultiStyleText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
+{
+"default": {
+fontFamily: "Arial",
+fontSize: "24px",
+fill: "#cccccc",
+lineSpacing: 20,
+wordWrap: true,
+wordWrapWidth: 500,
+},
+});
+
+lineSpacing.x = 300 - lineSpacing.width / 2;
+lineSpacing.y = 3530;
+stage.addChild(lineSpacing);
+</code></pre>
+
 			<h2>Wrapping and Alignment</h2>
 			<pre><code class="js">let wrapping = new MultiStyleText(&quot;Global word wrap and alignment properties are controlled by the \&quot;default\&quot; style, and can't be overridden by other styles.&quot;,
 {
@@ -205,7 +224,7 @@ requestAnimationFrame(animate);</code></pre>
 				PIXI.settings.RESOLUTION = 2;
 				let renderer = PIXI.autoDetectRenderer({
 					width: 600,
-					height: 3425
+					height: 4000
 				});
 				renderer.backgroundColor = 0x333333;
 				document.getElementById("pixi-container").appendChild(renderer.view);
@@ -303,6 +322,26 @@ requestAnimationFrame(animate);</code></pre>
 				valign.y = yPosition;
 				stage.addChild(valign);
 
+
+				// Line Spacing 
+				let lineSpacing = new MultiStyleText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
+					{
+						"default": {
+							fontFamily: "Arial",
+							fontSize: "24px",
+							fill: "#cccccc",
+							lineSpacing: 20,
+							wordWrap: true,
+							wordWrapWidth: 500,
+						},
+					});
+
+				lineSpacing.x = 300 - lineSpacing.width / 2;
+				yPosition += 330;
+				lineSpacing.y = yPosition;
+				stage.addChild(lineSpacing);
+
+
 				// Wrapping and Alignment
 				let wrapping = new MultiStyleText("Global word wrap and alignment properties are controlled by the \"default\" style, and can't be overridden by other styles.",
 					{
@@ -317,7 +356,7 @@ requestAnimationFrame(animate);</code></pre>
 					});
 
 				wrapping.x = 550 - wrapping.width;
-				yPosition += 320;
+				yPosition += 370;
 				wrapping.y = yPosition;
 				stage.addChild(wrapping);
 
