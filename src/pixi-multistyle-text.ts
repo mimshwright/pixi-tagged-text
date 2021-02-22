@@ -992,11 +992,6 @@ export default class MultiStyleText extends PIXI.Text {
 								spaceLeft = wordWrapWidth - wordWidth;
 							} else {
 								spaceLeft -= paddedWordWidth;
-
-								if (k > 0) {
-									result += " ";
-								}
-
 								result += words[k];
 							}
 						}
