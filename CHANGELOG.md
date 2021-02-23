@@ -1,5 +1,9 @@
 # Change Log
 
+## 2021-02-23
+
+- Fixed latin character tokenization with diacritics and numbers.
+
 ## 2021-02-21
 
 - Merged strict-typescript pull request from @mimshwright

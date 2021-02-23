@@ -206,7 +206,7 @@ function tokenize(text: string): string[] {
 
 	for (let i = 0; i < text.length; i++) {
 		const char = text[i]
-		if (!/[a-z'-\.,]/i.test(char)) {
+		if (!/[a-zA-Z\u0080-\uFFFF'-\.,0-9]/.test(char)) {
 			if (token !== '') {
 				tokens.push(token)
 				token = ''
