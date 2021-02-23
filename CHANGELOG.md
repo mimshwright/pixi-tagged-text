@@ -3,6 +3,7 @@
 ## 2021-02-23
 
 - Fixed latin character tokenization with diacritics and numbers.
+- Updated the prereqs to newer versions suggested by dependabot.
 
 ## 2021-02-21
 
