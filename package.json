@@ -1,6 +1,6 @@
 {
-  "name": "pixi-multistyle-text",
-  "version": "0.10.0",
+  "name": "@plainblack/pixi-multistyle-text",
+  "version": "1.0.0",
   "description": "Multi-Style Text for pixi.js",
   "source": "src/pixi-multistyle-text.ts",
   "main": "dist/pixi-multistyle-text.js",
@@ -12,12 +12,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/tleunen/pixi-multistyle-text.git"
+    "url": "git://github.com/plainblack/pixi-multistyle-text.git"
   },
   "bugs": {
-    "url": "https://github.com/tleunen/pixi-multistyle-text/issues"
+    "url": "https://github.com/plainblack/pixi-multistyle-text/issues"
   },
-  "homepage": "https://github.com/tleunen/pixi-multistyle-text",
+  "homepage": "https://github.com/plainblack/pixi-multistyle-text",
   "keywords": [
     "pixi",
     "pixi.js",
@@ -31,7 +31,7 @@
     "render",
     "2d"
   ],
-  "author": "Tommy Leunen <tommy.leunen@gmail.com> (http://tommyleunen.com/)",
+  "author": "JT Smith, Mims Wright, Tommy Leunen <tommy.leunen@gmail.com> (http://tommyleunen.com/)",
   "license": "MIT",
   "dependencies": {
     "husky-run": "^0.0.0"
