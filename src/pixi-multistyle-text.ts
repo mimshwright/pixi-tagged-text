@@ -1,4 +1,8 @@
 import * as PIXI from "pixi.js";
+import InteractionEvents from "./InteractionEvents";
+import {TagBrackets, TagStyle} from "./Tags";
+import {tokenize} from "./textUtils";
+import {TextStyleExtended, TextStyleExtendedWithDefault, TextStyleSet, MstDebugOptions, MstInteractionEvent, HitboxData, TextData, TagData, TextDrawingData, TextWithPrivateMembers} from "./types";
 
 "use strict";
 
@@ -8,224 +12,9 @@ if (majorVersion < 5) {
 }
 
 
-export interface TagData {
-	name: string;
-	properties: { [key: string]: string };
-}
-
-export interface HitboxData {
-	tag: TagData;
-	hitbox: PIXI.Rectangle;
-}
-
-export type TagStyle = "bbcode" | "xml";
-export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
-
-interface TextStyle {
-	align?: string;
-	breakWords?: boolean;
-	dropShadow?: boolean;
-	dropShadowAlpha?: number;
-	dropShadowAngle?: number;
-	dropShadowBlur?: number;
-	dropShadowColor?: string | number;
-	dropShadowDistance?: number;
-	fill?: string | string[] | number | number[] | CanvasGradient | CanvasPattern;
-	fillGradientType?: number;
-	fillGradientStops?: number[];
-	fontFamily?: string | string[];
-	fontSize?: number | string;
-	fontStyle?: string;
-	fontVariant?: string;
-	fontWeight?: string;
-	leading?: number;
-	letterSpacing?: number;
-	lineHeight?: number;
-	lineSpacing?: number;
-	lineJoin?: string;
-	miterLimit?: number;
-	padding?: number;
-	stroke?: string | number;
-	strokeThickness?: number;
-	trim?: boolean;
-	textBaseline?: string;
-	whiteSpace?: string;
-	wordWrap?: boolean;
-	wordWrapWidth?: number;
-}
-
-export interface TextStyleExtended extends TextStyle {
-	valign?: VAlign;
-	debug?: boolean;
-	tagStyle?: TagStyle;
-}
-
-export interface TextStyleExtendedWithDefault extends TextStyleExtended {
-	dropShadowAlpha?: number;
-	fillGradientStops?: number[];
-	leading?: number;
-	trim?: boolean;
-	whiteSpace?: string;
-
-	align: string;
-	breakWords: boolean;
-	dropShadow: boolean;
-	dropShadowAngle: number;
-	dropShadowBlur: number;
-	dropShadowColor: string | number;
-	dropShadowDistance: number;
-	fill: string | string[] | number | number[] | CanvasGradient | CanvasPattern;
-	fillGradientType: number;
-	fontFamily: string | string[];
-	fontSize: number | string;
-	fontStyle: string;
-	fontVariant: string;
-	fontWeight: string;
-	letterSpacing: number;
-	lineHeight: number;
-	lineSpacing: number,
-	lineJoin: string;
-	miterLimit: number;
-	padding: number;
-	stroke: string | number;
-	strokeThickness: number;
-	textBaseline: string;
-	wordWrap: boolean;
-	wordWrapWidth: number;
-
-	valign: VAlign;
-	debug: boolean;
-	tagStyle: TagStyle;
-}
-
-export type TextStyleSet = {
-	default: TextStyleExtendedWithDefault
-} & {
-	[key: string]: TextStyleExtended;
-};
-
-interface FontProperties {
-	ascent: number;
-	descent: number;
-	fontSize: number;
-}
-
-interface TextData {
-	text: string;
-	style: TextStyleExtended;
-	width: number;
-	height: number;
-	fontProperties: FontProperties;
-	tag: TagData;
-}
-
-interface TextDrawingData {
-	text: string;
-	style: TextStyleExtended;
-	x: number;
-	y: number;
-	width: number;
-	ascent: number;
-	descent: number;
-	tag: TagData;
-}
-
-export interface MstDebugOptions {
-	spans: {
-		enabled?: boolean;
-		baseline?: string;
-		top?: string;
-		bottom?: string;
-		bounding?: string;
-		text?: boolean;
-	};
-	objects: {
-		enabled?: boolean;
-		bounding?: string;
-		text?: boolean;
-	};
-}
-
-export interface MstInteractionEvent extends PIXI.InteractionEvent {
-	targetTag: TagData | undefined;
-}
-
-const INTERACTION_EVENTS = [
-	"pointerover",
-	"pointerenter",
-	"pointerdown",
-	"pointermove",
-	"pointerup",
-	"pointercancel",
-	"pointerout",
-	"pointerleave",
-	"gotpointercapture",
-	"lostpointercapture",
-	"mouseover",
-	"mouseenter",
-	"mousedown",
-	"mousemove",
-	"mouseup",
-	"mousecancel",
-	"mouseout",
-	"mouseleave",
-	"touchover",
-	"touchenter",
-	"touchdown",
-	"touchmove",
-	"touchup",
-	"touchcancel",
-	"touchout",
-	"touchleave",
-];
-
-const TAG_STYLE = {
-	bbcode: "bbcode",
-	xml: "xml",
-};
-
-const TAG = {
-	bbcode: ["[", "]"],
-	xml: ["<", ">"],
-};
-
-interface TextWithPrivateMembers {
-	dirty: boolean;
-	_texture: PIXI.Texture;
-	_style: PIXI.TextStyle;
-	_onTextureUpdate(): void;
-	_generateFillStyle(style: object, lines: string[]): string | number | CanvasGradient;
-}
-
-function tokenize(text: string): string[] {
-	const tokens: string[] = []
-	let token = ''
-	if (typeof text !== 'string') {
-		return tokens
-	}
-
-	for (let i = 0; i < text.length; i++) {
-		const char = text[i]
-		if (!/[a-zA-Z\u0080-\uFFFF'-\.,0-9]/.test(char)) {
-			if (token !== '') {
-				tokens.push(token)
-				token = ''
-			}
-			tokens.push(char)
-		} else {
-			token += char
-		}
-	}
-
-	if (token !== '') {
-		tokens.push(token)
-	}
-
-	return tokens
-}
-
 export default class MultiStyleText extends PIXI.Text {
-	private static DEFAULT_TAG_STYLE: TextStyleExtendedWithDefault = {
+
+  private static DEFAULT_TagStyle: TextStyleExtendedWithDefault = {
 		align: "left",
 		breakWords: false,
 		dropShadow: false,
@@ -294,7 +83,7 @@ export default class MultiStyleText extends PIXI.Text {
 				this._textStyles[styleName] = { ...styles[styleName] };
 			}
 		}
-		if (this._textStyles.default.tagStyle === TAG_STYLE.bbcode) {
+		if (this._textStyles.default.tagStyle === TagStyle.bbcode) {
 			// when using bbcode parsing, register a bunch of standard bbcode tags and some cool pixi ones
 			this._textStyles.b = { fontStyle: 'bold' };
 			this._textStyles.i = { fontStyle: 'italic' };
@@ -312,7 +101,7 @@ export default class MultiStyleText extends PIXI.Text {
 	}
 
 	private resetTextStyles() {
-		this._textStyles = { default: { ...MultiStyleText.DEFAULT_TAG_STYLE } };
+		this._textStyles = { default: { ...MultiStyleText.DEFAULT_TagStyle } };
 	}
 
 	private hitboxes: HitboxData[] = [];
@@ -324,7 +113,7 @@ export default class MultiStyleText extends PIXI.Text {
 
 		const migrateEvent = (e: PIXI.InteractionEvent) => this.handleInteraction(e);
 
-		INTERACTION_EVENTS.forEach((event) => {
+		InteractionEvents.forEach((event) => {
 			this.on(event, migrateEvent);
 		});
 	}
@@ -360,7 +149,7 @@ export default class MultiStyleText extends PIXI.Text {
 
 	public deleteTagStyle(tag: string): void {
 		if (tag === "default") {
-			this.defaultTextStyle = { ...MultiStyleText.DEFAULT_TAG_STYLE };
+			this.defaultTextStyle = { ...MultiStyleText.DEFAULT_TagStyle };
 		} else {
 			delete this.textStyles[tag];
 		}
@@ -380,11 +169,11 @@ export default class MultiStyleText extends PIXI.Text {
 		}
 
 		let pattern;
-		if (tagStyle === TAG_STYLE.bbcode) {
-			const [openTag, closeTag] = TAG.bbcode;
+		if (tagStyle === TagStyle.bbcode) {
+			const [openTag, closeTag] = TagBrackets.bbcode;
 			pattern = `\\${openTag}${tagAlternation}(?:\\=(?:[A-Za-z0-9_\\-\\#]+|'(?:[^']+|\\\\')*'))*\\s*\\${closeTag}|\\${openTag}\\/${tagAlternation}\\s*\\${closeTag}`;
 		} else {
-			const [openTag, closeTag] = TAG.xml;
+			const [openTag, closeTag] = TagBrackets.xml;
 			pattern = `\\${openTag}${tagAlternation}(?:\\s+[A-Za-z0-9_\\-]+=(?:"(?:[^"]+|\\\\")*"|'(?:[^']+|\\\\')*'))*\\s*\\${closeTag}|\\${openTag}\\/${tagAlternation}\\s*\\${closeTag}`;
 		}
 
@@ -458,7 +247,7 @@ export default class MultiStyleText extends PIXI.Text {
 
 						const { tagStyle } = this.defaultTextStyle;
 						// if using bbtag style, take styling information in a different way
-						if (tagStyle === TAG_STYLE.bbcode && matches[j][0].includes('=') && this.textStyles[matches[j][1]]) {
+						if (tagStyle === TagStyle.bbcode && matches[j][0].includes('=') && this.textStyles[matches[j][1]]) {
 							const bbcodeRegex = this.getBBcodePropertyRegex();
 							const bbcodeTags = bbcodeRegex.exec(matches[j][0]);
 							let bbStyle: { [key: string]: string | number } = {};
@@ -504,9 +293,9 @@ export default class MultiStyleText extends PIXI.Text {
 		// don't display any incomplete tags at the end of text- good for scrolling text in games
 		const { tagStyle } = this.defaultTextStyle;
 		outputTextData[outputTextData.length - 1].map(data => {
-			if (data.text.includes(TAG[tagStyle][0])) {
+			if (data.text.includes(TagBrackets[tagStyle][0])) {
 				let pattern;
-				if (tagStyle === TAG_STYLE.bbcode) {
+				if (tagStyle === TagStyle.bbcode) {
 					pattern = /^(.*)\[/;
 				} else {
 					pattern = /^(.*)\</;

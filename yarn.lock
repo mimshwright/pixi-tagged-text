@@ -1430,6 +1430,13 @@
   resolved "https://registry.yarnpkg.com/@types/parse-json/-/parse-json-4.0.0.tgz#2f8bb441434d163b35fb8ffdccd7138927ffb8c0"
   integrity sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==
 
+"@types/pixi.js@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@types/pixi.js/-/pixi.js-5.0.0.tgz#3fbd6d9d26cb563a0f2870e0ea767bc62dddf1b8"
+  integrity sha512-yZqQBR043lRBlBZci2cx6hgmX0fvBfYIqFm6VThlnueXEjitxd3coy+BGsqsZ7+ary7O//+ks4aJRhC5MJoHqA==
+  dependencies:
+    pixi.js "*"
+
 "@types/q@^1.5.1":
   version "1.5.4"
   resolved "https://registry.yarnpkg.com/@types/q/-/q-1.5.4.tgz#15925414e0ad2cd765bfef58842f7e26a7accb24"
@@ -4859,7 +4866,7 @@ pinkie@^2.0.0:
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
   integrity sha1-clVrgM+g1IqXToDnckjoDtT3+HA=
 
-pixi.js-legacy@^5.3.7:
+pixi.js-legacy@^5.3.8:
   version "5.3.8"
   resolved "https://registry.yarnpkg.com/pixi.js-legacy/-/pixi.js-legacy-5.3.8.tgz#e486f5bddb861060dbff9888c9154437ad529e41"
   integrity sha512-3KZOw95KNarCgTzAhIrFLtzVC1RllAdHSQRr4EBnUVLBFAujKmBjs6hl4A/lRO69oWleYC1fuVYuLDx+/SgGAQ==
@@ -4876,7 +4883,7 @@ pixi.js-legacy@^5.3.7:
     "@pixi/canvas-text" "5.3.8"
     pixi.js "5.3.8"
 
-pixi.js@5.3.8:
+pixi.js@*, pixi.js@5.3.8:
   version "5.3.8"
   resolved "https://registry.yarnpkg.com/pixi.js/-/pixi.js-5.3.8.tgz#f6389f128be61ca81067a8ecf165dc94861957de"
   integrity sha512-kDqkWhuAkc42lD+ldVTaS439q7D7uo9FM/wCP26jUNAFlYAp75IcALEgXuBh6HEjp51enGkRvwX9+fIiA5F9ug==
