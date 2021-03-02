@@ -2,7 +2,7 @@
   "name": "@plainblack/pixi-multistyle-text",
   "version": "1.0.0",
   "description": "Multi-Style Text for pixi.js",
-  "source": "src/pixi-multistyle-text.ts",
+  "source": "src/index.ts",
   "main": "dist/pixi-multistyle-text.js",
   "umd:main": "dist/pixi-multistyle-text.umd.js",
   "module": "dist/pixi-multistyle-text.m.js",
