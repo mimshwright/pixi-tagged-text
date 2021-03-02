@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import InteractionEvents from "./InteractionEvents";
-import {TagBrackets, TagStyle} from "./Tags";
+import {TagBrackets, TagStyle} from "./tags";
 import {tokenize} from "./textUtils";
 import {TextStyleExtended, TextStyleExtendedWithDefault, TextStyleSet, MstDebugOptions, MstInteractionEvent, HitboxData, TextData, TagData, TextDrawingData, TextWithPrivateMembers} from "./types";
 
