@@ -155,14 +155,6 @@ export default class MultiStyleText extends PIXI.Text {
     this.hitboxes = [];
   }
 
-  private _imageMap: ImageMap = {};
-  public get imageMap() {
-    return this._imageMap;
-  }
-  public set imageMap(imageMap: ImageMap) {
-    this._imageMap = imageMap;
-  }
-
   /////
   /// CONSTRUCTOR
   /////
@@ -170,12 +162,10 @@ export default class MultiStyleText extends PIXI.Text {
   constructor(
     text: string,
     styles: TextStyleSetWithDefault,
-    imageMap: ImageMap = {}
   ) {
     super(text);
 
     this.setStyles(styles);
-    this.imageMap = imageMap;
 
     this.initEvents();
   }
