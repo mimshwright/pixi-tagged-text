@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 import InteractionEvents from "./InteractionEvents";
 import {TagBrackets, TagStyle, bbcodePropertyRegex, propertyRegex} from "./tags";
-import {TextStyleExtended, TextStyleExtendedWithDefault, TextStyleSet, MstDebugOptions, MstInteractionEvent, HitboxData, TextData, TagData, TextDrawingData, TextWithPrivateMembers, ImageMap} from "./types";
+import {TextStyleExtended, TextStyleExtendedWithDefault, TextStyleSet, TextStyleSetWithDefault, MstDebugOptions, MstInteractionEvent, HitboxData, TextData, TagData, TextDrawingData, TextWithPrivateMembers, ImageMap} from "./types";
 
 import {tokenize} from "./textUtils";
 import { getFontString } from './pixiUtils';
@@ -14,6 +14,18 @@ if (majorVersion < 5) {
 }
 
 const WHITESPACE_REGEXP = /(\s\n\s)|(\s\n)|(\n\s)/g;
+
+const presetStyles:TextStyleSet = {
+  b : { fontStyle: 'bold' },
+  i: { fontStyle: 'italic' },
+  color: { fill: '' }, // an array would result in gradient
+  outline: { stroke: '', strokeThickness: 6 },
+  font: { fontFamily: '' },
+  shadow: { dropShadowColor: '', dropShadow: true, dropShadowBlur: 3, dropShadowDistance: 3, dropShadowAngle: 2 },
+  size: { fontSize: 'px' },
+  spacing: { letterSpacing: 0 },
+  align: { align: '' },
+};
 
 export default class MultiStyleText extends PIXI.Text {
   private static DEFAULT_TagStyle: TextStyleExtendedWithDefault = {
@@ -64,47 +76,49 @@ export default class MultiStyleText extends PIXI.Text {
 		}
 	};
 
-	private _textStyles!: TextStyleSet;
+	private _textStyles!: TextStyleSetWithDefault;
 
 	public get textStyles() { return this._textStyles; }
 
-	public set textStyles(_: TextStyleSet) {
+	public set textStyles(_: TextStyleSetWithDefault) {
 		throw new Error("Don't set textStyles directly. Use setStyles()");
 	}
 
 	public get defaultTextStyle() { return this.textStyles.default; }
 	public set defaultTextStyle(style) { this.textStyles.default = style; }
 
-	public setStyles(styles: TextStyleSet): void {
-		this.resetTextStyles();
-
-		for (let styleName in styles) {
-			if (styleName === "default") {
-				this._textStyles.default = { ...this._textStyles.default, ...styles.default };
-			} else {
-				this._textStyles[styleName] = { ...styles[styleName] };
-			}
-		}
-		if (this._textStyles.default.tagStyle === TagStyle.bbcode) {
-			// when using bbcode parsing, register a bunch of standard bbcode tags and some cool pixi ones
-			this._textStyles.b = { fontStyle: 'bold' };
-			this._textStyles.i = { fontStyle: 'italic' };
-			this._textStyles.color = { fill: '' }; // an array would result in gradiens
-			this._textStyles.outline = { stroke: '', strokeThickness: 6 };
-			this._textStyles.font = { fontFamily: '' };
-			this._textStyles.shadow = { dropShadowColor: '', dropShadow: true, dropShadowBlur: 3, dropShadowDistance: 3, dropShadowAngle: 2 };
-			this._textStyles.size = { fontSize: 'px' };
-			this._textStyles.spacing = { letterSpacing: 0 };
-			this._textStyles.align = { align: '' };
-		}
-
-		this.withPrivateMembers()._style = new PIXI.TextStyle(this._textStyles.default);
-		this.withPrivateMembers().dirty = true;
-	}
-
-	private resetTextStyles() {
+  private resetTextStyles() {
 		this._textStyles = { default: { ...MultiStyleText.DEFAULT_TagStyle } };
 	}
+
+	public setStyles(styles: TextStyleSetWithDefault): void {
+		this.resetTextStyles();
+
+		this.registerTags(styles);
+
+    // todo: Should we make this work for html style tags too? Why just for BBCode?
+		if (this.textStyles.default.tagStyle === TagStyle.bbcode) {
+			// when using bbcode parsing, register a bunch of standard bbcode tags and some cool pixi ones
+			this.registerTags(presetStyles)
+		}
+	}
+
+  //
+  private registerTags (styles:TextStyleSet) :void {
+    for (let styleName in styles) {
+      this.registerTag(styleName, styles[styleName]);
+		}
+  }
+
+  private registerTag (tagName:string, style:TextStyleExtended):void {
+    // if the tag name is "default", merge it rather than overwrite it.
+    if (tagName === "default") {
+      this.textStyles.default = { ...this.textStyles.default, ...style };
+      this.updateRootDefaultStyle();
+    } else {
+      this.textStyles[tagName] = { ...style };
+    }
+  }
 
 	private hitboxes: HitboxData[] = [];
   private resetHitboxes () { this.hitboxes = []; }
@@ -117,7 +131,7 @@ export default class MultiStyleText extends PIXI.Text {
   /// CONSTRUCTOR
   /////
 
-	constructor(text: string, styles: TextStyleSet, imageMap:ImageMap = {}) {
+	constructor(text: string, styles: TextStyleSetWithDefault, imageMap:ImageMap = {}) {
 		super(text);
 
 		this.setStyles(styles);
@@ -819,9 +833,15 @@ export default class MultiStyleText extends PIXI.Text {
 		return result;
 	}
 
+  private updateRootDefaultStyle () {
+    const thisRoot = this.withPrivateMembers();
+		thisRoot._style = new PIXI.TextStyle(this.textStyles.default);
+		thisRoot.dirty = true;
+  }
+
 	protected updateTexture() {
-    const thisPrivate = this.withPrivateMembers();
-		const {_texture: texture, _style: style} = thisPrivate;
+    const thisRoot = this.withPrivateMembers();
+		const {_texture: texture, _style: style} = thisRoot;
     const {padding: PADDING} = style;
 		const DROP_SHADOW_PADDING = this.getDropShadowPadding();
     const {canvas, resolution: RESOLUTION} = this;
@@ -839,10 +859,10 @@ export default class MultiStyleText extends PIXI.Text {
 		texture.orig.height = texture.frame.height - (TRIM) * 2;
 
 		// call sprite onTextureUpdate to update scale if _width or _height were set
-		thisPrivate._onTextureUpdate();
+		thisRoot._onTextureUpdate();
 
 		texture.baseTexture.emit('update', texture.baseTexture);
 
-		thisPrivate.dirty = false;
+		thisRoot.dirty = false;
 	}
 }

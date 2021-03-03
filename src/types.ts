@@ -88,11 +88,11 @@ export interface TextStyleExtendedWithDefault extends TextStyleExtended {
 	tagStyle: TagStyle;
 }
 
-export type TextStyleSet = {
+export type TextStyleSet = Record<string, TextStyleExtended>;
+
+export type TextStyleSetWithDefault = {
 	default: TextStyleExtendedWithDefault
-} & {
-	[key: string]: TextStyleExtended;
-};
+} & TextStyleSet;
 
 export type ImageMap = Record<string, PIXI.Container>;
 
