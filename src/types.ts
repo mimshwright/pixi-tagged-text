@@ -94,6 +94,8 @@ export type TextStyleSet = {
 	[key: string]: TextStyleExtended;
 };
 
+export type ImageMap = Record<string, PIXI.Container>;
+
 export interface FontProperties {
 	ascent: number;
 	descent: number;
