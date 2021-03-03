@@ -38,7 +38,12 @@
   },
   "devDependencies": {
     "@types/pixi.js": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.16.1",
+    "@typescript-eslint/parser": "^4.16.1",
     "argos-cli": "0.3.3",
+    "eslint": "^7.21.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-prettier": "^3.3.1",
     "fs-extra": "^9.1.0",
     "happo": "^5.0.0",
     "happo-target-firefox": "^5.1.2",
@@ -65,7 +70,7 @@
     "test": "npm run happo",
     "test:local": "happo run",
     "lint": "prettier -l ./**/*.{ts,js,tsx,jsx,json,html,css,md}",
-    "lint:fix": "npm run lint -- --write"
+    "lint:fix": "npm run lint --write"
   },
   "husky": {
     "hooks": {

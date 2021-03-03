@@ -1,6 +1,8 @@
+
+export type TagProperties = Record<string, string>;
 export interface TagData {
 	name: string;
-	properties: { [key: string]: string };
+	properties: TagProperties;
 }
 
 export interface HitboxData {
