@@ -440,8 +440,18 @@ export default class MultiStyleText extends PIXI.Text {
       return;
     }
 
+    // prep
+    this.resetHitboxes();
+
+    this.texture.baseTexture.resolution = this.resolution;
+    const textStyles = this.textStyles;
+
     // Calculate word wrap
-    // Calculate text data for each line
+    const wrappedText = this.calculateWordWrap(this.text);
+
+    // Calculate text style data for each line
+    const textDataLines = this.getTextDataPerLine(wrappedText);
+
     // Measure each line
     // Calculate drawing data for each line
     // Draw the component (4 passes)
@@ -451,22 +461,6 @@ export default class MultiStyleText extends PIXI.Text {
     //   3. Draw Debug info
     // Update the texture
 
-    this.resetHitboxes();
-
-    this.texture.baseTexture.resolution = this.resolution;
-    const textStyles = this.textStyles;
-    let outputText = this.text;
-
-    if (this.withPrivateMembers()._style.wordWrap) {
-      outputText = this.calculateWordWrap(this.text);
-    }
-
-    // split text into lines
-    const textLines = splitIntoLines(outputText);
-
-    // get the text data with specific styles
-    const textDataLines = this.getTextDataPerLine(outputText);
-
     // calculate text width and height
     const lineWidths: number[] = [];
     const lineYMins: number[] = [];
@@ -474,7 +468,7 @@ export default class MultiStyleText extends PIXI.Text {
     let maxLineWidth = 0;
     const lineSpacing = textStyles["default"].lineSpacing;
 
-    for (let lineIndex = 0; lineIndex < textLines.length; lineIndex++) {
+    for (let lineIndex = 0; lineIndex < textDataLines.length; lineIndex++) {
       const line = textDataLines[lineIndex];
 
       let lineWidth = 0;
@@ -885,10 +879,16 @@ export default class MultiStyleText extends PIXI.Text {
 
   protected calculateWordWrap(text: string): string {
     // Greedy wrapping algorithm that will wrap words as the line grows longer than its horizontal bounds.
-    let result = "";
-    const re = this.getTagRegex(true, true);
+
     const thisPrivate = this.withPrivateMembers();
     const style = thisPrivate._style;
+
+    if (style.wordWrap !== true) {
+      return text;
+    }
+
+    let wrappedText = "";
+    const re = this.getTagRegex(true, true);
 
     const lines = text.split("\n");
     const { wordWrapWidth, letterSpacing } = style;
@@ -896,59 +896,69 @@ export default class MultiStyleText extends PIXI.Text {
     const styleStack = [{ ...this.defaultTextStyle }];
     this.context.font = getFontString(this.textStyles["default"]);
 
-    for (let i = 0; i < lines.length; i++) {
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const line = lines[lineIndex];
       let spaceLeft = wordWrapWidth;
-      const tagSplit = lines[i].split(re);
+      const tagSplit = line.split(re);
       let firstWordOfLine = true;
 
-      for (let j = 0; j < tagSplit.length; j++) {
-        if (re.test(tagSplit[j])) {
-          result += tagSplit[j];
-          if (tagSplit[j][1] === "/") {
-            j += 2;
+      for (let tagIndex = 0; tagIndex < tagSplit.length; tagIndex++) {
+        const tag: string = tagSplit[tagIndex];
+
+        if (re.test(tag)) {
+          wrappedText += tag;
+          if (tag[1] === "/") {
+            tagIndex += 2;
             styleStack.pop();
           } else {
-            j++;
+            tagIndex++;
             styleStack.push({
               ...styleStack[styleStack.length - 1],
-              ...this.textStyles[tagSplit[j]],
+              ...this.textStyles[tag],
             });
-            j++;
+            tagIndex++;
           }
           this.context.font = getFontString(styleStack[styleStack.length - 1]);
         } else {
-          const words = tokenize(tagSplit[j]);
+          const words = tokenize(tag);
 
-          for (let k = 0; k < words.length; k++) {
+          for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+            const word = words[wordIndex];
             let cw = 0;
             if (letterSpacing > 0) {
-              const chars = words[k].split("");
-              for (let c = 0; c < chars.length; c++) {
-                cw += measureTextWidth(this.context, chars[c]) + letterSpacing;
+              const chars = word.split("");
+              for (let charIndex = 0; charIndex < chars.length; charIndex++) {
+                const char = chars[charIndex];
+                cw += measureTextWidth(this.context, char) + letterSpacing;
               }
             } else {
-              cw = measureTextWidth(this.context, words[k]);
+              cw = measureTextWidth(this.context, word);
             }
             const wordWidth = cw;
 
             if (style.breakWords && wordWidth > spaceLeft) {
               // Part should be split in the middle
-              const characters = words[k].split("");
+              const characters = word.split("");
 
-              for (let c = 0; c < characters.length; c++) {
+              for (
+                let charIndex = 0;
+                charIndex < characters.length;
+                charIndex++
+              ) {
+                const char = characters[charIndex];
                 const characterWidth =
-                  measureTextWidth(this.context, characters[c]) + letterSpacing;
+                  measureTextWidth(this.context, char) + letterSpacing;
 
                 if (characterWidth > spaceLeft) {
-                  result += `\n${characters[c]}`;
+                  wrappedText += `\n${char}`;
                   spaceLeft = wordWrapWidth - characterWidth;
                 } else {
-                  result += characters[c];
+                  wrappedText += char;
                   spaceLeft -= characterWidth;
                 }
               }
             } else if (style.breakWords) {
-              result += words[k];
+              wrappedText += word;
               spaceLeft -= wordWidth;
             } else {
               const paddedWordWidth = wordWidth + letterSpacing;
@@ -957,14 +967,14 @@ export default class MultiStyleText extends PIXI.Text {
                 // Skip printing the newline if it's the first word of the line that is
                 // greater than the word wrap width.
                 if (!firstWordOfLine) {
-                  result += "\n";
+                  wrappedText += "\n";
                 }
 
-                result += words[k];
+                wrappedText += word;
                 spaceLeft = wordWrapWidth - wordWidth;
               } else {
                 spaceLeft -= paddedWordWidth;
-                result += words[k];
+                wrappedText += word;
               }
             }
             firstWordOfLine = false;
@@ -972,13 +982,15 @@ export default class MultiStyleText extends PIXI.Text {
         }
       }
 
-      if (i < lines.length - 1) {
-        result += "\n";
+      // Unless this is the last line, add a new line to your output.
+      if (lineIndex < lines.length - 1) {
+        wrappedText += "\n";
       }
     }
 
-    result = result.replace(WHITESPACE_REGEXP, "\n");
-    return result;
+    // Remove whitespace before and after each line break.
+    wrappedText = wrappedText.replace(WHITESPACE_REGEXP, "\n");
+    return wrappedText;
   }
 
   protected updateTexture(): void {
