@@ -22,15 +22,10 @@ import {
 } from "./types";
 
 import { splitIntoLines, tokenize } from "./textUtils";
-import { getFontString, measureTextWidth } from "./pixiUtils";
+import { checkPixiVersion, getFontString, measureTextWidth } from "./pixiUtils";
 
 ("use strict");
-const majorVersion = parseInt(PIXI.VERSION.split(".")[0], 10);
-if (majorVersion < 5) {
-  throw new Error(
-    `Detected Pixi.js version ${PIXI.VERSION}. pixi-multistyle-text supports Pixi.js version 5+. (Please use v0.8.0 for Pixi 4 support.)`
-  );
-}
+checkPixiVersion(PIXI.VERSION, 5);
 
 const WHITESPACE_REGEXP = /(\s\n\s)|(\s\n)|(\n\s)/g;
 
