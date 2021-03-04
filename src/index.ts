@@ -962,8 +962,8 @@ export default class MultiStyleText extends PIXI.Text {
 
   protected updateTexture(): void {
     const thisRoot = this.withPrivateMembers();
-    const { _texture: texture, _style: style } = thisRoot;
-    const { padding: PADDING } = style;
+    const texture = thisRoot._texture;
+    const PADDING = thisRoot._style.padding;
     const DROP_SHADOW_PADDING = this.getDropShadowPadding();
     const { canvas, resolution: RESOLUTION } = this;
     const { width: CANVAS_WIDTH, height: CANVAS_HEIGHT } = canvas;
