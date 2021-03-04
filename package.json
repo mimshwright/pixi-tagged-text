@@ -61,7 +61,7 @@
   },
   "scripts": {
     "demo": "npm run build && opener demo/index.html",
-    "dev": "microbundle watch",
+    "dev": "microbundle watch  --name MultiStyleText",
     "build": "microbundle --name MultiStyleText",
     "prepublishOnly": "npm run build",
     "release": "standard-version",
