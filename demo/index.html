@@ -74,7 +74,7 @@
             }
           });</code></pre>
         </div>
-        <div class="pixi" id="p0">
+        <div class="pixi" id="basic">
           <script>
             // Basics
             let text = new MultiStyleText(
@@ -101,7 +101,7 @@
               }
             );
 
-            createTextContainer(text, "p0");
+            createTextContainer(text, "basic");
           </script>
         </div>
       </div>
@@ -117,7 +117,7 @@
 	},
 });</code></pre>
         </div>
-        <div class="pixi" id="p1">
+        <div class="pixi" id="bbcode">
           <script>
             // Tag Styles
             let bbcode = new MultiStyleText(
@@ -130,7 +130,7 @@
                 },
               }
             );
-            createTextContainer(bbcode, "p1");
+            createTextContainer(bbcode, "bbcode");
           </script>
         </div>
       </div>
@@ -153,7 +153,7 @@
 	&quot;large&quot;: { fontSize: &quot;36px&quot; }
 });</code></pre>
         </div>
-        <div class="pixi" id="p2">
+        <div class="pixi" id="nested">
           <script>
             // Nesting Tags
             let nested = new MultiStyleText(
@@ -173,7 +173,7 @@
                 large: { fontSize: "36px" },
               }
             );
-            createTextContainer(nested, "p2");
+            createTextContainer(nested, "nested");
           </script>
         </div>
       </div>
@@ -201,7 +201,7 @@
 	&quot;custom3&quot;: { fontSize: &quot;14px&quot;, valign: 25 }
 });</code></pre>
         </div>
-        <div class="pixi" id="p3">
+        <div class="pixi" id="valign">
           <script>
             // Vertical Alignment
             let valign = new MultiStyleText(
@@ -226,7 +226,7 @@
                 custom3: { fontSize: "14px", valign: 25 },
               }
             );
-            createTextContainer(valign, "p3");
+            createTextContainer(valign, "valign");
           </script>
         </div>
       </div>
@@ -252,7 +252,7 @@ lineSpacing.y = 3530;
 stage.addChild(lineSpacing);
 </code></pre>
         </div>
-        <div class="pixi" id="p4">
+        <div class="pixi" id="spacing">
           <script>
             // Spacing
             let spacing = new MultiStyleText(
@@ -270,7 +270,7 @@ stage.addChild(lineSpacing);
               }
             );
 
-            createTextContainer(spacing, "p4");
+            createTextContainer(spacing, "spacing");
           </script>
         </div>
       </div>
@@ -289,7 +289,7 @@ stage.addChild(lineSpacing);
 	}
 });</code></pre>
         </div>
-        <div class="pixi" id="p5">
+        <div class="pixi" id="wrapping">
           <script>
             // Wrapping and Alignment
             let wrapping = new MultiStyleText(
@@ -305,7 +305,7 @@ stage.addChild(lineSpacing);
                 },
               }
             );
-            createTextContainer(wrapping, "p5");
+            createTextContainer(wrapping, "wrapping");
           </script>
         </div>
       </div>
@@ -330,7 +330,7 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
 	&quot;big&quot;: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: &quot;36px&quot; }
 });</code></pre>
         </div>
-        <div class="pixi" id="p6">
+        <div class="pixi" id="wrapping2">
           <script>
             // Wrapping and Alignment II
             let wrapping2 = new MultiStyleText(
@@ -349,7 +349,7 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
                 big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
               }
             );
-            createTextContainer(wrapping2, "p6");
+            createTextContainer(wrapping2, "wrapping2");
           </script>
         </div>
       </div>
@@ -379,7 +379,7 @@ let debug = new MultiStyleText(&quot;You can use &lt;code&gt;debug mode&lt;/code
 	&quot;no-debug&quot;: { debug: false }
 });</code></pre>
         </div>
-        <div class="pixi" id="p7">
+        <div class="pixi" id="debug">
           <script>
             // Debug Mode
             let debug = new MultiStyleText(
@@ -407,7 +407,7 @@ let debug = new MultiStyleText(&quot;You can use &lt;code&gt;debug mode&lt;/code
             MultiStyleText.debugOptions.spans.enabled = true;
             MultiStyleText.debugOptions.objects.enabled = true;
 
-            createTextContainer(debug, "p7");
+            createTextContainer(debug, "debug");
 
             MultiStyleText.debugOptions.spans.enabled = false;
             MultiStyleText.debugOptions.objects.enabled = false;
@@ -440,7 +440,7 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
 	}
 });</code></pre>
         </div>
-        <div class="pixi" id="p8">
+        <div class="pixi" id="interaction">
           <script>
             // Interaction Events
             let interaction = new MultiStyleText(
@@ -468,7 +468,7 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
                 );
               }
             });
-            createTextContainer(interaction, "p8");
+            createTextContainer(interaction, "interaction");
           </script>
         </div>
       </div>
@@ -504,7 +504,7 @@ function animate() {
 
 requestAnimationFrame(animate);</code></pre>
 </div>
-          <div class="pixi" id="p9">
+          <div class="pixi" id="animated">
             <script>
               // Have Fun
               let funStyles = {
@@ -523,12 +523,12 @@ requestAnimationFrame(animate);</code></pre>
                 red: { fill: 0xff8888, stroke: 0xcc4444 },
               };
 
-              let fun = new MultiStyleText(
+              let animated = new MultiStyleText(
                 "Now have fun making some <blue>beautiful</blue> <red>multistyle</red> text!",
                 funStyles
               );
 
-              const [renderer, stage] = createTextContainer(fun, "p9");
+              const [renderer, stage] = createTextContainer(animated, "animated");
 
               // Animate
               function animate() {
@@ -540,7 +540,7 @@ requestAnimationFrame(animate);</code></pre>
                   Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) *
                     5 +
                   5;
-                fun.setStyles(funStyles);
+                  animated.setStyles(funStyles);
               }
 
               requestAnimationFrame(animate);
