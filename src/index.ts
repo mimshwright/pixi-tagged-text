@@ -261,7 +261,8 @@ export default class MultiStyleText extends PIXI.Text {
     return new RegExp(pattern, "g");
   }
 
-  private getTextDataPerLine(stringLines: string[]) {
+  private getTextDataPerLine(str: string) {
+    const stringLines = splitIntoLines(str);
     const lines: TextData[][] = [];
     const re = this.getTagRegex(true, false);
 
@@ -439,6 +440,17 @@ export default class MultiStyleText extends PIXI.Text {
       return;
     }
 
+    // Calculate word wrap
+    // Calculate text data for each line
+    // Measure each line
+    // Calculate drawing data for each line
+    // Draw the component (4 passes)
+    //   0. Draw shadows
+    //   1. Draw strokes
+    //   2. Draw fills
+    //   3. Draw Debug info
+    // Update the texture
+
     this.resetHitboxes();
 
     this.texture.baseTexture.resolution = this.resolution;
@@ -450,10 +462,10 @@ export default class MultiStyleText extends PIXI.Text {
     }
 
     // split text into lines
-    const lines = splitIntoLines(outputText);
+    const textLines = splitIntoLines(outputText);
 
     // get the text data with specific styles
-    const outputTextData = this.getTextDataPerLine(lines);
+    const textDataLines = this.getTextDataPerLine(outputText);
 
     // calculate text width and height
     const lineWidths: number[] = [];
@@ -462,78 +474,74 @@ export default class MultiStyleText extends PIXI.Text {
     let maxLineWidth = 0;
     const lineSpacing = textStyles["default"].lineSpacing;
 
-    for (let i = 0; i < lines.length; i++) {
+    for (let lineIndex = 0; lineIndex < textLines.length; lineIndex++) {
+      const line = textDataLines[lineIndex];
+
       let lineWidth = 0;
       let lineYMin = 0;
       let lineYMax = 0;
 
-      for (let j = 0; j < outputTextData[i].length; j++) {
-        const sty = outputTextData[i][j].style;
+      for (
+        let textDataIndex = 0;
+        textDataIndex < line.length;
+        textDataIndex++
+      ) {
+        const textData = line[textDataIndex];
+        const sty = textData.style;
         const ls = sty.letterSpacing || 0;
 
         this.context.font = getFontString(sty);
 
         // save the width
-        outputTextData[i][j].width = measureTextWidth(
-          this.context,
-          outputTextData[i][j].text
-        );
+        textData.width = measureTextWidth(this.context, textData.text);
 
-        if (outputTextData[i][j].text.length !== 0) {
-          outputTextData[i][j].width +=
-            (outputTextData[i][j].text.length - 1) * ls;
+        if (textData.text.length !== 0) {
+          textData.width += (textData.text.length - 1) * ls;
 
-          if (j > 0) {
+          if (textDataIndex > 0) {
             lineWidth += ls / 2; // spacing before first character
           }
 
-          if (j < outputTextData[i].length - 1) {
+          if (textDataIndex < textDataLines[lineIndex].length - 1) {
             lineWidth += ls / 2; // spacing after last character
           }
         }
 
-        lineWidth += outputTextData[i][j].width;
+        lineWidth += textData.width;
 
         // save the font properties
-        outputTextData[i][j].fontProperties = PIXI.TextMetrics.measureFont(
-          this.context.font
-        );
+        textDataLines[lineIndex][
+          textDataIndex
+        ].fontProperties = PIXI.TextMetrics.measureFont(this.context.font);
 
         // save the height
-        outputTextData[i][j].height =
-          outputTextData[i][j].fontProperties.fontSize;
+        textData.height = textData.fontProperties.fontSize;
 
         if (typeof sty.valign === "number") {
           lineYMin = Math.min(
             lineYMin,
-            sty.valign - outputTextData[i][j].fontProperties.descent
+            sty.valign - textData.fontProperties.descent
           );
           lineYMax = Math.max(
             lineYMax,
-            sty.valign + outputTextData[i][j].fontProperties.ascent
+            sty.valign + textData.fontProperties.ascent
           );
         } else {
-          lineYMin = Math.min(
-            lineYMin,
-            -outputTextData[i][j].fontProperties.descent
-          );
-          lineYMax = Math.max(
-            lineYMax,
-            outputTextData[i][j].fontProperties.ascent
-          );
+          lineYMin = Math.min(lineYMin, -textData.fontProperties.descent);
+          lineYMax = Math.max(lineYMax, textData.fontProperties.ascent);
         }
-      }
+      } // end text data loop
 
-      lineWidths[i] = lineWidth;
-      lineYMins[i] = lineYMin;
-      lineYMaxs[i] = lineYMax;
+      lineWidths[lineIndex] = lineWidth;
+      lineYMins[lineIndex] = lineYMin;
+      lineYMaxs[lineIndex] = lineYMax;
 
-      if (i > 0 && lineSpacing) {
-        lineYMaxs[i] += lineSpacing;
+      if (lineIndex > 0 && lineSpacing) {
+        lineYMaxs[lineIndex] += lineSpacing;
       }
 
       maxLineWidth = Math.max(maxLineWidth, lineWidth);
-    }
+    } // end line loop
 
     // transform styles in array
     const stylesArray = Object.keys(textStyles).map((key) => textStyles[key]);
@@ -566,8 +574,8 @@ export default class MultiStyleText extends PIXI.Text {
     const drawingData: TextDrawingData[] = [];
 
     // Compute the drawing data
-    for (let i = 0; i < outputTextData.length; i++) {
-      const line = outputTextData[i];
+    for (let lineIndex = 0; lineIndex < textDataLines.length; lineIndex++) {
+      const line = textDataLines[lineIndex];
       let linePositionX: number;
 
       switch (this.withPrivateMembers()._style.align) {
@@ -575,14 +583,14 @@ export default class MultiStyleText extends PIXI.Text {
           linePositionX =
             dropShadowPadding +
             maxStrokeThickness +
-            (maxLineWidth - lineWidths[i]) / 2;
+            (maxLineWidth - lineWidths[lineIndex]) / 2;
           break;
         case "right":
           linePositionX =
             dropShadowPadding +
             maxStrokeThickness +
             maxLineWidth -
-            lineWidths[i];
+            lineWidths[lineIndex];
           break;
         case "left":
         default:
@@ -590,8 +598,13 @@ export default class MultiStyleText extends PIXI.Text {
           break;
       }
 
-      for (let j = 0; j < line.length; j++) {
-        const { style, text, fontProperties, width, tag } = line[j];
+      for (
+        let textDataIndex = 0;
+        textDataIndex < line.length;
+        textDataIndex++
+      ) {
+        const textData = line[textDataIndex];
+        const { style, text, fontProperties, width, tag } = textData;
         const ls = style.letterSpacing || 0;
 
         let linePositionY = basePositionY + fontProperties.ascent;
@@ -602,13 +615,13 @@ export default class MultiStyleText extends PIXI.Text {
             break;
 
           case "baseline":
-            linePositionY += lineYMaxs[i] - fontProperties.ascent;
+            linePositionY += lineYMaxs[lineIndex] - fontProperties.ascent;
             break;
 
           case "middle":
             linePositionY +=
-              (lineYMaxs[i] -
-                lineYMins[i] -
+              (lineYMaxs[lineIndex] -
+                lineYMins[lineIndex] -
                 fontProperties.ascent -
                 fontProperties.descent) /
               2;
@@ -616,8 +629,8 @@ export default class MultiStyleText extends PIXI.Text {
 
           case "bottom":
             linePositionY +=
-              lineYMaxs[i] -
-              lineYMins[i] -
+              lineYMaxs[lineIndex] -
+              lineYMins[lineIndex] -
               fontProperties.ascent -
               fontProperties.descent;
             break;
@@ -625,7 +638,9 @@ export default class MultiStyleText extends PIXI.Text {
           default:
             // A number - offset from baseline, positive is higher
             linePositionY +=
-              lineYMaxs[i] - fontProperties.ascent - (style.valign || 0);
+              lineYMaxs[lineIndex] -
+              fontProperties.ascent -
+              (style.valign || 0);
             break;
         }
 
@@ -641,19 +656,22 @@ export default class MultiStyleText extends PIXI.Text {
             tag,
           });
 
-          linePositionX += line[j].width;
+          linePositionX += textData.width;
         } else {
-          this.context.font = getFontString(line[j].style);
+          this.context.font = getFontString(textData.style);
 
-          for (let k = 0; k < text.length; k++) {
-            if (k > 0 || j > 0) {
+          for (let charIndex = 0; charIndex < text.length; charIndex++) {
+            if (charIndex > 0 || textDataIndex > 0) {
               linePositionX += ls / 2;
             }
 
-            const charWidth = measureTextWidth(this.context, text.charAt(k));
+            const charWidth = measureTextWidth(
+              this.context,
+              text.charAt(charIndex)
+            );
 
             drawingData.push({
-              text: text.charAt(k),
+              text: text.charAt(charIndex),
               style,
               x: linePositionX,
               y: linePositionY,
@@ -665,15 +683,18 @@ export default class MultiStyleText extends PIXI.Text {
 
             linePositionX += charWidth;
 
-            if (k < text.length - 1 || j < line.length - 1) {
+            if (
+              charIndex < text.length - 1 ||
+              textDataIndex < line.length - 1
+            ) {
               linePositionX += ls / 2;
             }
           }
         }
-      }
+      } // end computeDrawingData textData loop
 
-      basePositionY += lineYMaxs[i] - lineYMins[i];
-    }
+      basePositionY += lineYMaxs[lineIndex] - lineYMins[lineIndex];
+    } // end computeDrawingData line loop
 
     this.context.save();
 
