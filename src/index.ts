@@ -5,7 +5,6 @@ import {
   TagStyle,
   bbcodePropertyRegex,
   propertyRegex,
-  createTextData,
 } from "./tags";
 import {
   TextStyleExtended,
@@ -257,29 +256,31 @@ export default class MultiStyleText extends PIXI.Text {
     return new RegExp(pattern, "g");
   }
 
-  private _getTextDataPerLine(lines: string[]) {
-    const outputTextData: TextData[][] = [];
+  private getTextDataPerLine(stringLines: string[]) {
+    const lines: TextData[][] = [];
     const re = this.getTagRegex(true, false);
 
     const styleStack = [{ ...this.defaultTextStyle }];
     const tagStack: TagData[] = [{ name: "default", properties: {} }];
 
     // determine the group of word for each line
-    for (let i = 0; i < lines.length; i++) {
-      const lineTextData: TextData[] = [];
+    for (let lineIndex = 0; lineIndex < stringLines.length; lineIndex++) {
+      const stringLine = stringLines[lineIndex];
+      const line: TextData[] = [];
 
       // find tags inside the string
       const matches: RegExpExecArray[] = [];
       let matchArray: RegExpExecArray | null;
 
-      while ((matchArray = re.exec(lines[i]))) {
+      while ((matchArray = re.exec(stringLine))) {
         matches.push(matchArray);
       }
+
       // if there is no match, we still need to add the line with the default style
       if (matches.length === 0) {
-        lineTextData.push(
+        line.push(
           createTextData(
-            lines[i],
+            stringLines[lineIndex],
             styleStack[styleStack.length - 1],
             tagStack[tagStack.length - 1]
           )
@@ -291,9 +292,12 @@ export default class MultiStyleText extends PIXI.Text {
           // if index > 0, it means we have characters before the match,
           // so we need to add it with the default style
           if (matches[j].index > currentSearchIdx) {
-            lineTextData.push(
+            line.push(
               createTextData(
-                lines[i].substring(currentSearchIdx, matches[j].index),
+                stringLines[lineIndex].substring(
+                  currentSearchIdx,
+                  matches[j].index
+                ),
                 styleStack[styleStack.length - 1],
                 tagStack[tagStack.length - 1]
               )
@@ -361,22 +365,24 @@ export default class MultiStyleText extends PIXI.Text {
         }
 
         // is there any character left?
-        if (currentSearchIdx < lines[i].length) {
+        if (currentSearchIdx < stringLines[lineIndex].length) {
           const result = createTextData(
-            currentSearchIdx ? lines[i].substring(currentSearchIdx) : lines[i],
+            currentSearchIdx
+              ? stringLines[lineIndex].substring(currentSearchIdx)
+              : stringLines[lineIndex],
             styleStack[styleStack.length - 1],
             tagStack[tagStack.length - 1]
           );
-          lineTextData.push(result);
+          line.push(result);
         }
       }
 
-      outputTextData.push(lineTextData);
+      lines.push(line);
     }
 
     // don't display any incomplete tags at the end of text- good for scrolling text in games
     const { tagStyle } = this.defaultTextStyle;
-    outputTextData[outputTextData.length - 1].map((data) => {
+    lines[lines.length - 1].map((data) => {
       if (data.text.includes(TagBrackets[tagStyle][0])) {
         let pattern;
         if (tagStyle === TagStyle.bbcode) {
@@ -391,7 +397,23 @@ export default class MultiStyleText extends PIXI.Text {
       }
     });
 
-    return outputTextData;
+    return lines;
+
+    // internal functions
+    function createTextData(
+      text: string,
+      style: TextStyleExtended,
+      tag: TagData
+    ): TextData {
+      return {
+        text,
+        style,
+        width: 0,
+        height: 0,
+        fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
+        tag,
+      };
+    }
   }
 
   private getDropShadowPadding(): number {
@@ -430,7 +452,7 @@ export default class MultiStyleText extends PIXI.Text {
     const lines = splitIntoLines(outputText);
 
     // get the text data with specific styles
-    const outputTextData = this._getTextDataPerLine(lines);
+    const outputTextData = this.getTextDataPerLine(lines);
 
     // calculate text width and height
     const lineWidths: number[] = [];
