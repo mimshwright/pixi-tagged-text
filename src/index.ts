@@ -136,12 +136,28 @@ export default class MultiStyleText extends PIXI.Text {
     this.withPrivateMembers().dirty = dirty;
   }
 
+  private getDirty(): boolean {
+    return this.withPrivateMembers().dirty;
+  }
+
   private setRootDefaultStyle(style: TextStyleExtended) {
     this.withPrivateMembers()._style = new PIXI.TextStyle(style);
   }
 
+  private getRootDefaultStyle(): PIXI.TextStyle {
+    return this.withPrivateMembers()._style;
+  }
+
   private updateRootDefaultStyle() {
     this.setRootDefaultStyle(this.defaultTextStyle);
+  }
+
+  private getTexture() {
+    return this.withPrivateMembers()._texture;
+  }
+
+  private generateFillStyle(style: PIXI.TextStyle, lines: string[]) {
+    return this.withPrivateMembers()._generateFillStyle(style, lines);
   }
 
   private hitboxes: HitboxData[] = [];
@@ -436,7 +452,7 @@ export default class MultiStyleText extends PIXI.Text {
   }
 
   public updateText(): void {
-    if (!this.withPrivateMembers().dirty) {
+    if (this.getDirty() === false) {
       return;
     }
 
@@ -572,7 +588,7 @@ export default class MultiStyleText extends PIXI.Text {
       const line = textDataLines[lineIndex];
       let linePositionX: number;
 
-      switch (this.withPrivateMembers()._style.align) {
+      switch (this.getRootDefaultStyle().align) {
         case "center":
           linePositionX =
             dropShadowPadding +
@@ -756,7 +772,7 @@ export default class MultiStyleText extends PIXI.Text {
           }
         }
       }
-      this.context.fillStyle = ((this as unknown) as TextWithPrivateMembers)._generateFillStyle(
+      this.context.fillStyle = this.generateFillStyle(
         new PIXI.TextStyle(style),
         [text]
       ) as string | CanvasGradient;
@@ -768,7 +784,7 @@ export default class MultiStyleText extends PIXI.Text {
     // Fourth pass: collect the bounding boxes and draw the debug information
     drawingData.forEach(({ style, x, y, width, ascent, descent, tag }) => {
       const offset =
-        -this.withPrivateMembers()._style.padding - this.getDropShadowPadding();
+        -this.getRootDefaultStyle().padding - this.getDropShadowPadding();
 
       this.hitboxes.push({
         tag,
@@ -880,8 +896,7 @@ export default class MultiStyleText extends PIXI.Text {
   protected calculateWordWrap(text: string): string {
     // Greedy wrapping algorithm that will wrap words as the line grows longer than its horizontal bounds.
 
-    const thisPrivate = this.withPrivateMembers();
-    const style = thisPrivate._style;
+    const style = this.getRootDefaultStyle();
 
     if (style.wordWrap !== true) {
       return text;
@@ -994,9 +1009,8 @@ export default class MultiStyleText extends PIXI.Text {
   }
 
   protected updateTexture(): void {
-    const thisRoot = this.withPrivateMembers();
-    const texture = thisRoot._texture;
-    const PADDING = thisRoot._style.padding;
+    const texture = this.getTexture();
+    const PADDING = this.getRootDefaultStyle().padding;
     const DROP_SHADOW_PADDING = this.getDropShadowPadding();
     const { canvas, resolution: RESOLUTION } = this;
     const { width: CANVAS_WIDTH, height: CANVAS_HEIGHT } = canvas;
@@ -1013,7 +1027,7 @@ export default class MultiStyleText extends PIXI.Text {
     texture.orig.height = texture.frame.height - TRIM * 2;
 
     // call sprite onTextureUpdate to update scale if _width or _height were set
-    thisRoot._onTextureUpdate();
+    this.withPrivateMembers()._onTextureUpdate();
 
     texture.baseTexture.emit("update", texture.baseTexture);
 
