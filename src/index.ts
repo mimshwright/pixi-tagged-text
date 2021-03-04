@@ -903,7 +903,7 @@ export default class MultiStyleText extends PIXI.Text {
     }
 
     let wrappedText = "";
-    const re = this.getTagRegex(true, true);
+    const tagPattern = this.getTagRegex(true, true);
 
     const lines = text.split("\n");
     const { wordWrapWidth, letterSpacing } = style;
@@ -913,14 +913,15 @@ export default class MultiStyleText extends PIXI.Text {
 
     for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
       const line = lines[lineIndex];
-      let spaceLeft = wordWrapWidth;
-      const tagSplit = line.split(re);
+      const tagSplit = line.split(tagPattern);
       let firstWordOfLine = true;
+
+      let spaceLeft = wordWrapWidth;
 
       for (let tagIndex = 0; tagIndex < tagSplit.length; tagIndex++) {
         const tag: string = tagSplit[tagIndex];
 
-        if (re.test(tag)) {
+        if (tagPattern.test(tag)) {
           wrappedText += tag;
           if (tag[1] === "/") {
             tagIndex += 2;
