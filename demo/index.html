@@ -47,38 +47,7 @@
       }
       </script>
 
-<div class="example">
-  <div class="code">
-    <h2>Images</h2>
-    <pre><code class="js">/* TBD! */</code></pre>
-  </div>
-  <div class="pixi" id="images">
-    <script>
-      // Images
-      let icon = new PIXI.Sprite();
-      icon.backgroundColor = "0xFF00FF";
-      icon.width = 100;
-      icon.height = 100;
 
-      let images = new MultiStyleText(
-        "Insert an image <img ref='icon' /> inline!",
-        {
-          default: {
-            fontFamily: "Arial",
-            fontSize: "24px",
-            fill: "#cccccc",
-            align: "center",
-          },
-          imageMap: {
-            icon
-          }
-        }
-      );
-
-      createTextContainer(images, "images");
-    </script>
-  </div>
-</div>
 
       <div class="example">
         <div class="code">

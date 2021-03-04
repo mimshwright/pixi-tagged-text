@@ -154,3 +154,16 @@ export interface TextWithPrivateMembers {
     lines: string[]
   ): string | number | CanvasGradient;
 }
+
+export interface TextLineMeasurements {
+  width: number;
+  height: number;
+  maxLineWidth: number;
+  lineWidths: number[];
+  lineYMins: number[];
+  lineYMaxs: number[];
+  totalHeight: number;
+  maxStrokeThickness: number;
+  dropShadowPadding: number;
+  basePositionY: number;
+}

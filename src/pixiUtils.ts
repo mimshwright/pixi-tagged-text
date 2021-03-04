@@ -4,6 +4,10 @@ import * as PIXI from "pixi.js";
 export const getFontString = (style: TextStyleExtended): string =>
   new PIXI.TextStyle(style).toFontString();
 
+export const measureFont = (
+  context: CanvasRenderingContext2D
+): PIXI.IFontMetrics => PIXI.TextMetrics.measureFont(context.font);
+
 export const measureTextWidth = (
   context: CanvasRenderingContext2D,
   text: string
