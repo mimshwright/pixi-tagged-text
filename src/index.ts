@@ -161,6 +161,11 @@ export default class MultiStyleText extends PIXI.Text {
     this.initEvents();
   }
 
+  // Tricks TypeScript into letting us access the private members of the parent class.
+  private withPrivateMembers(): TextWithPrivateMembers {
+    return (this as unknown) as TextWithPrivateMembers;
+  }
+
   ///////////
   ///////////
 
@@ -427,10 +432,6 @@ export default class MultiStyleText extends PIXI.Text {
     });
 
     return maxDistance + maxBlur;
-  }
-
-  private withPrivateMembers(): TextWithPrivateMembers {
-    return (this as unknown) as TextWithPrivateMembers;
   }
 
   public updateText(): void {
