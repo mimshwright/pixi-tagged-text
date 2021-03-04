@@ -265,6 +265,278 @@ export default class MultiStyleText extends PIXI.Text {
 
   /////
 
+  public updateText(): void {
+    if (this.getDirty() === false) {
+      return;
+    }
+
+    // prep
+    // Calculate word wrap
+    // Calculate text style data for each line
+    // Measure each line
+    // Calculate drawing data for each line
+    // Draw the component (4 passes)
+    // Update the texture
+
+    // prep
+    this.resetHitboxes();
+
+    this.texture.baseTexture.resolution = this.resolution;
+    const textStyles = this.textStyles;
+
+    // Calculate word wrap
+    const wrappedText = this.calculateWordWrap(this.text);
+
+    // Calculate text style data for each line
+    const textDataLines = this.parseTags(wrappedText);
+
+    // calculate text width and height
+    const lineMeasurements = this.calculateTextLineMeasurements(
+      textDataLines,
+      textStyles
+    );
+
+    this.resizeCanvas(lineMeasurements);
+
+    // Compute the drawing data
+    const drawingData = this.calculateDrawingData(
+      textDataLines,
+      lineMeasurements
+    );
+
+    // Do the multiple drawing passes.
+    this.draw(drawingData, lineMeasurements);
+
+    this.updateTexture();
+  }
+
+  protected draw(
+    drawingData: TextDrawingData[],
+    lineMeasurements: TextLineMeasurements
+  ): void {
+    const { context, resolution, hitboxes } = this;
+    // First pass: draw the shadows only
+    drawShadows(drawingData, context, resolution);
+
+    // Second pass: draw the strokes only
+    drawStrokes(drawingData, context);
+
+    // Third pass: draw the fills only
+    drawFills(drawingData, context, this);
+
+    // Fourth pass: collect the bounding boxes and draw the debug information
+    drawDebug(
+      drawingData,
+      context,
+      hitboxes,
+      this.getRootDefaultStyle(),
+      lineMeasurements
+    );
+
+    function drawShadows(
+      drawingData: TextDrawingData[],
+      context: CanvasRenderingContext2D,
+      resolution: number
+    ) {
+      context.save();
+
+      drawingData.forEach(({ style, text, x, y }) => {
+        if (!style.dropShadow) {
+          return; // This text doesn't have a shadow
+        }
+
+        context.font = getFontString(style);
+
+        let dropFillStyle = style.dropShadowColor || 0;
+        if (typeof dropFillStyle === "number") {
+          dropFillStyle = PIXI.utils.hex2string(dropFillStyle);
+        }
+        const blur = style.dropShadowBlur || 0;
+        const angle = style.dropShadowAngle || 0;
+        const distance = style.dropShadowDistance || 0;
+        context.shadowColor = dropFillStyle;
+        context.shadowBlur = blur;
+        context.shadowOffsetX = Math.cos(angle) * distance * resolution;
+        context.shadowOffsetY = Math.sin(angle) * distance * resolution;
+
+        context.fillText(text, x, y);
+      });
+
+      context.restore();
+    }
+
+    function drawStrokes(
+      drawingData: TextDrawingData[],
+      context: CanvasRenderingContext2D
+    ) {
+      drawingData.forEach(({ style, text, x, y }) => {
+        if (style.stroke === undefined || !style.strokeThickness) {
+          return; // Skip this step if we have no stroke
+        }
+
+        context.font = getFontString(style);
+
+        let strokeStyle = style.stroke;
+        if (typeof strokeStyle === "number") {
+          strokeStyle = PIXI.utils.hex2string(strokeStyle);
+        }
+
+        context.strokeStyle = strokeStyle;
+        context.lineWidth = style.strokeThickness;
+
+        context.strokeText(text, x, y);
+      });
+    }
+
+    function drawFills(
+      drawingData: TextDrawingData[],
+      context: CanvasRenderingContext2D,
+      self: MultiStyleText
+    ) {
+      drawingData.forEach(({ style, text, x, y }) => {
+        if (style.fill === undefined) {
+          return; // Skip this step if we have no fill
+        }
+
+        context.font = getFontString(style);
+
+        // set canvas text styles
+        let fillStyle = style.fill;
+        if (typeof fillStyle === "number") {
+          fillStyle = PIXI.utils.hex2string(fillStyle);
+        } else if (Array.isArray(fillStyle)) {
+          for (let i = 0; i < fillStyle.length; i++) {
+            const fill = fillStyle[i];
+            if (typeof fill === "number") {
+              fillStyle[i] = PIXI.utils.hex2string(fill);
+            }
+          }
+        }
+        context.fillStyle = self.generateFillStyle(new PIXI.TextStyle(style), [
+          text,
+        ]) as string | CanvasGradient;
+        // Typecast required for proper typechecking
+
+        context.fillText(text, x, y);
+      });
+    }
+
+    function drawDebug(
+      drawingData: TextDrawingData[],
+      context: CanvasRenderingContext2D,
+      hitboxes: HitboxData[],
+      defaultRootStyle: PIXI.TextStyle,
+      { dropShadowPadding, width, height }: TextLineMeasurements
+    ) {
+      drawingData.forEach(({ style, x, y, width, ascent, descent, tag }) => {
+        const offset = -defaultRootStyle.padding - dropShadowPadding;
+
+        hitboxes.push({
+          tag,
+          hitbox: new PIXI.Rectangle(
+            x + offset,
+            y - ascent + offset,
+            width,
+            ascent + descent
+          ),
+        });
+
+        const debugSpan =
+          style.debug === undefined
+            ? MultiStyleText.debugOptions.spans.enabled
+            : style.debug;
+
+        if (debugSpan) {
+          context.lineWidth = 1;
+
+          if (MultiStyleText.debugOptions.spans.bounding) {
+            context.fillStyle = MultiStyleText.debugOptions.spans.bounding;
+            context.strokeStyle = MultiStyleText.debugOptions.spans.bounding;
+            context.beginPath();
+            context.rect(x, y - ascent, width, ascent + descent);
+            context.fill();
+            context.stroke();
+            context.stroke(); // yes, twice
+          }
+
+          if (MultiStyleText.debugOptions.spans.baseline) {
+            context.strokeStyle = MultiStyleText.debugOptions.spans.baseline;
+            context.beginPath();
+            context.moveTo(x, y);
+            context.lineTo(x + width, y);
+            context.closePath();
+            context.stroke();
+          }
+
+          if (MultiStyleText.debugOptions.spans.top) {
+            context.strokeStyle = MultiStyleText.debugOptions.spans.top;
+            context.beginPath();
+            context.moveTo(x, y - ascent);
+            context.lineTo(x + width, y - ascent);
+            context.closePath();
+            context.stroke();
+          }
+
+          if (MultiStyleText.debugOptions.spans.bottom) {
+            context.strokeStyle = MultiStyleText.debugOptions.spans.bottom;
+            context.beginPath();
+            context.moveTo(x, y + descent);
+            context.lineTo(x + width, y + descent);
+            context.closePath();
+            context.stroke();
+          }
+
+          if (MultiStyleText.debugOptions.spans.text) {
+            context.fillStyle = DEBUG_TEXT_COLOR;
+            context.strokeStyle = DEBUG_STROKE_COLOR;
+            context.lineWidth = DEBUG_LINE_WIDTH;
+            context.font = DEBUG_FONT;
+            context.strokeText(tag.name, x, y - ascent + 8);
+            context.fillText(tag.name, x, y - ascent + 8);
+            context.strokeText(
+              `${width.toFixed(2)}x${(ascent + descent).toFixed(2)}`,
+              x,
+              y - ascent + 16
+            );
+            context.fillText(
+              `${width.toFixed(2)}x${(ascent + descent).toFixed(2)}`,
+              x,
+              y - ascent + 16
+            );
+          }
+        }
+      });
+
+      if (MultiStyleText.debugOptions.objects.enabled) {
+        if (MultiStyleText.debugOptions.objects.bounding) {
+          context.fillStyle = MultiStyleText.debugOptions.objects.bounding;
+          context.beginPath();
+          context.rect(0, 0, width, height);
+          context.fill();
+        }
+
+        if (MultiStyleText.debugOptions.objects.text) {
+          context.fillStyle = DEBUG_TEXT_COLOR;
+          context.strokeStyle = DEBUG_STROKE_COLOR;
+          context.lineWidth = DEBUG_LINE_WIDTH;
+          context.font = DEBUG_FONT;
+          context.strokeText(
+            `${width.toFixed(2)}x${height.toFixed(2)}`,
+            0,
+            8,
+            width
+          );
+          context.fillText(
+            `${width.toFixed(2)}x${height.toFixed(2)}`,
+            0,
+            8,
+            width
+          );
+        }
+      }
+    }
+  }
+
   private getTagRegex(captureName: boolean, captureMatch: boolean): RegExp {
     let tagAlternation = Object.keys(this.textStyles).join("|");
     const { tagStyle } = this.defaultTextStyle;
@@ -291,7 +563,7 @@ export default class MultiStyleText extends PIXI.Text {
     return new RegExp(pattern, "g");
   }
 
-  private getTextDataPerLine(str: string) {
+  private parseTags(str: string) {
     const stringLines = splitIntoLines(str);
     const lines: TextData[][] = [];
     const re = this.getTagRegex(true, false);
@@ -452,7 +724,7 @@ export default class MultiStyleText extends PIXI.Text {
     }
   }
 
-  private getDropShadowPadding(): number {
+  private calculateDropShadowPadding(): number {
     let maxDistance = 0;
     let maxBlur = 0;
 
@@ -463,552 +735,6 @@ export default class MultiStyleText extends PIXI.Text {
     });
 
     return maxDistance + maxBlur;
-  }
-
-  public updateText(): void {
-    if (this.getDirty() === false) {
-      return;
-    }
-
-    // prep
-    // Calculate word wrap
-    // Calculate text style data for each line
-    // Measure each line
-    // Calculate drawing data for each line
-    // Draw the component (4 passes)
-    // Update the texture
-
-    // prep
-    this.resetHitboxes();
-
-    this.texture.baseTexture.resolution = this.resolution;
-    const textStyles = this.textStyles;
-
-    // Calculate word wrap
-    const wrappedText = this.calculateWordWrap(this.text);
-
-    // Calculate text style data for each line
-    const textDataLines = this.getTextDataPerLine(wrappedText);
-
-    // transform styles in array
-    const stylesArray = Object.values(textStyles);
-
-    // calculate text width and height
-    const lineMeasurements = measureLines(
-      textDataLines,
-      textStyles,
-      this.context,
-      this.getDropShadowPadding()
-    );
-
-    resizeCanvas(this.canvas, this.context, lineMeasurements, this.resolution);
-
-    // Compute the drawing data
-    const drawingData = computeDrawingData(
-      textDataLines,
-      this.getRootDefaultStyle(),
-      this.context,
-      lineMeasurements
-    );
-
-    // Do the multiple drawing passes.
-    draw(drawingData, lineMeasurements, this);
-
-    this.updateTexture();
-
-    // Internal Functions for updateText();
-
-    function measureLines(
-      textDataLines: TextData[][],
-      textStyles: TextStyleSet,
-      context: CanvasRenderingContext2D,
-      dropShadowPadding: number
-    ): TextLineMeasurements {
-      const lineWidths: number[] = [];
-      const lineYMins: number[] = [];
-      const lineYMaxs: number[] = [];
-      let maxLineWidth = 0;
-      const lineSpacing = textStyles["default"].lineSpacing;
-
-      for (let lineIndex = 0; lineIndex < textDataLines.length; lineIndex++) {
-        const line = textDataLines[lineIndex];
-
-        let lineWidth = 0;
-        let lineYMin = 0;
-        let lineYMax = 0;
-
-        for (
-          let textDataIndex = 0;
-          textDataIndex < line.length;
-          textDataIndex++
-        ) {
-          const textData = line[textDataIndex];
-          const sty = textData.style;
-          const ls = sty.letterSpacing || 0;
-
-          context.font = getFontString(sty);
-
-          // save the width
-          textData.width = measureTextWidth(context, textData.text);
-
-          if (textData.text.length !== 0) {
-            textData.width += (textData.text.length - 1) * ls;
-
-            if (textDataIndex > 0) {
-              lineWidth += ls / 2; // spacing before first character
-            }
-
-            if (textDataIndex < textDataLines[lineIndex].length - 1) {
-              lineWidth += ls / 2; // spacing after last character
-            }
-          }
-
-          lineWidth += textData.width;
-
-          // save the font properties
-          textData.fontProperties = measureFont(context);
-          const { ascent, descent } = textData.fontProperties;
-
-          // save the height
-          textData.height = textData.fontProperties.fontSize;
-
-          if (typeof sty.valign === "number") {
-            lineYMin = Math.min(lineYMin, sty.valign - descent);
-            lineYMax = Math.max(lineYMax, sty.valign + ascent);
-          } else {
-            lineYMin = Math.min(lineYMin, -descent);
-            lineYMax = Math.max(lineYMax, ascent);
-          }
-        } // end text data loop
-
-        lineWidths[lineIndex] = lineWidth;
-        lineYMins[lineIndex] = lineYMin;
-        lineYMaxs[lineIndex] = lineYMax;
-
-        if (lineIndex > 0 && lineSpacing) {
-          lineYMaxs[lineIndex] += lineSpacing;
-        }
-
-        maxLineWidth = Math.max(maxLineWidth, lineWidth);
-      } // end line loop
-
-      const totalHeight =
-        lineYMaxs.reduce((prev, cur) => prev + cur, 0) -
-        lineYMins.reduce((prev, cur) => prev + cur, 0);
-
-      const maxStrokeThickness = stylesArray.reduce(
-        (prev, cur) => Math.max(prev, cur.strokeThickness || 0),
-        0
-      );
-
-      const basePositionY = dropShadowPadding + maxStrokeThickness;
-
-      // define the right width and height
-      const width =
-        maxLineWidth + 2 * maxStrokeThickness + 2 * dropShadowPadding;
-      const height =
-        totalHeight + 2 * maxStrokeThickness + 2 * dropShadowPadding;
-
-      return {
-        lineWidths,
-        maxLineWidth,
-        lineYMaxs,
-        lineYMins,
-        totalHeight,
-        maxStrokeThickness,
-        dropShadowPadding,
-        basePositionY,
-        width,
-        height,
-      };
-    }
-
-    function resizeCanvas(
-      canvas: HTMLCanvasElement,
-      context: CanvasRenderingContext2D,
-      lineMeasurements: TextLineMeasurements,
-      resolution: number
-    ) {
-      const { width, height } = lineMeasurements;
-
-      canvas.width = width * resolution;
-      canvas.height = height * resolution;
-
-      context.scale(resolution, resolution);
-
-      context.textBaseline = "alphabetic";
-      context.lineJoin = "round";
-    }
-
-    function computeDrawingData(
-      textDataLines: TextData[][],
-      rootDefaultStyle: PIXI.TextStyle,
-      context: CanvasRenderingContext2D,
-      {
-        maxLineWidth,
-        lineWidths,
-        lineYMaxs,
-        lineYMins,
-        maxStrokeThickness,
-        dropShadowPadding,
-        basePositionY,
-      }: TextLineMeasurements
-    ) {
-      const drawingData: TextDrawingData[] = [];
-
-      for (let lineIndex = 0; lineIndex < textDataLines.length; lineIndex++) {
-        const line = textDataLines[lineIndex];
-        let linePositionX: number;
-
-        switch (rootDefaultStyle.align) {
-          case "center":
-            linePositionX =
-              dropShadowPadding +
-              maxStrokeThickness +
-              (maxLineWidth - lineWidths[lineIndex]) / 2;
-            break;
-          case "right":
-            linePositionX =
-              dropShadowPadding +
-              maxStrokeThickness +
-              maxLineWidth -
-              lineWidths[lineIndex];
-            break;
-          case "left":
-          default:
-            linePositionX = dropShadowPadding + maxStrokeThickness;
-            break;
-        }
-
-        for (
-          let textDataIndex = 0;
-          textDataIndex < line.length;
-          textDataIndex++
-        ) {
-          const textData = line[textDataIndex];
-          const { style, text, fontProperties, width, tag } = textData;
-          const ls = style.letterSpacing || 0;
-
-          let linePositionY = basePositionY + fontProperties.ascent;
-
-          switch (style.valign) {
-            case "top":
-              // no need to do anything
-              break;
-
-            case "baseline":
-              linePositionY += lineYMaxs[lineIndex] - fontProperties.ascent;
-              break;
-
-            case "middle":
-              linePositionY +=
-                (lineYMaxs[lineIndex] -
-                  lineYMins[lineIndex] -
-                  fontProperties.ascent -
-                  fontProperties.descent) /
-                2;
-              break;
-
-            case "bottom":
-              linePositionY +=
-                lineYMaxs[lineIndex] -
-                lineYMins[lineIndex] -
-                fontProperties.ascent -
-                fontProperties.descent;
-              break;
-
-            default:
-              // A number - offset from baseline, positive is higher
-              linePositionY +=
-                lineYMaxs[lineIndex] -
-                fontProperties.ascent -
-                (style.valign || 0);
-              break;
-          }
-
-          if (ls === 0) {
-            drawingData.push({
-              text,
-              style,
-              x: linePositionX,
-              y: linePositionY,
-              width,
-              ascent: fontProperties.ascent,
-              descent: fontProperties.descent,
-              tag,
-            });
-
-            linePositionX += textData.width;
-          } else {
-            context.font = getFontString(textData.style);
-
-            for (let charIndex = 0; charIndex < text.length; charIndex++) {
-              if (charIndex > 0 || textDataIndex > 0) {
-                linePositionX += ls / 2;
-              }
-
-              const charWidth = measureTextWidth(
-                context,
-                text.charAt(charIndex)
-              );
-
-              drawingData.push({
-                text: text.charAt(charIndex),
-                style,
-                x: linePositionX,
-                y: linePositionY,
-                width: charWidth,
-                ascent: fontProperties.ascent,
-                descent: fontProperties.descent,
-                tag,
-              });
-
-              linePositionX += charWidth;
-
-              if (
-                charIndex < text.length - 1 ||
-                textDataIndex < line.length - 1
-              ) {
-                linePositionX += ls / 2;
-              }
-            }
-          }
-        } // end computeDrawingData textData loop
-
-        basePositionY += lineYMaxs[lineIndex] - lineYMins[lineIndex];
-      } // end computeDrawingData line loop
-
-      return drawingData;
-    }
-
-    function draw(
-      drawingData: TextDrawingData[],
-      lineMeasurements: TextLineMeasurements,
-      self: MultiStyleText
-    ) {
-      const { context, resolution, hitboxes } = self;
-      // First pass: draw the shadows only
-      drawShadows(drawingData, context, resolution);
-
-      // Second pass: draw the strokes only
-      drawStrokes(drawingData, context);
-
-      // Third pass: draw the fills only
-      drawFills(drawingData, context, self);
-
-      // Fourth pass: collect the bounding boxes and draw the debug information
-      drawDebug(
-        drawingData,
-        context,
-        hitboxes,
-        self.getRootDefaultStyle(),
-        lineMeasurements
-      );
-
-      function drawShadows(
-        drawingData: TextDrawingData[],
-        context: CanvasRenderingContext2D,
-        resolution: number
-      ) {
-        context.save();
-
-        drawingData.forEach(({ style, text, x, y }) => {
-          if (!style.dropShadow) {
-            return; // This text doesn't have a shadow
-          }
-
-          context.font = getFontString(style);
-
-          let dropFillStyle = style.dropShadowColor || 0;
-          if (typeof dropFillStyle === "number") {
-            dropFillStyle = PIXI.utils.hex2string(dropFillStyle);
-          }
-          const blur = style.dropShadowBlur || 0;
-          const angle = style.dropShadowAngle || 0;
-          const distance = style.dropShadowDistance || 0;
-          context.shadowColor = dropFillStyle;
-          context.shadowBlur = blur;
-          context.shadowOffsetX = Math.cos(angle) * distance * resolution;
-          context.shadowOffsetY = Math.sin(angle) * distance * resolution;
-
-          context.fillText(text, x, y);
-        });
-
-        context.restore();
-      }
-
-      function drawStrokes(
-        drawingData: TextDrawingData[],
-        context: CanvasRenderingContext2D
-      ) {
-        drawingData.forEach(({ style, text, x, y }) => {
-          if (style.stroke === undefined || !style.strokeThickness) {
-            return; // Skip this step if we have no stroke
-          }
-
-          context.font = getFontString(style);
-
-          let strokeStyle = style.stroke;
-          if (typeof strokeStyle === "number") {
-            strokeStyle = PIXI.utils.hex2string(strokeStyle);
-          }
-
-          context.strokeStyle = strokeStyle;
-          context.lineWidth = style.strokeThickness;
-
-          context.strokeText(text, x, y);
-        });
-      }
-
-      function drawFills(
-        drawingData: TextDrawingData[],
-        context: CanvasRenderingContext2D,
-        self: MultiStyleText
-      ) {
-        drawingData.forEach(({ style, text, x, y }) => {
-          if (style.fill === undefined) {
-            return; // Skip this step if we have no fill
-          }
-
-          context.font = getFontString(style);
-
-          // set canvas text styles
-          let fillStyle = style.fill;
-          if (typeof fillStyle === "number") {
-            fillStyle = PIXI.utils.hex2string(fillStyle);
-          } else if (Array.isArray(fillStyle)) {
-            for (let i = 0; i < fillStyle.length; i++) {
-              const fill = fillStyle[i];
-              if (typeof fill === "number") {
-                fillStyle[i] = PIXI.utils.hex2string(fill);
-              }
-            }
-          }
-          context.fillStyle = self.generateFillStyle(
-            new PIXI.TextStyle(style),
-            [text]
-          ) as string | CanvasGradient;
-          // Typecast required for proper typechecking
-
-          context.fillText(text, x, y);
-        });
-      }
-
-      function drawDebug(
-        drawingData: TextDrawingData[],
-        context: CanvasRenderingContext2D,
-        hitboxes: HitboxData[],
-        defaultRootStyle: PIXI.TextStyle,
-        { dropShadowPadding, width, height }: TextLineMeasurements
-      ) {
-        drawingData.forEach(({ style, x, y, width, ascent, descent, tag }) => {
-          const offset = -defaultRootStyle.padding - dropShadowPadding;
-
-          hitboxes.push({
-            tag,
-            hitbox: new PIXI.Rectangle(
-              x + offset,
-              y - ascent + offset,
-              width,
-              ascent + descent
-            ),
-          });
-
-          const debugSpan =
-            style.debug === undefined
-              ? MultiStyleText.debugOptions.spans.enabled
-              : style.debug;
-
-          if (debugSpan) {
-            context.lineWidth = 1;
-
-            if (MultiStyleText.debugOptions.spans.bounding) {
-              context.fillStyle = MultiStyleText.debugOptions.spans.bounding;
-              context.strokeStyle = MultiStyleText.debugOptions.spans.bounding;
-              context.beginPath();
-              context.rect(x, y - ascent, width, ascent + descent);
-              context.fill();
-              context.stroke();
-              context.stroke(); // yes, twice
-            }
-
-            if (MultiStyleText.debugOptions.spans.baseline) {
-              context.strokeStyle = MultiStyleText.debugOptions.spans.baseline;
-              context.beginPath();
-              context.moveTo(x, y);
-              context.lineTo(x + width, y);
-              context.closePath();
-              context.stroke();
-            }
-
-            if (MultiStyleText.debugOptions.spans.top) {
-              context.strokeStyle = MultiStyleText.debugOptions.spans.top;
-              context.beginPath();
-              context.moveTo(x, y - ascent);
-              context.lineTo(x + width, y - ascent);
-              context.closePath();
-              context.stroke();
-            }
-
-            if (MultiStyleText.debugOptions.spans.bottom) {
-              context.strokeStyle = MultiStyleText.debugOptions.spans.bottom;
-              context.beginPath();
-              context.moveTo(x, y + descent);
-              context.lineTo(x + width, y + descent);
-              context.closePath();
-              context.stroke();
-            }
-
-            if (MultiStyleText.debugOptions.spans.text) {
-              context.fillStyle = DEBUG_TEXT_COLOR;
-              context.strokeStyle = DEBUG_STROKE_COLOR;
-              context.lineWidth = DEBUG_LINE_WIDTH;
-              context.font = DEBUG_FONT;
-              context.strokeText(tag.name, x, y - ascent + 8);
-              context.fillText(tag.name, x, y - ascent + 8);
-              context.strokeText(
-                `${width.toFixed(2)}x${(ascent + descent).toFixed(2)}`,
-                x,
-                y - ascent + 16
-              );
-              context.fillText(
-                `${width.toFixed(2)}x${(ascent + descent).toFixed(2)}`,
-                x,
-                y - ascent + 16
-              );
-            }
-          }
-        });
-
-        if (MultiStyleText.debugOptions.objects.enabled) {
-          if (MultiStyleText.debugOptions.objects.bounding) {
-            context.fillStyle = MultiStyleText.debugOptions.objects.bounding;
-            context.beginPath();
-            context.rect(0, 0, width, height);
-            context.fill();
-          }
-
-          if (MultiStyleText.debugOptions.objects.text) {
-            context.fillStyle = DEBUG_TEXT_COLOR;
-            context.strokeStyle = DEBUG_STROKE_COLOR;
-            context.lineWidth = DEBUG_LINE_WIDTH;
-            context.font = DEBUG_FONT;
-            context.strokeText(
-              `${width.toFixed(2)}x${height.toFixed(2)}`,
-              0,
-              8,
-              width
-            );
-            context.fillText(
-              `${width.toFixed(2)}x${height.toFixed(2)}`,
-              0,
-              8,
-              width
-            );
-          }
-        }
-      }
-    }
   }
 
   protected calculateWordWrap(text: string): string {
@@ -1127,10 +853,270 @@ export default class MultiStyleText extends PIXI.Text {
     return wrappedText;
   }
 
+  protected calculateTextLineMeasurements(
+    textDataLines: TextData[][],
+    textStyles: TextStyleSet
+  ): TextLineMeasurements {
+    const { context } = this;
+    const dropShadowPadding = this.calculateDropShadowPadding();
+    // transform styles in array
+    const stylesArray = Object.values(textStyles);
+
+    const lineWidths: number[] = [];
+    const lineYMins: number[] = [];
+    const lineYMaxs: number[] = [];
+    let maxLineWidth = 0;
+    const lineSpacing = textStyles["default"].lineSpacing;
+
+    for (let lineIndex = 0; lineIndex < textDataLines.length; lineIndex++) {
+      const line = textDataLines[lineIndex];
+
+      let lineWidth = 0;
+      let lineYMin = 0;
+      let lineYMax = 0;
+
+      for (
+        let textDataIndex = 0;
+        textDataIndex < line.length;
+        textDataIndex++
+      ) {
+        const textData = line[textDataIndex];
+        const sty = textData.style;
+        const ls = sty.letterSpacing || 0;
+
+        context.font = getFontString(sty);
+
+        // save the width
+        textData.width = measureTextWidth(context, textData.text);
+
+        if (textData.text.length !== 0) {
+          textData.width += (textData.text.length - 1) * ls;
+
+          if (textDataIndex > 0) {
+            lineWidth += ls / 2; // spacing before first character
+          }
+
+          if (textDataIndex < textDataLines[lineIndex].length - 1) {
+            lineWidth += ls / 2; // spacing after last character
+          }
+        }
+
+        lineWidth += textData.width;
+
+        // save the font properties
+        textData.fontProperties = measureFont(context);
+        const { ascent, descent } = textData.fontProperties;
+
+        // save the height
+        textData.height = textData.fontProperties.fontSize;
+
+        if (typeof sty.valign === "number") {
+          lineYMin = Math.min(lineYMin, sty.valign - descent);
+          lineYMax = Math.max(lineYMax, sty.valign + ascent);
+        } else {
+          lineYMin = Math.min(lineYMin, -descent);
+          lineYMax = Math.max(lineYMax, ascent);
+        }
+      } // end text data loop
+
+      lineWidths[lineIndex] = lineWidth;
+      lineYMins[lineIndex] = lineYMin;
+      lineYMaxs[lineIndex] = lineYMax;
+
+      if (lineIndex > 0 && lineSpacing) {
+        lineYMaxs[lineIndex] += lineSpacing;
+      }
+
+      maxLineWidth = Math.max(maxLineWidth, lineWidth);
+    } // end line loop
+
+    const totalHeight =
+      lineYMaxs.reduce((prev, cur) => prev + cur, 0) -
+      lineYMins.reduce((prev, cur) => prev + cur, 0);
+
+    const maxStrokeThickness = stylesArray.reduce(
+      (prev, cur) => Math.max(prev, cur.strokeThickness || 0),
+      0
+    );
+
+    const basePositionY = dropShadowPadding + maxStrokeThickness;
+
+    // define the right width and height
+    const width = maxLineWidth + 2 * maxStrokeThickness + 2 * dropShadowPadding;
+    const height = totalHeight + 2 * maxStrokeThickness + 2 * dropShadowPadding;
+
+    return {
+      lineWidths,
+      maxLineWidth,
+      lineYMaxs,
+      lineYMins,
+      totalHeight,
+      maxStrokeThickness,
+      dropShadowPadding,
+      basePositionY,
+      width,
+      height,
+    };
+  }
+
+  protected calculateDrawingData(
+    textDataLines: TextData[][],
+    lineMeasurements: TextLineMeasurements
+  ): TextDrawingData[] {
+    const { context } = this;
+    const rootDefaultStyle = this.getRootDefaultStyle();
+    const {
+      maxLineWidth,
+      lineWidths,
+      lineYMaxs,
+      lineYMins,
+      maxStrokeThickness,
+      dropShadowPadding,
+    } = lineMeasurements;
+
+    const drawingData: TextDrawingData[] = [];
+
+    for (let lineIndex = 0; lineIndex < textDataLines.length; lineIndex++) {
+      const line = textDataLines[lineIndex];
+      let linePositionX: number;
+
+      switch (rootDefaultStyle.align) {
+        case "center":
+          linePositionX =
+            dropShadowPadding +
+            maxStrokeThickness +
+            (maxLineWidth - lineWidths[lineIndex]) / 2;
+          break;
+        case "right":
+          linePositionX =
+            dropShadowPadding +
+            maxStrokeThickness +
+            maxLineWidth -
+            lineWidths[lineIndex];
+          break;
+        case "left":
+        default:
+          linePositionX = dropShadowPadding + maxStrokeThickness;
+          break;
+      }
+
+      for (
+        let textDataIndex = 0;
+        textDataIndex < line.length;
+        textDataIndex++
+      ) {
+        const textData = line[textDataIndex];
+        const { style, text, fontProperties, width, tag } = textData;
+        const ls = style.letterSpacing || 0;
+
+        let linePositionY =
+          lineMeasurements.basePositionY + fontProperties.ascent;
+
+        switch (style.valign) {
+          case "top":
+            // no need to do anything
+            break;
+
+          case "baseline":
+            linePositionY += lineYMaxs[lineIndex] - fontProperties.ascent;
+            break;
+
+          case "middle":
+            linePositionY +=
+              (lineYMaxs[lineIndex] -
+                lineYMins[lineIndex] -
+                fontProperties.ascent -
+                fontProperties.descent) /
+              2;
+            break;
+
+          case "bottom":
+            linePositionY +=
+              lineYMaxs[lineIndex] -
+              lineYMins[lineIndex] -
+              fontProperties.ascent -
+              fontProperties.descent;
+            break;
+
+          default:
+            // A number - offset from baseline, positive is higher
+            linePositionY +=
+              lineYMaxs[lineIndex] -
+              fontProperties.ascent -
+              (style.valign || 0);
+            break;
+        }
+
+        if (ls === 0) {
+          drawingData.push({
+            text,
+            style,
+            x: linePositionX,
+            y: linePositionY,
+            width,
+            ascent: fontProperties.ascent,
+            descent: fontProperties.descent,
+            tag,
+          });
+
+          linePositionX += textData.width;
+        } else {
+          context.font = getFontString(textData.style);
+
+          for (let charIndex = 0; charIndex < text.length; charIndex++) {
+            if (charIndex > 0 || textDataIndex > 0) {
+              linePositionX += ls / 2;
+            }
+
+            const charWidth = measureTextWidth(context, text.charAt(charIndex));
+
+            drawingData.push({
+              text: text.charAt(charIndex),
+              style,
+              x: linePositionX,
+              y: linePositionY,
+              width: charWidth,
+              ascent: fontProperties.ascent,
+              descent: fontProperties.descent,
+              tag,
+            });
+
+            linePositionX += charWidth;
+
+            if (
+              charIndex < text.length - 1 ||
+              textDataIndex < line.length - 1
+            ) {
+              linePositionX += ls / 2;
+            }
+          }
+        }
+      } // end computeDrawingData textData loop
+
+      lineMeasurements.basePositionY +=
+        lineYMaxs[lineIndex] - lineYMins[lineIndex];
+    } // end computeDrawingData line loop
+
+    return drawingData;
+  }
+
+  protected resizeCanvas(lineMeasurements: TextLineMeasurements): void {
+    const { canvas, context, resolution } = this;
+    const { width, height } = lineMeasurements;
+
+    canvas.width = width * resolution;
+    canvas.height = height * resolution;
+
+    context.scale(resolution, resolution);
+
+    context.textBaseline = "alphabetic";
+    context.lineJoin = "round";
+  }
+
   protected updateTexture(): void {
     const texture = this.getTexture();
     const PADDING = this.getRootDefaultStyle().padding;
-    const DROP_SHADOW_PADDING = this.getDropShadowPadding();
+    const DROP_SHADOW_PADDING = this.calculateDropShadowPadding();
     const { canvas, resolution: RESOLUTION } = this;
     const { width: CANVAS_WIDTH, height: CANVAS_HEIGHT } = canvas;
     const TRIM = PADDING + DROP_SHADOW_PADDING;
