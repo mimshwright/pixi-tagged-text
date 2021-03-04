@@ -21,8 +21,8 @@ import {
   TextWithPrivateMembers,
 } from "./types";
 
-import { tokenize } from "./textUtils";
-import { getFontString } from "./pixiUtils";
+import { splitIntoLines, tokenize } from "./textUtils";
+import { getFontString, measureTextWidth } from "./pixiUtils";
 
 ("use strict");
 const majorVersion = parseInt(PIXI.VERSION.split(".")[0], 10);
@@ -432,7 +432,7 @@ export default class MultiStyleText extends PIXI.Text {
     }
 
     // split text into lines
-    const lines = outputText.split(/(?:\r\n|\r|\n)/);
+    const lines = splitIntoLines(outputText);
 
     // get the text data with specific styles
     const outputTextData = this._getTextDataPerLine(lines);
@@ -456,9 +456,10 @@ export default class MultiStyleText extends PIXI.Text {
         this.context.font = getFontString(sty);
 
         // save the width
-        outputTextData[i][j].width = this.context.measureText(
+        outputTextData[i][j].width = measureTextWidth(
+          this.context,
           outputTextData[i][j].text
-        ).width;
+        );
 
         if (outputTextData[i][j].text.length !== 0) {
           outputTextData[i][j].width +=
@@ -631,7 +632,7 @@ export default class MultiStyleText extends PIXI.Text {
               linePositionX += ls / 2;
             }
 
-            const charWidth = this.context.measureText(text.charAt(k)).width;
+            const charWidth = measureTextWidth(this.context, text.charAt(k));
 
             drawingData.push({
               text: text.charAt(k),
@@ -884,10 +885,10 @@ export default class MultiStyleText extends PIXI.Text {
             if (letterSpacing > 0) {
               const chars = words[k].split("");
               for (let c = 0; c < chars.length; c++) {
-                cw += this.context.measureText(chars[c]).width + letterSpacing;
+                cw += measureTextWidth(this.context, chars[c]) + letterSpacing;
               }
             } else {
-              cw = this.context.measureText(words[k]).width;
+              cw = measureTextWidth(this.context, words[k]);
             }
             const wordWidth = cw;
 
@@ -897,7 +898,7 @@ export default class MultiStyleText extends PIXI.Text {
 
               for (let c = 0; c < characters.length; c++) {
                 const characterWidth =
-                  this.context.measureText(characters[c]).width + letterSpacing;
+                  measureTextWidth(this.context, characters[c]) + letterSpacing;
 
                 if (characterWidth > spaceLeft) {
                   result += `\n${characters[c]}`;
