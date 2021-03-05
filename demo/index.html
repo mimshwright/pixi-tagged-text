@@ -53,7 +53,8 @@
           const [renderer, stage] = createPixiRendererAndStage(id);
 
           children.forEach((child) => {
-            child.x = 300 - child.width / 2;
+            // child.x = 300 - child.width / 2;
+            child.x = 30;
             child.y = 30;
             stage.addChild(child);
           });
@@ -564,7 +565,7 @@ requestAnimationFrame(animate);</code></pre>
                 Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
                 5;
               animated[0].setStyles(funStyles);
-              animated[1].setStyles(funStyles);
+              animated[1].styles = funStyles;
             }
 
             requestAnimationFrame(animate);

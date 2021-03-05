@@ -1,6 +1,11 @@
 import * as PIXI from "pixi.js";
 import interactionEvents from "./interactionEvents";
-import { MstInteractionEvent, TextStyleSet, HitboxData } from "./types";
+import {
+  MstInteractionEvent,
+  TextStyleSet,
+  HitboxData,
+  TextStyleExtended,
+} from "./types";
 
 export default class RichText extends PIXI.Sprite {
   private _text = "";
@@ -8,22 +13,68 @@ export default class RichText extends PIXI.Sprite {
     return this._text;
   }
   public set text(text: string) {
+    const changed = this._text !== text;
     this._text = text;
+
+    if (changed) {
+      this.update();
+    }
   }
 
-  public setStyles(styles: TextStyleSet): void {
-    //noop
-    styles;
+  private _tagStyles: TextStyleSet = {};
+  public get tagStyles(): TextStyleSet {
+    return this._tagStyles;
+  }
+  public set tagStyles(styles: TextStyleSet) {
+    this._tagStyles = styles;
+  }
+  public getStyleForTag(tag: string): TextStyleExtended {
+    return this.tagStyles[tag];
+  }
+  public setStyleForTag(tag: string, styles: TextStyleExtended): boolean {
+    if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
+      return false;
+    }
+
+    this.tagStyles[tag] = styles;
+    this.update();
+    return true;
+  }
+  public removeStylesForTag(tag: string): boolean {
+    if (tag in this.tagStyles) {
+      delete this.tagStyles[tag];
+      this.update();
+      return true;
+    }
+    return false;
+  }
+  public get defaultStyles(): TextStyleExtended {
+    return this.tagStyles?.default;
+  }
+  public set defaultStyles(defaultStyles: TextStyleExtended) {
+    this.setStyleForTag("default", defaultStyles);
   }
 
   private hitboxes: HitboxData[] = [];
 
-  constructor(text = "", styles: TextStyleSet = {}, texture?: PIXI.Texture) {
+  public textFields: PIXI.Text[] = [];
+
+  private _textContainer: PIXI.Container;
+  public get textContainer(): PIXI.Container {
+    return this._textContainer;
+  }
+
+  constructor(text = "", tagStyles: TextStyleSet = {}, texture?: PIXI.Texture) {
     super(texture);
+
+    this._textContainer = new PIXI.Container();
+    this.addChild(this.textContainer);
+
+    this.tagStyles = tagStyles;
 
     this.text = text;
 
-    this.setStyles(styles);
+    this.tagStyles = tagStyles;
 
     this.initEvents();
   }
@@ -53,5 +104,24 @@ export default class RichText extends PIXI.Sprite {
     function contains(hitbox: HitboxData, point: PIXI.Point): boolean {
       return hitbox.hitbox.contains(point.x, point.y);
     }
+  }
+
+  private update() {
+    const rawText = this.text;
+    this.removeTextFieldsFromTextContainer();
+
+    const firstText = new PIXI.Text(rawText, this.defaultStyles);
+    this.textFields[0] = firstText;
+
+    this.addTextFieldsToTextContainer();
+  }
+
+  private addTextFieldsToTextContainer() {
+    for (const child of this.textFields) {
+      this.textContainer.addChild(child);
+    }
+  }
+  private removeTextFieldsFromTextContainer() {
+    this.textContainer.removeChildren();
   }
 }
