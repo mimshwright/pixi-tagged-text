@@ -22,6 +22,7 @@
     <main>
       <script>
         var MultiStyleText = pixiMultistyleText.MultiStyleText;
+        var RichText = pixiMultistyleText.RichText;
 
         function appendPixiRendererToId(
           id,
@@ -48,16 +49,24 @@
           return [renderer, stage, render];
         }
 
-        function createDemo(child, id) {
+        function createDemo(children, id) {
           const [renderer, stage] = createPixiRendererAndStage(id);
 
-          child.x = 300 - child.width / 2;
-          child.y = 30;
-          stage.addChild(child);
+          children.forEach((child) => {
+            child.x = 300 - child.width / 2;
+            child.y = 30;
+            stage.addChild(child);
+          });
 
           renderer.render(stage);
 
           return [renderer, stage];
+        }
+
+        // For testing purposes, temporarily replace the code that creates
+        // text fields to create two of them to compare against each other.
+        function createComparisonText(text, styles) {
+          return [new MultiStyleText(text, styles), new RichText(text, styles)];
         }
       </script>
 
@@ -89,7 +98,7 @@
         <div class="pixi" id="basic">
           <script>
             // Basics
-            let text = new MultiStyleText(
+            let text = createComparisonText(
               "Let's make some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
               {
                 default: {
@@ -132,7 +141,7 @@
         <div class="pixi" id="bbcode">
           <script>
             // Tag Styles
-            let bbcode = new MultiStyleText(
+            let bbcode = createComparisonText(
               "Let's make some [b]bold[/b]\n [color=yellow][i]multistyle[/i][/color] [size=40]bbcode[/size] [outline=purple]tags[/outline] text for \n[spacing=10]Pixi.js![/spacing]",
               {
                 default: {
@@ -168,7 +177,7 @@
         <div class="pixi" id="nested">
           <script>
             // Nesting Tags
-            let nested = new MultiStyleText(
+            let nested = createComparisonText(
               "You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like</large></shadow></thicker></i></red></b></outline>",
               {
                 default: {
@@ -216,7 +225,7 @@
         <div class="pixi" id="valign">
           <script>
             // Vertical Alignment
-            let valign = new MultiStyleText(
+            let valign = createComparisonText(
               "You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>the</baseline> <bottom>vertical</bottom> <custom1>alignment</custom1> <custom2>of</custom2> <custom3>text</custom3>.",
               {
                 default: {
@@ -246,7 +255,7 @@
         <div class="code">
           <h2>Spacing</h2>
           <pre><code class="js">
-let lineSpacing = new MultiStyleText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
+let lineSpacing = createComparisonText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
 {
 "default": {
 fontFamily: "Arial",
@@ -267,7 +276,7 @@ stage.addChild(lineSpacing);
         <div class="pixi" id="spacing">
           <script>
             // Spacing
-            let spacing = new MultiStyleText(
+            let spacing = createComparisonText(
               "You can set line and letter spacing to give your text some drama. Note that lineSpacing can only be set on the default style.",
               {
                 default: {
@@ -304,7 +313,7 @@ stage.addChild(lineSpacing);
         <div class="pixi" id="wrapping">
           <script>
             // Wrapping and Alignment
-            let wrapping = new MultiStyleText(
+            let wrapping = createComparisonText(
               'Global word wrap and alignment properties are controlled by the "default" style, and can\'t be overridden by other styles.',
               {
                 default: {
@@ -345,7 +354,7 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
         <div class="pixi" id="wrapping2">
           <script>
             // Wrapping and Alignment II
-            let wrapping2 = new MultiStyleText(
+            let wrapping2 = createComparisonText(
               "全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。",
               {
                 default: {
@@ -394,7 +403,7 @@ let debug = new MultiStyleText(&quot;You can use &lt;code&gt;debug mode&lt;/code
         <div class="pixi" id="debug">
           <script>
             // Debug Mode
-            let debug = new MultiStyleText(
+            let debug = createComparisonText(
               "You can use <code>debug mode</code> to help you figure out what your text is doing.  You can use <blue>global, </blue><red>static</red> settings or <no-debug>override those with the <code>debug</code> style option.</no-debug>",
               {
                 default: {
@@ -455,7 +464,7 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
         <div class="pixi" id="interaction">
           <script>
             // Interaction Events
-            let interaction = new MultiStyleText(
+            let interaction = createComparisonText(
               `If you enable <link name="interaction">interaction</link>, you can get <link name="information">information</link> about which <link name="tag">tag</link> corresponded to the <link name="event">event</link>.`,
               {
                 default: {
@@ -472,14 +481,17 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
               }
             );
 
-            interaction.interactive = true;
-            interaction.on("pointerdown", (e) => {
-              if (e.targetTag !== undefined && e.targetTag.name === "link") {
-                alert(
-                  `You clicked on the link for "${e.targetTag.properties.name}"!`
-                );
-              }
-            });
+            for (const text of interaction) {
+              text.interactive = true;
+              text.on("pointerdown", (e) => {
+                if (e.targetTag !== undefined && e.targetTag.name === "link") {
+                  alert(
+                    `You clicked on the link for "${e.targetTag.properties.name}"!`
+                  );
+                }
+              });
+            }
+
             createDemo(interaction, "interaction");
           </script>
         </div>
@@ -535,7 +547,7 @@ requestAnimationFrame(animate);</code></pre>
               red: { fill: 0xff8888, stroke: 0xcc4444 },
             };
 
-            let animated = new MultiStyleText(
+            let animated = createComparisonText(
               "Now have fun making some <blue>beautiful</blue> <red>multistyle</red> text!",
               funStyles
             );
@@ -551,7 +563,8 @@ requestAnimationFrame(animate);</code></pre>
               funStyles.default.dropShadowBlur =
                 Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
                 5;
-              animated.setStyles(funStyles);
+              animated[0].setStyles(funStyles);
+              animated[1].setStyles(funStyles);
             }
 
             requestAnimationFrame(animate);

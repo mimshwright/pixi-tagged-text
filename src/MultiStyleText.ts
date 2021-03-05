@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import InteractionEvents from "./InteractionEvents";
+import interactionEvents from "./interactionEvents";
 import {
   TagBrackets,
   TagStyle,
@@ -203,7 +203,7 @@ export default class MultiStyleText extends PIXI.Text {
     const migrateEvent = (e: PIXI.InteractionEvent) =>
       this.handleInteraction(e);
 
-    InteractionEvents.forEach((event) => {
+    interactionEvents.forEach((event) => {
       this.on(event, migrateEvent);
     });
   }
