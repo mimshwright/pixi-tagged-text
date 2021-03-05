@@ -21,33 +21,43 @@
     <h1>Pixi Multistyle Text Demo</h1>
     <main>
       <script>
-              function createPixiView(id) {
-        PIXI.settings.RESOLUTION = 2;
-        let renderer = PIXI.autoDetectRenderer({
-          width: 600,
-          height: 600,
-        });
-        renderer.backgroundColor = 0x333333;
-        document.getElementById(id).appendChild(renderer.view);
+        function appendPixiRendererToId(
+          id,
+          width = 600,
+          height = 600,
+          backgroundColor = 0x333333
+        ) {
+          PIXI.settings.RESOLUTION = 2;
+          let renderer = PIXI.autoDetectRenderer({
+            width,
+            height,
+          });
+          renderer.backgroundColor = backgroundColor;
+          document.getElementById(id).appendChild(renderer.view);
 
-        return renderer;
-      }
+          return renderer;
+        }
 
-      function createTextContainer(text, id) {
-        text.x = 300 - text.width / 2;
-        text.y = 30;
+        function createPixiRendererAndStage(id) {
+          const renderer = appendPixiRendererToId(id);
+          const stage = new PIXI.Sprite();
+          const render = () => renderer.render(stage);
 
-        let stage = new PIXI.Container();
-        stage.addChild(text);
+          return [renderer, stage, render];
+        }
 
-        const pixiView = createPixiView(id);
-        pixiView.render(stage);
+        function createDemo(child, id) {
+          const [renderer, stage] = createPixiRendererAndStage(id);
 
-        return [pixiView, stage];
-      }
+          child.x = 300 - child.width / 2;
+          child.y = 30;
+          stage.addChild(child);
+
+          renderer.render(stage);
+
+          return [renderer, stage];
+        }
       </script>
-
-
 
       <div class="example">
         <div class="code">
@@ -101,7 +111,7 @@
               }
             );
 
-            createTextContainer(text, "basic");
+            createDemo(text, "basic");
           </script>
         </div>
       </div>
@@ -130,7 +140,7 @@
                 },
               }
             );
-            createTextContainer(bbcode, "bbcode");
+            createDemo(bbcode, "bbcode");
           </script>
         </div>
       </div>
@@ -173,7 +183,7 @@
                 large: { fontSize: "36px" },
               }
             );
-            createTextContainer(nested, "nested");
+            createDemo(nested, "nested");
           </script>
         </div>
       </div>
@@ -226,7 +236,7 @@
                 custom3: { fontSize: "14px", valign: 25 },
               }
             );
-            createTextContainer(valign, "valign");
+            createDemo(valign, "valign");
           </script>
         </div>
       </div>
@@ -270,7 +280,7 @@ stage.addChild(lineSpacing);
               }
             );
 
-            createTextContainer(spacing, "spacing");
+            createDemo(spacing, "spacing");
           </script>
         </div>
       </div>
@@ -305,7 +315,7 @@ stage.addChild(lineSpacing);
                 },
               }
             );
-            createTextContainer(wrapping, "wrapping");
+            createDemo(wrapping, "wrapping");
           </script>
         </div>
       </div>
@@ -349,7 +359,7 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
                 big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
               }
             );
-            createTextContainer(wrapping2, "wrapping2");
+            createDemo(wrapping2, "wrapping2");
           </script>
         </div>
       </div>
@@ -407,7 +417,7 @@ let debug = new MultiStyleText(&quot;You can use &lt;code&gt;debug mode&lt;/code
             MultiStyleText.debugOptions.spans.enabled = true;
             MultiStyleText.debugOptions.objects.enabled = true;
 
-            createTextContainer(debug, "debug");
+            createDemo(debug, "debug");
 
             MultiStyleText.debugOptions.spans.enabled = false;
             MultiStyleText.debugOptions.objects.enabled = false;
@@ -468,7 +478,7 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
                 );
               }
             });
-            createTextContainer(interaction, "interaction");
+            createDemo(interaction, "interaction");
           </script>
         </div>
       </div>
@@ -503,49 +513,47 @@ function animate() {
 }
 
 requestAnimationFrame(animate);</code></pre>
-</div>
-          <div class="pixi" id="animated">
-            <script>
-              // Have Fun
-              let funStyles = {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                  strokeThickness: 1,
-                  stroke: "#aaaaaa",
-                  dropShadow: true,
-                  dropShadowBlur: 10,
-                  dropShadowDistance: 8,
-                  dropShadowAngle: 0,
-                },
-                blue: { fill: 0x4488ff, stroke: 0x2244cc },
-                red: { fill: 0xff8888, stroke: 0xcc4444 },
-              };
+        </div>
+        <div class="pixi" id="animated">
+          <script>
+            // Have Fun
+            let funStyles = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                strokeThickness: 1,
+                stroke: "#aaaaaa",
+                dropShadow: true,
+                dropShadowBlur: 10,
+                dropShadowDistance: 8,
+                dropShadowAngle: 0,
+              },
+              blue: { fill: 0x4488ff, stroke: 0x2244cc },
+              red: { fill: 0xff8888, stroke: 0xcc4444 },
+            };
 
-              let animated = new MultiStyleText(
-                "Now have fun making some <blue>beautiful</blue> <red>multistyle</red> text!",
-                funStyles
-              );
+            let animated = new MultiStyleText(
+              "Now have fun making some <blue>beautiful</blue> <red>multistyle</red> text!",
+              funStyles
+            );
 
-              const [renderer, stage] = createTextContainer(animated, "animated");
+            const [renderer, animatedStage] = createDemo(animated, "animated");
 
-              // Animate
-              function animate() {
-                requestAnimationFrame(animate);
-                renderer.render(stage);
-
-                funStyles.default.dropShadowAngle += 0.02;
-                funStyles.default.dropShadowBlur =
-                  Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) *
-                    5 +
-                  5;
-                  animated.setStyles(funStyles);
-              }
-
+            // Animate
+            function animate() {
               requestAnimationFrame(animate);
-            </script>
-          </div>
+              renderer.render(animatedStage);
+
+              funStyles.default.dropShadowAngle += 0.02;
+              funStyles.default.dropShadowBlur =
+                Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
+                5;
+              animated.setStyles(funStyles);
+            }
+
+            requestAnimationFrame(animate);
+          </script>
         </div>
       </div>
     </main>
