@@ -214,14 +214,14 @@ export const parseTags = (
 
 const attributesToString = (attributes: AttributesList) =>
   Object.entries(attributes)
-    .map(([key, value]) => `${key}="${value}"`)
+    .map(([key, value]) => ` ${key}="${value}"`)
     .join(" ");
 
 const tagsToString = (tags: TagWithAttributes[]) =>
   tags
     .map(
       ({ tagName, attributes }) =>
-        ` <${tagName} ${attributesToString(attributes)}>`
+        ` <${tagName}${attributesToString(attributes)}>`
     )
     .join(",");
 export const logTagParseResults = (tags: TagParseResults): void[] =>
