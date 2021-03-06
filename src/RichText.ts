@@ -1,4 +1,4 @@
-import { logTagParseResults, parseTags as parseTagsExt } from "./Tags";
+import { taggedTextListToString, parseTags as parseTagsExt } from "./Tags";
 import * as PIXI from "pixi.js";
 import interactionEvents from "./interactionEvents";
 import {
@@ -126,7 +126,7 @@ export default class RichText extends PIXI.Sprite {
     this.textFields[0] = firstText;
 
     const tags = this.parseTags();
-    logTagParseResults(tags);
+    console.log(taggedTextListToString(tags));
 
     // console.log(this.untaggedText);
 

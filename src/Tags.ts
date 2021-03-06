@@ -5,30 +5,35 @@ import {
   TagWithAttributes,
   TaggedText,
   TagStack,
-  TagParseResults,
 } from "./types";
 
+// TODO: kill this
 export const TagStyle = {
   bbcode: "bbcode",
   xml: "xml",
 };
 
+// TODO: kill this
 export const TagBrackets = {
   bbcode: ["[", "]"],
   xml: ["<", ">"],
 };
 
+// TODO: kill this
 export const propertyRegex = new RegExp(
   `([A-Za-z0-9_\\-]+)=(?:"((?:[^"]+|\\\\")*)"|'((?:[^']+|\\\\')*)')`,
   "g"
 );
 
+// TODO: kill this
 export const bbcodePropertyRegex = new RegExp(
   `[A-Za-z0-9_\\-]+=([A-Za-z0-9_\\-\\#]+)`,
   "g"
 );
 
 // TODO: this can probably be just a static value without all the options and parameters.
+// TODO: make it a IIFE
+// Seems doing one pass will be enough to gather all relevant info.
 export const getTagRegex = (
   tagStyles: TextStyleSet,
   captureTagName: boolean,
@@ -79,6 +84,11 @@ export const getTagRegex = (
   return new RegExp(pattern, "g");
 };
 
+/**
+ * Takes a string of attributes and returns an object with key value pairs for each attribute.
+ * Converts "true" | "false" into booleans and number-like strings into numbers.
+ * @param attributesString  XML style attributes like "src='/image.png' alt='foo'"
+ */
 export const parseAttributes = (attributesString = ""): AttributesList => {
   if (attributesString === "") {
     return {};
@@ -137,10 +147,17 @@ export const tagMatchDataToTagWithAttributes = (
   attributes: tag.attributes,
 });
 
+/**
+ * Converts a string into a list of tokens that match segments of text with styles.
+ *
+ * @param str Input string with XML-style tags.
+ * @param tagStyles Used to only tokenize tags that have styles defined for them.
+ */
 export const parseTags = (
   str: string,
   tagStyles: TextStyleSet = {}
-): TagParseResults => {
+): TaggedText[] => {
+  // TODO: Warn the user if tags were found that are not defined in the tagStyles.
   const re = getTagRegex(tagStyles, true, false);
 
   const tags: TagMatchData[] = [];
@@ -212,6 +229,8 @@ export const parseTags = (
   return taggedTextList;
 };
 
+// LOGGING
+
 const attributesToString = (attributes: AttributesList) =>
   Object.entries(attributes)
     .map(([key, value]) => ` ${key}="${value}"`)
@@ -224,11 +243,17 @@ const tagsToString = (tags: TagWithAttributes[]) =>
         ` <${tagName}${attributesToString(attributes)}>`
     )
     .join(",");
-export const logTagParseResults = (tags: TagParseResults): void[] =>
-  tags.map(({ tags, text }) =>
-    text
-      ? tags
-        ? console.log(`"${text}"   ${tagsToString(tags)}`)
-        : undefined
-      : undefined
-  );
+
+const taggedTextToString = ({ tags, text }: TaggedText): string =>
+  text
+    ? tags
+      ? `"${text.replace(/\n/, "\\n")}"   ${tagsToString(tags)}\n`
+      : ""
+    : "";
+
+/**
+ * Converts the tagged text tokens into a string format where each string
+ * segment is listed with its stack of tags.
+ */
+export const taggedTextListToString = (tags: TaggedText[]): string =>
+  tags.reduce((acc, tag) => (acc += taggedTextToString(tag)), "");

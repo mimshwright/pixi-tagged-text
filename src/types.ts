@@ -185,5 +185,3 @@ export interface TaggedText {
   text: string;
   tags: TagWithAttributes[];
 }
-
-export type TagParseResults = TaggedText[];
