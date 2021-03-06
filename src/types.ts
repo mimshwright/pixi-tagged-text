@@ -167,3 +167,12 @@ export interface TextLineMeasurements {
   dropShadowPadding: number;
   basePositionY: number;
 }
+
+export type AttributesList = Record<string, string | number | boolean>;
+export interface TagMatchData {
+  tag: string;
+  tagName: string;
+  isOpening: boolean;
+  attributes: AttributesList;
+  index: number;
+}

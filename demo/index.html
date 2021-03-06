@@ -100,13 +100,17 @@
           <script>
             // Basics
             let text = createComparisonText(
-              "Let's make some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
+              "Let's <font color='#FFFF00' weight='700'>make</font> some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
               {
                 default: {
                   fontFamily: "Arial",
                   fontSize: "24px",
                   fill: "#cccccc",
                   align: "center",
+                },
+                font: {
+                  fill: "${color}",
+                  fontWeight: "${weight}",
                 },
                 ml: {
                   fontStyle: "italic",
@@ -152,6 +156,7 @@
                 },
               }
             );
+            bbcode[1].text = "bbcode not supported!";
             createDemo(bbcode, "bbcode");
           </script>
         </div>
