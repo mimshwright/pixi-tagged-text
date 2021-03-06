@@ -100,7 +100,7 @@
           <script>
             // Basics
             let text = createComparisonText(
-              "Let's <font color='#FFFF00' weight='700'>make</font> some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
+              "A <ml>B<ms>Let's</ms></ml> <font color='#FFFF00' weight='700'>make</font> some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
               {
                 default: {
                   fontFamily: "Arial",
@@ -117,7 +117,7 @@
                   fill: "#ff8888",
                 },
                 ms: {
-                  fontStyle: "italic",
+                  fontWeight: "bold",
                   fill: "#4488ff",
                 },
                 pixi: {

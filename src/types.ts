@@ -169,10 +169,21 @@ export interface TextLineMeasurements {
 }
 
 export type AttributesList = Record<string, string | number | boolean>;
-export interface TagMatchData {
-  tag: string;
+export interface TagWithAttributes {
   tagName: string;
-  isOpening: boolean;
   attributes: AttributesList;
+}
+export interface TagMatchData extends TagWithAttributes {
+  tag: string;
+  isOpening: boolean;
   index: number;
 }
+
+export type TagStack = TagMatchData[];
+
+export interface TaggedText {
+  text: string;
+  tags: TagWithAttributes[];
+}
+
+export type TagParseResults = TaggedText[];
