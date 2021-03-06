@@ -3,29 +3,29 @@ import {
   TextStyleSet,
   AttributesList,
   TagWithAttributes,
-  TaggedText,
+  TaggedText as TaggedTextToken,
   TagStack,
 } from "./types";
 
-// TODO: kill this
+// TODO: kill this. only used for old component.
 export const TagStyle = {
   bbcode: "bbcode",
   xml: "xml",
 };
 
-// TODO: kill this
+// TODO: kill this. only used for old component.
 export const TagBrackets = {
   bbcode: ["[", "]"],
   xml: ["<", ">"],
 };
 
-// TODO: kill this
+// TODO: kill this. only used for old component.
 export const propertyRegex = new RegExp(
   `([A-Za-z0-9_\\-]+)=(?:"((?:[^"]+|\\\\")*)"|'((?:[^']+|\\\\')*)')`,
   "g"
 );
 
-// TODO: kill this
+// TODO: kill this. only used for old component.
 export const bbcodePropertyRegex = new RegExp(
   `[A-Za-z0-9_\\-]+=([A-Za-z0-9_\\-\\#]+)`,
   "g"
@@ -147,50 +147,13 @@ export const tagMatchDataToTagWithAttributes = (
   attributes: tag.attributes,
 });
 
-/**
- * Converts a string into a list of tokens that match segments of text with styles.
- *
- * @param str Input string with XML-style tags.
- * @param tagStyles Used to only tokenize tags that have styles defined for them.
- */
-export const parseTags = (
-  str: string,
-  tagStyles: TextStyleSet = {}
-): TaggedText[] => {
-  // TODO: Warn the user if tags were found that are not defined in the tagStyles.
-  const re = getTagRegex(tagStyles, true, false);
-
-  const tags: TagMatchData[] = [];
-  const matchesRaw = [];
-  let match;
-  while ((match = re.exec(str))) {
-    const meta = matchToMeta(match);
-    matchesRaw.push(match);
-    tags.push(meta);
-  }
-
-  match = null;
-  const segments: string[] = [];
-  let remaining = str;
-  let offset = 0;
-  for (match of tags) {
-    if (remaining !== undefined) {
-      const { tag, index } = match;
-      const startOfTag = index - offset;
-      const endOfTag = startOfTag + tag.length;
-      offset += endOfTag;
-
-      const segment = remaining.substr(0, startOfTag);
-      segments.push(segment);
-
-      remaining = remaining.substr(endOfTag);
-    }
-  }
-  segments.push(remaining);
-
+export const createTokens = (
+  segments: string[],
+  tags: TagMatchData[]
+): TaggedTextToken[] => {
   // Add the entire text with no tag as a default value in case there are no tags.
-  const untaggedOriginalText: TaggedText = { text: segments[0], tags: [] };
-  const taggedTextList: TaggedText[] = [untaggedOriginalText];
+  const untaggedOriginalText: TaggedTextToken = { text: segments[0], tags: [] };
+  const taggedTextList: TaggedTextToken[] = [untaggedOriginalText];
 
   // Track which tags are opened and closed and add them to the list.
   const activeTags: TagStack = [];
@@ -221,12 +184,55 @@ export const parseTags = (
     );
   }
 
+  return taggedTextList;
+};
+
+/**
+ * Converts a string into a list of tokens that match segments of text with styles.
+ *
+ * @param str Input string with XML-style tags.
+ * @param tagStyles Used to only tokenize tags that have styles defined for them.
+ */
+export const parseTags = (
+  str: string,
+  tagStyles: TextStyleSet = {}
+): TaggedTextToken[] => {
+  // TODO: Warn the user if tags were found that are not defined in the tagStyles.
+  const re = getTagRegex(tagStyles, true, false);
+  const tags: TagMatchData[] = [];
+  const matchesRaw: RegExpExecArray[] = [];
+  const segments: string[] = [];
+  let match;
+  let remaining = str;
+  let offset = 0;
+  while ((match = re.exec(str))) {
+    matchesRaw.push(match);
+
+    const tagMeta = matchToMeta(match);
+    tags.push(tagMeta);
+
+    if (remaining !== undefined) {
+      const { tag, index } = tagMeta;
+      const startOfTag = index - offset;
+      const endOfTag = startOfTag + tag.length;
+      offset += endOfTag;
+
+      const segment = remaining.substr(0, startOfTag);
+      segments.push(segment);
+
+      remaining = remaining.substr(endOfTag);
+      segments.push(remaining);
+    }
+  }
+
+  const tokens = createTokens(segments, tags);
+
   // console.log({ matchesRaw });
   // console.log({ segments });
   // console.log({ tags });
-  // console.log({ taggedTextList });
+  // console.log({ tokens });
 
-  return taggedTextList;
+  return tokens;
 };
 
 // LOGGING
@@ -244,7 +250,7 @@ const tagsToString = (tags: TagWithAttributes[]) =>
     )
     .join(",");
 
-const taggedTextToString = ({ tags, text }: TaggedText): string =>
+const tokenToString = ({ tags, text }: TaggedTextToken): string =>
   text
     ? tags
       ? `"${text.replace(/\n/, "\\n")}"   ${tagsToString(tags)}\n`
@@ -255,5 +261,5 @@ const taggedTextToString = ({ tags, text }: TaggedText): string =>
  * Converts the tagged text tokens into a string format where each string
  * segment is listed with its stack of tags.
  */
-export const taggedTextListToString = (tags: TaggedText[]): string =>
-  tags.reduce((acc, tag) => (acc += taggedTextToString(tag)), "");
+export const tokensToString = (tokens: TaggedTextToken[]): string =>
+  tokens.reduce((acc, token) => (acc += tokenToString(token)), "");
