@@ -169,16 +169,17 @@ export const parseTags = (
       remaining = remaining.substr(endOfTag);
     }
   }
+  segments.push(remaining);
 
   // Add the entire text with no tag as a default value in case there are no tags.
-  const untaggedOriginalText: TaggedText = { text: str, tags: [] };
+  const untaggedOriginalText: TaggedText = { text: segments[0], tags: [] };
   const taggedTextList: TaggedText[] = [untaggedOriginalText];
 
   // Track which tags are opened and closed and add them to the list.
   const activeTags: TagStack = [];
   for (let i = 0; i < tags.length; i++) {
     const tag = tags[i];
-    const segment = segments[i];
+    const segment = segments[i + 1] ?? "";
     if (tag.isOpening) {
       activeTags.push(tag);
     } else {
@@ -190,10 +191,10 @@ export const parseTags = (
       }
     }
 
-    taggedTextList[i] = {
+    taggedTextList.push({
       text: segment,
       tags: activeTags.map(tagMatchDataToTagWithAttributes),
-    };
+    });
   }
   if (activeTags.length > 0) {
     console.warn(
@@ -210,3 +211,24 @@ export const parseTags = (
 
   return taggedTextList;
 };
+
+const attributesToString = (attributes: AttributesList) =>
+  Object.entries(attributes)
+    .map(([key, value]) => `${key}="${value}"`)
+    .join(" ");
+
+const tagsToString = (tags: TagWithAttributes[]) =>
+  tags
+    .map(
+      ({ tagName, attributes }) =>
+        ` <${tagName} ${attributesToString(attributes)}>`
+    )
+    .join(",");
+export const logTagParseResults = (tags: TagParseResults): void[] =>
+  tags.map(({ tags, text }) =>
+    text
+      ? tags
+        ? console.log(`"${text}"   ${tagsToString(tags)}`)
+        : undefined
+      : undefined
+  );

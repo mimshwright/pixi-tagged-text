@@ -1,4 +1,4 @@
-import { parseTags } from "./Tags";
+import { parseTags as parseTagsExt } from "./Tags";
 import * as PIXI from "pixi.js";
 import interactionEvents from "./interactionEvents";
 import {
@@ -126,13 +126,27 @@ export default class RichText extends PIXI.Sprite {
     this.textFields[0] = firstText;
 
     const tags = this.parseTags();
-    console.log(tags);
+    tags.map(
+      ({ tags, text }) =>
+        text &&
+        tags &&
+        console.log(
+          `"${text}"     ${tags
+            .map(
+              ({ tagName, attributes }) =>
+                ` <${tagName}${Object.entries(attributes).map(
+                  ([key, value]) => ` ${key}="${value}" `
+                )}>`
+            )
+            .join(",")}`
+        )
+    );
     // console.log(this.untaggedText);
 
     this.addTextFieldsToTextContainer();
   }
   private parseTags() {
-    return parseTags(this.text, this.tagStyles);
+    return parseTagsExt(this.text, this.tagStyles);
   }
 
   private addTextFieldsToTextContainer() {
