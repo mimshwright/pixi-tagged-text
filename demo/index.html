@@ -58,6 +58,7 @@
             child.y = 30;
             stage.addChild(child);
           });
+          children[0].visible = false;
 
           renderer.render(stage);
 
@@ -570,7 +571,7 @@ requestAnimationFrame(animate);</code></pre>
                 Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
                 5;
               animated[0].setStyles(funStyles);
-              animated[1].styles = funStyles;
+              animated[1].setStyleForTag("default", funStyles.default);
             }
 
             requestAnimationFrame(animate);

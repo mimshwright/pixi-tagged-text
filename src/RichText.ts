@@ -11,17 +11,31 @@ import {
 } from "./types";
 
 export default class RichText extends PIXI.Sprite {
+  constructor(text = "", tagStyles: TextStyleSet = {}, texture?: PIXI.Texture) {
+    super(texture);
+
+    this._textContainer = new PIXI.Container();
+    this.addChild(this.textContainer);
+
+    this.tagStyles = tagStyles;
+
+    this.text = text;
+
+    this.initEvents();
+  }
+
   private _text = "";
   public get text(): string {
     return this._text;
   }
   public set text(text: string) {
-    const changed = this._text !== text;
+    // Todo: check for deep equality.
+    // const changed = this._text !== text;
     this._text = text;
 
-    if (changed) {
-      this.update();
-    }
+    // if (changed) {
+    this.update();
+    // }
   }
   public get untaggedText(): string {
     return this.parseTags().reduce((acc, { text }) => acc + text, "");
@@ -32,11 +46,11 @@ export default class RichText extends PIXI.Sprite {
     return this._tagStyles;
   }
   public set tagStyles(styles: TextStyleSet) {
-    const changed = this._tagStyles !== styles;
+    // const changed = this._tagStyles !== styles;
     this._tagStyles = styles;
-    if (changed) {
-      this.update();
-    }
+    // if (changed) {
+    this.update();
+    // }
   }
   public combineStyles(styles: TextStyleExtended[]): TextStyleExtended {
     return styles.reduce(
@@ -52,9 +66,10 @@ export default class RichText extends PIXI.Sprite {
     return this.combineStyles(styles);
   }
   public setStyleForTag(tag: string, styles: TextStyleExtended): boolean {
-    if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
-      return false;
-    }
+    // todo: check for deep equality
+    // if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
+    //   return false;
+    // }
 
     this.tagStyles[tag] = styles;
     this.update();
@@ -87,17 +102,14 @@ export default class RichText extends PIXI.Sprite {
     return this._textContainer;
   }
 
-  constructor(text = "", tagStyles: TextStyleSet = {}, texture?: PIXI.Texture) {
-    super(texture);
-
-    this._textContainer = new PIXI.Container();
-    this.addChild(this.textContainer);
-
-    this.tagStyles = tagStyles;
-
-    this.text = text;
-
-    this.initEvents();
+  private addChildrenToTextContainer(children: PIXI.DisplayObject[]) {
+    for (const child of children) {
+      this.textContainer.addChild(child);
+    }
+  }
+  private resetTextFields() {
+    this.textContainer.removeChildren();
+    this._textFields = [];
   }
 
   private initEvents() {
@@ -141,15 +153,20 @@ export default class RichText extends PIXI.Sprite {
     this.textFields[0] = firstText;
 
     const tokens = this.parseTags();
-    console.log(tokensToString(tokens));
+    // console.log(tokensToString(tokens));
 
     this.resetTextFields();
     const textFields = this.createTextFieldsForTokens(tokens);
     this.addChildrenToTextContainer(textFields);
     this._textFields = textFields;
 
+    this.layout();
+
+    this.drawDebug();
+
     // console.log(this.untaggedText);
   }
+
   private parseTags() {
     return parseTagsExt(this.text, this.tagStyles);
   }
@@ -158,17 +175,64 @@ export default class RichText extends PIXI.Sprite {
     return tokens
       .filter(({ text }) => text !== "") // discard blank text.
       .map(
-        (token) => new PIXI.Text(token.text, this.getStyleForTags(token.tags))
+        (token) =>
+          new PIXI.Text(
+            token.text,
+            this.combineStyles([
+              this.defaultStyle,
+              this.getStyleForTags(token.tags),
+            ])
+          )
       );
   }
 
-  private addChildrenToTextContainer(children: PIXI.DisplayObject[]) {
-    for (const child of children) {
-      this.textContainer.addChild(child);
+  private layout() {
+    if (this.textFields.length === 0) {
+      return;
     }
+
+    // calculate positions.
+
+    const dimensions = this.textFields.map(
+      (text) => new PIXI.Point(text.width, text.height)
+    );
+
+    const startPoint = new PIXI.Point(0, 0);
+
+    const positions: PIXI.Point[] = [];
+    for (let i = 0; i < this.textFields.length; i++) {
+      if (i === 0) {
+        positions[i] = startPoint;
+        continue;
+      }
+      // For now, only use X
+      const previousFieldSize = dimensions[i - 1];
+      const previousPosition = positions[i - 1];
+      positions[i] = new PIXI.Point(
+        previousPosition.x + previousFieldSize.x,
+        startPoint.y
+      );
+    }
+
+    // console.log(this.textFields);
+    // console.log(dimensions.map((d) => `[${d.x}, ${d.y}] `));
+    // console.log(positions.map((p) => `[${p.x},${p.y}]`).join(", "));
+
+    this.textFields.forEach((text, i) => {
+      const { x, y } = positions[i];
+      text.x = x;
+      text.y = y;
+      text.text.replace(/\n/g, "");
+    });
   }
-  private resetTextFields() {
-    this.textContainer.removeChildren();
-    this._textFields = [];
+
+  public drawDebug(): void {
+    for (const text of this.textFields) {
+      const c = text.context;
+      c.rect(0, 0, text.width, text.height);
+      c.strokeStyle = "red";
+      c.lineWidth = 2;
+      c.stroke();
+    }
   }
 }
