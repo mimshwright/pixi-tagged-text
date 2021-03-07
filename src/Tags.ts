@@ -60,24 +60,12 @@ export const parseAttributes = (attributesString = ""): AttributesList => {
   return attributes.reduce((obj: AttributesList, attribute: string) => {
     const attributePair = attribute.split("=");
     const name = attributePair[0];
-    const valueStr: string | number | boolean = attributePair[1].substr(
+    const valueStr: string = attributePair[1].substr(
       1,
       attributePair[1].length - 2
     );
-    let value: string | number | boolean;
 
-    if (valueStr === "true" || valueStr === "false") {
-      value = valueStr === "true" ? true : false;
-    } else {
-      const valueNumber = parseFloat(valueStr);
-      if (isNaN(valueNumber) === false) {
-        value = valueNumber;
-      } else {
-        value = valueStr;
-      }
-    }
-
-    obj[name] = value;
+    obj[name] = valueStr;
     return obj;
   }, {});
 };

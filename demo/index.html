@@ -74,6 +74,36 @@
 
       <div class="example">
         <div class="code">
+          <h2>Attributes</h2>
+          <pre><code class="js">
+          </code></pre>
+        </div>
+        <div class="pixi" id="attributes">
+          <script>
+            // Basics
+            let attributes = createComparisonText(
+              `You can add <em>attributes</em> to your tags! They will <em fontStyle="italic">overwrite</em> the <em fill="#FF8822">values</em> for any existing <em fontFamily="Georgia" fill="#FFFF00" fontWeight="400">tag styles</em>.`,
+              {
+                default: {
+                  fontFamily: "Arial",
+                  fontSize: "24px",
+                  fill: "#cccccc",
+                  align: "left",
+                },
+                em: {
+                  fill: "#4488FF",
+                  fontWeight: 700,
+                },
+              }
+            );
+
+            createDemo(attributes, "attributes");
+          </script>
+        </div>
+      </div>
+
+      <div class="example">
+        <div class="code">
           <h2>Basics</h2>
           <pre><code class="js">let text = new MultiStyleText(&quot;Let's make some &lt;ml&gt;multiline&lt;/ml&gt;\nand &lt;ms&gt;multistyle&lt;/ms&gt; text for\n&lt;pixi&gt;Pixi.js!&lt;/pixi&gt;&quot;,
           {
@@ -97,21 +127,18 @@
             }
           });</code></pre>
         </div>
+
         <div class="pixi" id="basic">
           <script>
             // Basics
             let text = createComparisonText(
-              "Hey <ml>there. <ms>Let's</ms></ml> <font color='#FFFF00' weight='700'>make</font> some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi> ok?",
+              "Let's make some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
               {
                 default: {
                   fontFamily: "Arial",
                   fontSize: "24px",
                   fill: "#cccccc",
                   align: "center",
-                },
-                font: {
-                  fill: "${color}",
-                  fontWeight: "${weight}",
                 },
                 ml: {
                   fontStyle: "italic",
@@ -132,6 +159,7 @@
           </script>
         </div>
       </div>
+
       <div class="example">
         <div class="code">
           <h2>Tag Styles</h2>
@@ -574,7 +602,7 @@ requestAnimationFrame(animate);</code></pre>
               animated[1].setStyleForTag("default", funStyles.default);
             }
 
-            requestAnimationFrame(animate);
+            // requestAnimationFrame(animate);
           </script>
         </div>
       </div>

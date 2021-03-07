@@ -168,7 +168,7 @@ export interface TextLineMeasurements {
   basePositionY: number;
 }
 
-export type AttributesList = Record<string, string | number | boolean>;
+export type AttributesList = Record<string, string>;
 export interface TagWithAttributes {
   tagName: string;
   attributes: AttributesList;

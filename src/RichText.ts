@@ -8,6 +8,7 @@ import {
   TextStyleExtended,
   TaggedTextToken,
   TagWithAttributes,
+  AttributesList,
 } from "./types";
 
 export default class RichText extends PIXI.Sprite {
@@ -52,17 +53,33 @@ export default class RichText extends PIXI.Sprite {
     this.update();
     // }
   }
+
   public combineStyles(styles: TextStyleExtended[]): TextStyleExtended {
     return styles.reduce(
       (comboStyle, style) => (comboStyle = { ...comboStyle, ...style }),
       {}
     );
   }
-  public getStyleForTag(tag: string): TextStyleExtended {
-    return this.tagStyles[tag];
+
+  private injectAttributes(
+    style: TextStyleExtended,
+    attributes: AttributesList
+  ): TextStyleExtended {
+    return { ...style, ...attributes };
+  }
+
+  public getStyleForTag(
+    tag: string,
+    attributes: AttributesList
+  ): TextStyleExtended {
+    const style = this.tagStyles[tag];
+    const styleWithAttributes = this.injectAttributes(style, attributes);
+    return styleWithAttributes;
   }
   public getStyleForTags(tags: TagWithAttributes[]): TextStyleExtended {
-    const styles = tags.map(({ tagName }) => this.getStyleForTag(tagName));
+    const styles = tags.map(({ tagName, attributes }) =>
+      this.getStyleForTag(tagName, attributes)
+    );
     return this.combineStyles(styles);
   }
   public setStyleForTag(tag: string, styles: TextStyleExtended): boolean {
@@ -222,17 +239,17 @@ export default class RichText extends PIXI.Sprite {
       const { x, y } = positions[i];
       text.x = x;
       text.y = y;
-      text.text.replace(/\n/g, "");
+      // TEMP: remove line breaks from text.
+      text.text = text.text.replace(/\n/g, "");
     });
   }
 
   public drawDebug(): void {
     for (const text of this.textFields) {
       const c = text.context;
-      c.rect(0, 0, text.width, text.height);
       c.strokeStyle = "red";
       c.lineWidth = 2;
-      c.stroke();
+      c.strokeRect(0, 0, text.width, text.height);
     }
   }
 }
