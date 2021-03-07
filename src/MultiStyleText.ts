@@ -1,12 +1,6 @@
 import * as PIXI from "pixi.js";
 import interactionEvents from "./interactionEvents";
 import {
-  TagBrackets,
-  TagStyle,
-  bbcodePropertyRegex,
-  propertyRegex,
-} from "./tags";
-import {
   TextStyleExtended,
   TextStyleExtendedWithDefault,
   TextStyleSet,
@@ -30,6 +24,26 @@ import {
 } from "./pixiUtils";
 
 ("use strict");
+
+const TagStyle = {
+  bbcode: "bbcode",
+  xml: "xml",
+};
+
+const TagBrackets = {
+  bbcode: ["[", "]"],
+  xml: ["<", ">"],
+};
+
+const propertyRegex = new RegExp(
+  `([A-Za-z0-9_\\-]+)=(?:"((?:[^"]+|\\\\")*)"|'((?:[^']+|\\\\')*)')`,
+  "g"
+);
+
+const bbcodePropertyRegex = new RegExp(
+  `[A-Za-z0-9_\\-]+=([A-Za-z0-9_\\-\\#]+)`,
+  "g"
+);
 
 const WHITESPACE_REGEXP = /(\s\n\s)|(\s\n)|(\n\s)/g;
 

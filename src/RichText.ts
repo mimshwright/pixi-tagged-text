@@ -6,6 +6,8 @@ import {
   TextStyleSet,
   HitboxData,
   TextStyleExtended,
+  TaggedTextToken,
+  TagWithAttributes,
 } from "./types";
 
 export default class RichText extends PIXI.Sprite {
@@ -36,8 +38,18 @@ export default class RichText extends PIXI.Sprite {
       this.update();
     }
   }
+  public combineStyles(styles: TextStyleExtended[]): TextStyleExtended {
+    return styles.reduce(
+      (comboStyle, style) => (comboStyle = { ...comboStyle, ...style }),
+      {}
+    );
+  }
   public getStyleForTag(tag: string): TextStyleExtended {
     return this.tagStyles[tag];
+  }
+  public getStyleForTags(tags: TagWithAttributes[]): TextStyleExtended {
+    const styles = tags.map(({ tagName }) => this.getStyleForTag(tagName));
+    return this.combineStyles(styles);
   }
   public setStyleForTag(tag: string, styles: TextStyleExtended): boolean {
     if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
@@ -65,7 +77,10 @@ export default class RichText extends PIXI.Sprite {
 
   private hitboxes: HitboxData[] = [];
 
-  public textFields: PIXI.Text[] = [];
+  private _textFields: PIXI.Text[] = [];
+  public get textFields(): PIXI.Text[] {
+    return this._textFields;
+  }
 
   private _textContainer: PIXI.Container;
   public get textContainer(): PIXI.Container {
@@ -114,7 +129,7 @@ export default class RichText extends PIXI.Sprite {
 
   private update() {
     const rawText = this.text;
-    this.removeTextFieldsFromTextContainer();
+    this.resetTextFields();
 
     // TODO:
     // Parse tags and tokenize text.
@@ -125,23 +140,35 @@ export default class RichText extends PIXI.Sprite {
     const firstText = new PIXI.Text(rawText, this.defaultStyle);
     this.textFields[0] = firstText;
 
-    const tags = this.parseTags();
-    console.log(tokensToString(tags));
+    const tokens = this.parseTags();
+    console.log(tokensToString(tokens));
+
+    this.resetTextFields();
+    const textFields = this.createTextFieldsForTokens(tokens);
+    this.addChildrenToTextContainer(textFields);
+    this._textFields = textFields;
 
     // console.log(this.untaggedText);
-
-    this.addTextFieldsToTextContainer();
   }
   private parseTags() {
     return parseTagsExt(this.text, this.tagStyles);
   }
 
-  private addTextFieldsToTextContainer() {
-    for (const child of this.textFields) {
+  private createTextFieldsForTokens(tokens: TaggedTextToken[]) {
+    return tokens
+      .filter(({ text }) => text !== "") // discard blank text.
+      .map(
+        (token) => new PIXI.Text(token.text, this.getStyleForTags(token.tags))
+      );
+  }
+
+  private addChildrenToTextContainer(children: PIXI.DisplayObject[]) {
+    for (const child of children) {
       this.textContainer.addChild(child);
     }
   }
-  private removeTextFieldsFromTextContainer() {
+  private resetTextFields() {
     this.textContainer.removeChildren();
+    this._textFields = [];
   }
 }

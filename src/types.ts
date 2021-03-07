@@ -181,7 +181,7 @@ export interface TagMatchData extends TagWithAttributes {
 
 export type TagStack = TagMatchData[];
 
-export interface TaggedText {
+export interface TaggedTextToken {
   text: string;
   tags: TagWithAttributes[];
 }

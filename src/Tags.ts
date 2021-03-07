@@ -3,42 +3,13 @@ import {
   TextStyleSet,
   AttributesList,
   TagWithAttributes,
-  TaggedText as TaggedTextToken,
+  TaggedTextToken,
   TagStack,
 } from "./types";
 
-// TODO: kill this. only used for old component.
-export const TagStyle = {
-  bbcode: "bbcode",
-  xml: "xml",
-};
-
-// TODO: kill this. only used for old component.
-export const TagBrackets = {
-  bbcode: ["[", "]"],
-  xml: ["<", ">"],
-};
-
-// TODO: kill this. only used for old component.
-export const propertyRegex = new RegExp(
-  `([A-Za-z0-9_\\-]+)=(?:"((?:[^"]+|\\\\")*)"|'((?:[^']+|\\\\')*)')`,
-  "g"
-);
-
-// TODO: kill this. only used for old component.
-export const bbcodePropertyRegex = new RegExp(
-  `[A-Za-z0-9_\\-]+=([A-Za-z0-9_\\-\\#]+)`,
-  "g"
-);
-
 // TODO: this can probably be just a static value without all the options and parameters.
-// TODO: make it a IIFE
 // Seems doing one pass will be enough to gather all relevant info.
-export const getTagRegex = (
-  tagStyles: TextStyleSet,
-  captureTagName: boolean,
-  captureMatch: boolean
-): RegExp => {
+export const getTagRegex = (tagStyles: TextStyleSet): RegExp => {
   const tagNames = Object.keys(tagStyles).join("|");
 
   const captureGroup = (a: string) => `(${a})`;
@@ -51,15 +22,9 @@ export const getTagRegex = (
   const CHAR = "[A-Za-z0-9_\\-]";
   const QUOTE = noCaptureGroup(`"|'`);
   const NOT_QUOTE = `[^${QUOTE}]`;
+  const TAG_NAMES = captureGroup(tagNames);
   const ATTRIBUTE_NAME = CHAR + "+";
   const ATTRIBUTE_VALUE = NOT_QUOTE + "+";
-
-  let registeredTagNames;
-  if (captureTagName) {
-    registeredTagNames = captureGroup(tagNames);
-  } else {
-    registeredTagNames = noCaptureGroup(tagNames);
-  }
 
   const ATTRIBUTES =
     captureGroup(
@@ -72,14 +37,10 @@ export const getTagRegex = (
           QUOTE
       ) + "*"
     ) + "+";
-  const TAG_OPEN = `<` + registeredTagNames + ATTRIBUTES + S + `>`;
-  const TAG_CLOSE = `</${registeredTagNames}${S}>`;
+  const TAG_OPEN = `<` + TAG_NAMES + ATTRIBUTES + S + `>`;
+  const TAG_CLOSE = `</${TAG_NAMES}${S}>`;
 
-  let pattern = TAG_OPEN + OR + TAG_CLOSE;
-
-  if (captureMatch) {
-    pattern = captureGroup(pattern);
-  }
+  const pattern = TAG_OPEN + OR + TAG_CLOSE;
 
   return new RegExp(pattern, "g");
 };
@@ -121,7 +82,7 @@ export const parseAttributes = (attributesString = ""): AttributesList => {
   }, {});
 };
 
-export const matchToMeta = (match: RegExpExecArray): TagMatchData => {
+export const createTagMatch = (match: RegExpExecArray): TagMatchData => {
   const {
     0: tag,
     1: openTagName,
@@ -187,32 +148,18 @@ export const createTokens = (
   return taggedTextList;
 };
 
-/**
- * Converts a string into a list of tokens that match segments of text with styles.
- *
- * @param str Input string with XML-style tags.
- * @param tagStyles Used to only tokenize tags that have styles defined for them.
- */
-export const parseTags = (
-  str: string,
-  tagStyles: TextStyleSet = {}
-): TaggedTextToken[] => {
-  // TODO: Warn the user if tags were found that are not defined in the tagStyles.
-  const re = getTagRegex(tagStyles, true, false);
-  const tags: TagMatchData[] = [];
-  const matchesRaw: RegExpExecArray[] = [];
+export const extractSegments = (
+  input: string,
+  tagMatchData: TagMatchData[]
+): string[] => {
   const segments: string[] = [];
-  let match;
-  let remaining = str;
+
+  let remaining = input;
   let offset = 0;
-  while ((match = re.exec(str))) {
-    matchesRaw.push(match);
-
-    const tagMeta = matchToMeta(match);
-    tags.push(tagMeta);
-
+  let tagMatch: TagMatchData;
+  for (tagMatch of tagMatchData) {
     if (remaining !== undefined) {
-      const { tag, index } = tagMeta;
+      const { tag, index } = tagMatch;
       const startOfTag = index - offset;
       const endOfTag = startOfTag + tag.length;
       offset += endOfTag;
@@ -221,16 +168,45 @@ export const parseTags = (
       segments.push(segment);
 
       remaining = remaining.substr(endOfTag);
-      segments.push(remaining);
     }
   }
+  segments.push(remaining);
 
-  const tokens = createTokens(segments, tags);
+  return segments;
+};
 
-  // console.log({ matchesRaw });
-  // console.log({ segments });
-  // console.log({ tags });
-  // console.log({ tokens });
+/**
+ * Converts a string into a list of tokens that match segments of text with styles.
+ *
+ * @param input Input string with XML-style tags.
+ * @param tagStyles Used to only tokenize tags that have styles defined for them.
+ */
+export const parseTags = (
+  input: string,
+  tagStyles: TextStyleSet = {}
+): TaggedTextToken[] => {
+  // TODO: Warn the user if tags were found that are not defined in the tagStyles.
+  const re = getTagRegex(tagStyles);
+  const matchesRaw: RegExpExecArray[] = [];
+  const tagMatches: TagMatchData[] = [];
+  let match;
+  while ((match = re.exec(input))) {
+    matchesRaw.push(match);
+
+    const tagMatch = createTagMatch(match);
+    tagMatches.push(tagMatch);
+  }
+
+  const segments = extractSegments(input, tagMatches);
+
+  const tokens = createTokens(segments, tagMatches);
+
+  // console.log({
+  //   matchesRaw,
+  //   segments,
+  //   tags: tagMatches,
+  //   tokens,
+  // });
 
   return tokens;
 };
@@ -253,7 +229,7 @@ const tagsToString = (tags: TagWithAttributes[]) =>
 const tokenToString = ({ tags, text }: TaggedTextToken): string =>
   text
     ? tags
-      ? `"${text.replace(/\n/, "\\n")}"   ${tagsToString(tags)}\n`
+      ? `"${text.replace(/\n/, "\\n")}"   ${tagsToString(tags)}`
       : ""
     : "";
 
@@ -262,4 +238,6 @@ const tokenToString = ({ tags, text }: TaggedTextToken): string =>
  * segment is listed with its stack of tags.
  */
 export const tokensToString = (tokens: TaggedTextToken[]): string =>
-  tokens.reduce((acc, token) => (acc += tokenToString(token)), "");
+  tokens
+    .filter((t) => t.text !== "")
+    .reduce((acc, token) => `${acc}${tokenToString(token)}\n`, "");
