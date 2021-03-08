@@ -1,4 +1,4 @@
-import { tokensToString, parseTags as parseTagsExt } from "./Tags";
+import { tokensToString, parseTags as parseTagsExt, removeTags } from "./Tags";
 import * as PIXI from "pixi.js";
 import interactionEvents from "./interactionEvents";
 import {
@@ -39,7 +39,7 @@ export default class RichText extends PIXI.Sprite {
     // }
   }
   public get untaggedText(): string {
-    return this.parseTags().reduce((acc, { text }) => acc + text, "");
+    return removeTags(this.text);
   }
 
   private _tagStyles: TextStyleSet = {};
@@ -157,25 +157,23 @@ export default class RichText extends PIXI.Sprite {
   }
 
   private update() {
-    const rawText = this.text;
-    this.resetTextFields();
-
     // TODO:
-    // Parse tags and tokenize text.
-    // create a textfield for each token.
     // position each text field correctly.
     // draw?
 
-    const firstText = new PIXI.Text(rawText, this.defaultStyle);
-    this.textFields[0] = firstText;
+    const rawText = this.text;
+    this.resetTextFields();
 
     const tokens = this.parseTags();
-    // console.log(tokensToString(tokens));
+    console.log(this.untaggedText);
+    console.log(tokensToString(tokens));
 
     this.resetTextFields();
     const textFields = this.createTextFieldsForTokens(tokens);
     this.addChildrenToTextContainer(textFields);
     this._textFields = textFields;
+
+    this.getLines(tokens, 600);
 
     this.layout();
 
@@ -203,6 +201,8 @@ export default class RichText extends PIXI.Sprite {
       );
   }
 
+  private getLines(tokens: TaggedTextToken[], maxLineWidth: number) {}
+
   private layout() {
     if (this.textFields.length === 0) {
       return;
@@ -213,6 +213,8 @@ export default class RichText extends PIXI.Sprite {
     const dimensions = this.textFields.map(
       (text) => new PIXI.Point(text.width, text.height)
     );
+
+    // const textSegments = this.textFields.map(({ text }) => text);
 
     const startPoint = new PIXI.Point(0, 0);
 
@@ -244,6 +246,7 @@ export default class RichText extends PIXI.Sprite {
     });
   }
 
+  // FIXME: for some reason, this doesn't work on the first time it's used in the demos.
   public drawDebug(): void {
     for (const text of this.textFields) {
       const c = text.context;

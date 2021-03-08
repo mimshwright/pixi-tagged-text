@@ -7,10 +7,19 @@ import {
   TagStack,
 } from "./types";
 
+const LINE_BREAK_TAG_NAME = "br";
+
 // TODO: this can probably be just a static value without all the options and parameters.
 // Seems doing one pass will be enough to gather all relevant info.
-export const getTagRegex = (tagStyles: TextStyleSet): RegExp => {
-  const tagNames = Object.keys(tagStyles).join("|");
+// TODO: support self closing tags?
+
+/**
+ * Generates a regular expression object for identifying tags and attributes.
+ * @param tagNamesToMatch List of tag-names that will be matched by the RegExp
+ */
+export const getTagRegex = (tagNamesToMatch: string[] = ["\\w+"]): RegExp => {
+  const matchingTagNames =
+    tagNamesToMatch.join("|") + "|" + LINE_BREAK_TAG_NAME;
 
   const captureGroup = (a: string) => `(${a})`;
   const noCaptureGroup = (a: string) => `(?:${a})`;
@@ -22,7 +31,7 @@ export const getTagRegex = (tagStyles: TextStyleSet): RegExp => {
   const CHAR = "[A-Za-z0-9_\\-]";
   const QUOTE = noCaptureGroup(`"|'`);
   const NOT_QUOTE = `[^${QUOTE}]`;
-  const TAG_NAMES = captureGroup(tagNames);
+  const TAG_NAMES = captureGroup(matchingTagNames);
   const ATTRIBUTE_NAME = CHAR + "+";
   const ATTRIBUTE_VALUE = NOT_QUOTE + "+";
 
@@ -70,7 +79,8 @@ export const parseAttributes = (attributesString = ""): AttributesList => {
   }, {});
 };
 
-export const createTagMatch = (match: RegExpExecArray): TagMatchData => {
+/** Converts from RegExpExecArray to TagMatchData */
+export const createTagMatchData = (match: RegExpExecArray): TagMatchData => {
   const {
     0: tag,
     1: openTagName,
@@ -89,6 +99,7 @@ export const createTagMatch = (match: RegExpExecArray): TagMatchData => {
   };
 };
 
+/** Converts TagMatchData to TagWithAttributes */
 export const tagMatchDataToTagWithAttributes = (
   tag: TagMatchData
 ): TagWithAttributes => ({
@@ -136,6 +147,11 @@ export const createTokens = (
   return taggedTextList;
 };
 
+/**
+ * Splits original text into an untagged list of string segments.
+ * @param input Original text input
+ * @param tagMatchData Results of regexp exect converted to tag matches.
+ */
 export const extractSegments = (
   input: string,
   tagMatchData: TagMatchData[]
@@ -164,6 +180,12 @@ export const extractSegments = (
 };
 
 /**
+ * Replaces \n with special tags that will be recognized by the parser.
+ */
+export const replaceLineBreaks = (input: string): string =>
+  input.replace(/\n/g, `<${LINE_BREAK_TAG_NAME}></${LINE_BREAK_TAG_NAME}>`);
+
+/**
  * Converts a string into a list of tokens that match segments of text with styles.
  *
  * @param input Input string with XML-style tags.
@@ -171,17 +193,21 @@ export const extractSegments = (
  */
 export const parseTags = (
   input: string,
-  tagStyles: TextStyleSet = {}
+  tagStyles?: TextStyleSet
 ): TaggedTextToken[] => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
-  const re = getTagRegex(tagStyles);
+
+  const tagNames = tagStyles ? Object.keys(tagStyles) : undefined;
+
+  input = replaceLineBreaks(input);
+  const re = getTagRegex(tagNames);
   const matchesRaw: RegExpExecArray[] = [];
   const tagMatches: TagMatchData[] = [];
   let match;
   while ((match = re.exec(input))) {
     matchesRaw.push(match);
 
-    const tagMatch = createTagMatch(match);
+    const tagMatch = createTagMatchData(match);
     tagMatches.push(tagMatch);
   }
 
@@ -198,6 +224,9 @@ export const parseTags = (
 
   return tokens;
 };
+
+export const removeTags = (input: string): string =>
+  input.replace(getTagRegex(), "");
 
 // LOGGING
 
@@ -217,7 +246,7 @@ const tagsToString = (tags: TagWithAttributes[]) =>
 const tokenToString = ({ tags, text }: TaggedTextToken): string =>
   text
     ? tags
-      ? `"${text.replace(/\n/, "\\n")}"   ${tagsToString(tags)}`
+      ? `"${text.replace(/\n/, "\\n")}"  -> ${tagsToString(tags)}`
       : ""
     : "";
 
