@@ -71,7 +71,7 @@ const presetStyles: TextStyleSet = {
   },
   size: { fontSize: "px" },
   spacing: { letterSpacing: 0 },
-  align: { align: "" },
+  align: { align: "left" },
 };
 
 export default class MultiStyleText extends PIXI.Text {

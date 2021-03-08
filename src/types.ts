@@ -13,17 +13,19 @@ export interface HitboxData {
 
 export type TagStyle = "bbcode" | "xml";
 export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
-
+export type Align = "left" | "right" | "center";
+export type Color = string | number;
+export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
 export interface TextStyle {
-  align?: string;
+  align?: Align;
   breakWords?: boolean;
   dropShadow?: boolean;
   dropShadowAlpha?: number;
   dropShadowAngle?: number;
   dropShadowBlur?: number;
-  dropShadowColor?: string | number;
+  dropShadowColor?: Color;
   dropShadowDistance?: number;
-  fill?: string | string[] | number | number[] | CanvasGradient | CanvasPattern;
+  fill?: Fill;
   fillGradientType?: number;
   fillGradientStops?: number[];
   fontFamily?: string | string[];
@@ -38,7 +40,7 @@ export interface TextStyle {
   lineJoin?: string;
   miterLimit?: number;
   padding?: number;
-  stroke?: string | number;
+  stroke?: Color;
   strokeThickness?: number;
   trim?: boolean;
   textBaseline?: string;
@@ -60,14 +62,14 @@ export interface TextStyleExtendedWithDefault extends TextStyleExtended {
   trim?: boolean;
   whiteSpace?: string;
 
-  align: string;
+  align: Align;
   breakWords: boolean;
   dropShadow: boolean;
   dropShadowAngle: number;
   dropShadowBlur: number;
-  dropShadowColor: string | number;
+  dropShadowColor: Color;
   dropShadowDistance: number;
-  fill: string | string[] | number | number[] | CanvasGradient | CanvasPattern;
+  fill: Fill;
   fillGradientType: number;
   fontFamily: string | string[];
   fontSize: number | string;
@@ -80,7 +82,7 @@ export interface TextStyleExtendedWithDefault extends TextStyleExtended {
   lineJoin: string;
   miterLimit: number;
   padding: number;
-  stroke: string | number;
+  stroke: Color;
   strokeThickness: number;
   textBaseline: string;
   wordWrap: boolean;

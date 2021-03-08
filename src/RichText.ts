@@ -5,17 +5,20 @@ import {
   LINE_BREAK_TAG_NAME,
 } from "./Tags";
 import * as PIXI from "pixi.js";
-import interactionEvents from "./interactionEvents";
 import {
-  MstInteractionEvent,
   TextStyleSet,
-  HitboxData,
   TextStyleExtended,
   TaggedTextToken,
   TagWithAttributes,
   AttributesList,
+  Align,
 } from "./types";
 
+const DEFAULT_STYLE: TextStyleExtended = {
+  align: "left",
+  wordWrap: true,
+  wordWrapWidth: 500,
+};
 export default class RichText extends PIXI.Sprite {
   constructor(text = "", tagStyles: TextStyleSet = {}, texture?: PIXI.Texture) {
     super(texture);
@@ -23,11 +26,11 @@ export default class RichText extends PIXI.Sprite {
     this._textContainer = new PIXI.Container();
     this.addChild(this.textContainer);
 
+    const mergedDefault = { ...DEFAULT_STYLE, ...tagStyles.default };
+    tagStyles.default = mergedDefault;
     this.tagStyles = tagStyles;
 
     this.text = text;
-
-    this.initEvents();
   }
 
   private _text = "";
@@ -112,8 +115,6 @@ export default class RichText extends PIXI.Sprite {
     this.setStyleForTag("default", defaultStyles);
   }
 
-  private hitboxes: HitboxData[] = [];
-
   private _textFields: PIXI.Text[] = [];
   public get textFields(): PIXI.Text[] {
     return this._textFields;
@@ -134,33 +135,6 @@ export default class RichText extends PIXI.Sprite {
     this._textFields = [];
   }
 
-  private initEvents() {
-    const migrateEvent = (e: PIXI.InteractionEvent) =>
-      this.handleInteraction(e);
-
-    for (const event in interactionEvents) {
-      this.on(event, migrateEvent);
-    }
-  }
-
-  private handleInteraction(e: PIXI.InteractionEvent) {
-    const ev = e as MstInteractionEvent;
-    const localPoint = e.data.getLocalPosition(this);
-    let targetHitbox: HitboxData | null = null;
-
-    for (const hitbox of this.hitboxes) {
-      if (contains(hitbox, localPoint)) {
-        targetHitbox = hitbox;
-        break;
-      }
-    }
-    ev.targetTag = targetHitbox?.tag;
-
-    function contains(hitbox: HitboxData, point: PIXI.Point): boolean {
-      return hitbox.hitbox.contains(point.x, point.y);
-    }
-  }
-
   private update() {
     // TODO:
     // position each text field correctly.
@@ -173,8 +147,21 @@ export default class RichText extends PIXI.Sprite {
     // console.log(this.untaggedText);
     // console.log(tokensToString(tokens));
 
-    const measurements = this.calculateMeasurements(tokens, 600);
-    console.log(measurements);
+    const measurements = this.calculateMeasurements(
+      tokens,
+      this.defaultStyle.wordWrap
+        ? this.defaultStyle.wordWrapWidth
+        : Number.POSITIVE_INFINITY,
+      this.defaultStyle.align ?? "left"
+    );
+    // console.log(measurements);
+
+    console.log({
+      wordWrap: this.defaultStyle.wordWrap,
+      width: this.width,
+      localBounds: this.getLocalBounds(),
+      wordWrapWidth: this.defaultStyle.wordWrapWidth,
+    });
 
     this.resetTextFields();
     const textFields = this.createTextFieldsForTokens(tokens);
@@ -218,7 +205,8 @@ export default class RichText extends PIXI.Sprite {
 
   private calculateMeasurements(
     tokens: TaggedTextToken[],
-    maxLineWidth: number
+    maxLineWidth: number = Number.POSITIVE_INFINITY,
+    align: Align
   ): PIXI.Rectangle[] {
     const sizer = new PIXI.Text("");
     const measurements = [];
@@ -226,12 +214,32 @@ export default class RichText extends PIXI.Sprite {
     let largestLineHeight = 0;
     const offset = new PIXI.Point(0, 0);
 
+    const updateOffsetForNewLine = (): void => {
+      // handle new line.
+      offset.x = 0;
+      offset.y += largestLineHeight;
+    };
+
+    const rectFromSizer = (
+      sizer: PIXI.Container,
+      offset: PIXI.Point,
+      align: Align
+    ): PIXI.Rectangle => {
+      const w = sizer.width;
+      const h = sizer.height;
+      let x = offset.x + sizer.x;
+      const y = offset.y + sizer.y;
+
+      if (align === "right") {
+        x = maxLineWidth - x;
+      }
+      return new PIXI.Rectangle(x, y, w, h);
+    };
+
     for (const token of tokens) {
       for (const tag of token.tags) {
         if (tag.tagName === LINE_BREAK_TAG_NAME) {
-          // handle new line.
-          offset.x = 0;
-          offset.y += largestLineHeight;
+          updateOffsetForNewLine();
           break;
         }
       }
@@ -244,12 +252,13 @@ export default class RichText extends PIXI.Sprite {
 
         largestLineHeight = Math.max(lastMeasurement.height, largestLineHeight);
 
-        const x = offset.x + sizer.x;
-        const y = offset.y + sizer.y;
-        const w = sizer.width;
-        const h = sizer.height;
+        let size = rectFromSizer(sizer, offset, align);
 
-        const size = new PIXI.Rectangle(x, y, w, h);
+        // if new size would exceed the max line width...
+        if (size.right > maxLineWidth) {
+          updateOffsetForNewLine();
+          size = rectFromSizer(sizer, offset, align);
+        }
 
         offset.x = size.right;
 
@@ -264,9 +273,12 @@ export default class RichText extends PIXI.Sprite {
   public drawDebug(): void {
     for (const text of this.textFields) {
       const c = text.context;
+      c.save();
       c.strokeStyle = "red";
       c.lineWidth = 2;
-      c.strokeRect(0, 0, text.width, text.height);
+      c.rect(0, 0, text.width, text.height);
+      c.stroke();
+      c.restore();
     }
   }
 }
