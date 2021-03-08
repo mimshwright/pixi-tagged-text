@@ -1,4 +1,9 @@
-import { tokensToString, parseTags as parseTagsExt, removeTags } from "./Tags";
+import {
+  tokensToString,
+  parseTags as parseTagsExt,
+  removeTags,
+  LINE_BREAK_TAG_NAME,
+} from "./Tags";
 import * as PIXI from "pixi.js";
 import interactionEvents from "./interactionEvents";
 import {
@@ -161,21 +166,21 @@ export default class RichText extends PIXI.Sprite {
     // position each text field correctly.
     // draw?
 
-    const rawText = this.text;
+    // const rawText = this.text;
     this.resetTextFields();
 
     const tokens = this.parseTags();
-    console.log(this.untaggedText);
-    console.log(tokensToString(tokens));
+    // console.log(this.untaggedText);
+    // console.log(tokensToString(tokens));
+
+    const measurements = this.calculateMeasurements(tokens, 600);
+    console.log(measurements);
 
     this.resetTextFields();
     const textFields = this.createTextFieldsForTokens(tokens);
+    this.positionDisplayObjects(textFields, measurements);
     this.addChildrenToTextContainer(textFields);
     this._textFields = textFields;
-
-    this.getLines(tokens, 600);
-
-    this.layout();
 
     this.drawDebug();
 
@@ -186,64 +191,73 @@ export default class RichText extends PIXI.Sprite {
     return parseTagsExt(this.text, this.tagStyles);
   }
 
-  private createTextFieldsForTokens(tokens: TaggedTextToken[]) {
+  private createTextFieldsForTokens(tokens: TaggedTextToken[]): PIXI.Text[] {
     return tokens
       .filter(({ text }) => text !== "") // discard blank text.
-      .map(
-        (token) =>
-          new PIXI.Text(
-            token.text,
-            this.combineStyles([
-              this.defaultStyle,
-              this.getStyleForTags(token.tags),
-            ])
-          )
-      );
+      .map((t) => this.createTextFieldForToken(t));
   }
 
-  private getLines(tokens: TaggedTextToken[], maxLineWidth: number) {}
-
-  private layout() {
-    if (this.textFields.length === 0) {
-      return;
-    }
-
-    // calculate positions.
-
-    const dimensions = this.textFields.map(
-      (text) => new PIXI.Point(text.width, text.height)
+  private createTextFieldForToken(token: TaggedTextToken): PIXI.Text {
+    return new PIXI.Text(
+      token.text,
+      this.combineStyles([this.defaultStyle, this.getStyleForTags(token.tags)])
     );
+  }
 
-    // const textSegments = this.textFields.map(({ text }) => text);
-
-    const startPoint = new PIXI.Point(0, 0);
-
-    const positions: PIXI.Point[] = [];
-    for (let i = 0; i < this.textFields.length; i++) {
-      if (i === 0) {
-        positions[i] = startPoint;
-        continue;
-      }
-      // For now, only use X
-      const previousFieldSize = dimensions[i - 1];
-      const previousPosition = positions[i - 1];
-      positions[i] = new PIXI.Point(
-        previousPosition.x + previousFieldSize.x,
-        startPoint.y
-      );
+  private positionDisplayObjects(
+    displayObjects: PIXI.DisplayObject[],
+    measurements: PIXI.Rectangle[]
+  ): void {
+    for (let i = 0; i < displayObjects.length; i++) {
+      const d = displayObjects[i];
+      const m = measurements[i];
+      d.x = m.x;
+      d.y = m.y;
     }
+  }
 
-    // console.log(this.textFields);
-    // console.log(dimensions.map((d) => `[${d.x}, ${d.y}] `));
-    // console.log(positions.map((p) => `[${p.x},${p.y}]`).join(", "));
+  private calculateMeasurements(
+    tokens: TaggedTextToken[],
+    maxLineWidth: number
+  ): PIXI.Rectangle[] {
+    const sizer = new PIXI.Text("");
+    const measurements = [];
+    let lastMeasurement = new PIXI.Rectangle(0, 0, 0, 0);
+    let largestLineHeight = 0;
+    const offset = new PIXI.Point(0, 0);
 
-    this.textFields.forEach((text, i) => {
-      const { x, y } = positions[i];
-      text.x = x;
-      text.y = y;
-      // TEMP: remove line breaks from text.
-      text.text = text.text.replace(/\n/g, "");
-    });
+    for (const token of tokens) {
+      for (const tag of token.tags) {
+        if (tag.tagName === LINE_BREAK_TAG_NAME) {
+          // handle new line.
+          offset.x = 0;
+          offset.y += largestLineHeight;
+          break;
+        }
+      }
+      if (token.text !== "") {
+        sizer.text = token.text;
+        sizer.style = this.combineStyles([
+          this.defaultStyle,
+          this.getStyleForTags(token.tags),
+        ]);
+
+        largestLineHeight = Math.max(lastMeasurement.height, largestLineHeight);
+
+        const x = offset.x + sizer.x;
+        const y = offset.y + sizer.y;
+        const w = sizer.width;
+        const h = sizer.height;
+
+        const size = new PIXI.Rectangle(x, y, w, h);
+
+        offset.x = size.right;
+
+        measurements.push(size);
+        lastMeasurement = size;
+      }
+    }
+    return measurements;
   }
 
   // FIXME: for some reason, this doesn't work on the first time it's used in the demos.

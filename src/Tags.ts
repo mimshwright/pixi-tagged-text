@@ -7,7 +7,7 @@ import {
   TagStack,
 } from "./types";
 
-const LINE_BREAK_TAG_NAME = "br";
+export const LINE_BREAK_TAG_NAME = "br";
 
 // TODO: this can probably be just a static value without all the options and parameters.
 // Seems doing one pass will be enough to gather all relevant info.
@@ -244,17 +244,12 @@ const tagsToString = (tags: TagWithAttributes[]) =>
     .join(",");
 
 const tokenToString = ({ tags, text }: TaggedTextToken): string =>
-  text
-    ? tags
-      ? `"${text.replace(/\n/, "\\n")}"  -> ${tagsToString(tags)}`
-      : ""
-    : "";
-
+  tags ? `"${text.replace(/\n/, "\\n")}"  -> ${tagsToString(tags)}` : "";
 /**
  * Converts the tagged text tokens into a string format where each string
  * segment is listed with its stack of tags.
  */
 export const tokensToString = (tokens: TaggedTextToken[]): string =>
   tokens
-    .filter((t) => t.text !== "")
+    .filter((t) => t.tags[0]?.tagName === LINE_BREAK_TAG_NAME || t.text !== "")
     .reduce((acc, token) => `${acc}${tokenToString(token)}\n`, "");
