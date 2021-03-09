@@ -107,13 +107,29 @@ export const tagMatchDataToTagWithAttributes = (
   attributes: tag.attributes,
 });
 
+const Token = (text: string, tags: TagWithAttributes[]): TaggedTextToken => ({
+  text,
+  tags,
+});
+
+const splitWords = (input: string): string[] =>
+  input.split(" ").map((s, i, { length }) => s + (i < length - 1 ? " " : ""));
+
+const splitTokensIntoWords = (tokens: TaggedTextToken[]): TaggedTextToken[] =>
+  tokens.flatMap(({ text, tags }) =>
+    splitWords(text).map((word) => Token(word, tags))
+  );
+
 export const createTokens = (
   segments: string[],
   tags: TagMatchData[]
 ): TaggedTextToken[] => {
   // Add the entire text with no tag as a default value in case there are no tags.
-  const untaggedOriginalText: TaggedTextToken = { text: segments[0], tags: [] };
-  const taggedTextList: TaggedTextToken[] = [untaggedOriginalText];
+  const firstSegmentWithoutTags: TaggedTextToken = {
+    text: segments[0],
+    tags: [],
+  };
+  const tokens: TaggedTextToken[] = [firstSegmentWithoutTags];
 
   // Track which tags are opened and closed and add them to the list.
   const activeTags: TagStack = [];
@@ -131,10 +147,9 @@ export const createTokens = (
       }
     }
 
-    taggedTextList.push({
-      text: segment,
-      tags: activeTags.map(tagMatchDataToTagWithAttributes),
-    });
+    tokens.push(
+      Token(segment, activeTags.map(tagMatchDataToTagWithAttributes))
+    );
   }
   if (activeTags.length > 0) {
     console.warn(
@@ -144,7 +159,7 @@ export const createTokens = (
     );
   }
 
-  return taggedTextList;
+  return splitTokensIntoWords(tokens);
 };
 
 /**

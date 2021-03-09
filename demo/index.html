@@ -58,8 +58,22 @@
             child.y = 30;
             stage.addChild(child);
           });
-          // children[0].visible = false;
           children[0].alpha = 0.5;
+          children[0].visible = false;
+
+          const tf = new PIXI.Text(
+            "synthesize Senior Directives extranet Refined Delectus quisquam rerum doloremque quo veniam ut optio nesciunt dicta. Est dolorum asperiores. Aperiam rem et aut rerum dolorem. Numquam reprehenderit sunt. Cum illum corrupti.",
+            {
+              align: "left",
+              wordWrap: false,
+              wordWrapWidth: 500,
+              fill: "#FF00FF",
+            }
+          );
+          tf.x = children[1].x;
+          tf.y = children[1].y;
+          tf.visible = false;
+          stage.addChild(tf);
 
           renderer.render(stage);
 

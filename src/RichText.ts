@@ -147,21 +147,25 @@ export default class RichText extends PIXI.Sprite {
     // console.log(this.untaggedText);
     // console.log(tokensToString(tokens));
 
+    const wordWrapWidth = this.defaultStyle.wordWrap
+      ? this.defaultStyle.wordWrapWidth
+      : Number.POSITIVE_INFINITY;
+    const align = this.defaultStyle.align;
+    const lineSpacing = this.defaultStyle.lineSpacing;
     const measurements = this.calculateMeasurements(
       tokens,
-      this.defaultStyle.wordWrap
-        ? this.defaultStyle.wordWrapWidth
-        : Number.POSITIVE_INFINITY,
-      this.defaultStyle.align ?? "left"
+      wordWrapWidth,
+      align,
+      lineSpacing
     );
-    // console.log(measurements);
+    console.log(measurements);
 
-    console.log({
-      wordWrap: this.defaultStyle.wordWrap,
-      width: this.width,
-      localBounds: this.getLocalBounds(),
-      wordWrapWidth: this.defaultStyle.wordWrapWidth,
-    });
+    // console.log({
+    //   wordWrap: this.defaultStyle.wordWrap,
+    //   width: this.width,
+    //   localBounds: this.getLocalBounds(),
+    //   wordWrapWidth: this.defaultStyle.wordWrapWidth,
+    // });
 
     this.resetTextFields();
     const textFields = this.createTextFieldsForTokens(tokens);
@@ -187,7 +191,11 @@ export default class RichText extends PIXI.Sprite {
   private createTextFieldForToken(token: TaggedTextToken): PIXI.Text {
     return new PIXI.Text(
       token.text,
-      this.combineStyles([this.defaultStyle, this.getStyleForTags(token.tags)])
+      this.combineStyles([
+        this.defaultStyle,
+        this.getStyleForTags(token.tags),
+        { wordWrap: false },
+      ])
     );
   }
 
@@ -206,7 +214,8 @@ export default class RichText extends PIXI.Sprite {
   private calculateMeasurements(
     tokens: TaggedTextToken[],
     maxLineWidth: number = Number.POSITIVE_INFINITY,
-    align: Align
+    align: Align = "left",
+    lineSpacing = 0
   ): PIXI.Rectangle[] {
     const sizer = new PIXI.Text("");
     const measurements = [];
@@ -214,32 +223,35 @@ export default class RichText extends PIXI.Sprite {
     let largestLineHeight = 0;
     const offset = new PIXI.Point(0, 0);
 
-    const updateOffsetForNewLine = (): void => {
+    const updateOffsetForNewLine = (
+      offset: PIXI.Point,
+      largestLineHeight: number,
+      lineSpacing: number
+    ): PIXI.Point => {
       // handle new line.
       offset.x = 0;
       offset.y += largestLineHeight;
+      offset.y += lineSpacing;
+      return offset;
     };
 
-    const rectFromSizer = (
-      sizer: PIXI.Container,
-      offset: PIXI.Point,
-      align: Align
+    const rectFromContainer = (
+      container: PIXI.Container,
+      offset: PIXI.Point
     ): PIXI.Rectangle => {
-      const w = sizer.width;
-      const h = sizer.height;
-      let x = offset.x + sizer.x;
-      const y = offset.y + sizer.y;
+      const w = container.width;
+      const h = container.height;
+      const x = offset.x + container.x;
+      const y = offset.y + container.y;
 
-      if (align === "right") {
-        x = maxLineWidth - x;
-      }
       return new PIXI.Rectangle(x, y, w, h);
     };
 
+    // TODO: group measurements by line
     for (const token of tokens) {
       for (const tag of token.tags) {
         if (tag.tagName === LINE_BREAK_TAG_NAME) {
-          updateOffsetForNewLine();
+          updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
           break;
         }
       }
@@ -248,16 +260,17 @@ export default class RichText extends PIXI.Sprite {
         sizer.style = this.combineStyles([
           this.defaultStyle,
           this.getStyleForTags(token.tags),
+          { wordWrap: false },
         ]);
 
         largestLineHeight = Math.max(lastMeasurement.height, largestLineHeight);
 
-        let size = rectFromSizer(sizer, offset, align);
+        let size = rectFromContainer(sizer, offset);
 
         // if new size would exceed the max line width...
         if (size.right > maxLineWidth) {
-          updateOffsetForNewLine();
-          size = rectFromSizer(sizer, offset, align);
+          updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
+          size = rectFromContainer(sizer, offset);
         }
 
         offset.x = size.right;
