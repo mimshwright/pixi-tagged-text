@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1615405837707" clover="3.2.0">
+  <project timestamp="1615405837707" name="All files">
+    <metrics statements="12" coveredstatements="9" conditionals="2" coveredconditionals="2" methods="4" coveredmethods="1" elements="18" coveredelements="12" complexity="0" loc="12" ncloc="12" packages="1" files="1" classes="1"/>
+    <file name="pixiUtils.ts" path="/Users/mimswright/libs/js/pixi-multistyle-text/src/pixiUtils.ts">
+      <metrics statements="12" coveredstatements="9" conditionals="2" coveredconditionals="2" methods="4" coveredmethods="1"/>
+      <line num="2" count="1" type="stmt"/>
+      <line num="4" count="1" type="stmt"/>
+      <line num="5" count="0" type="stmt"/>
+      <line num="7" count="1" type="stmt"/>
+      <line num="9" count="0" type="stmt"/>
+      <line num="11" count="1" type="stmt"/>
+      <line num="14" count="0" type="stmt"/>
+      <line num="16" count="1" type="stmt"/>
+      <line num="20" count="4" type="stmt"/>
+      <line num="21" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="22" count="3" type="stmt"/>
+      <line num="26" count="1" type="stmt"/>
+    </file>
+  </project>
+</coverage>

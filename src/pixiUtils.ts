@@ -15,14 +15,13 @@ export const measureTextWidth = (
 
 export const checkPixiVersion = (
   version: string,
-  minimumVersion: number
+  expectedMajorVersion: number
 ): number => {
   const majorVersion = parseInt(version.split(".")[0], 10);
-  if (majorVersion < minimumVersion) {
+  if (majorVersion !== expectedMajorVersion) {
     throw new Error(
-      `Detected Pixi.js version ${PIXI.VERSION}. pixi-multistyle-text supports Pixi.js version 5+. (Please use v0.8.0 for Pixi 4 support.)`
+      `Detected Pixi.js version ${PIXI.VERSION}. pixi-multistyle-text supports Pixi.js version 5. (Please use v0.8.0 for Pixi 4 support.)`
     );
-    return 1;
   }
   return 0;
 };
