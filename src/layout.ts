@@ -1,3 +1,4 @@
+import * as PIXI from "pixi.js";
 import { combineAllStyles, getStyleForTags } from "./style";
 import { LINE_BREAK_TAG_NAME } from "./tags";
 import { Align, TaggedTextToken, TextStyleSet } from "./types";
