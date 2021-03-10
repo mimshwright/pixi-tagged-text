@@ -61,8 +61,8 @@
   },
   "scripts": {
     "demo": "npm run build && opener demo/index.html",
-    "dev": "microbundle watch  --name MultiStyleText",
-    "build": "microbundle --name MultiStyleText",
+    "dev": "microbundle watch  --name MultiStyleText --globals 'pixi.js'=PIXI",
+    "build": "microbundle --name MultiStyleText --globals 'pixi.js'=PIXI",
     "prepublishOnly": "npm run build",
     "release": "standard-version",
     "snapshot": "rm -rf happo-snapshots && happo run",
