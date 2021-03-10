@@ -24,6 +24,7 @@ export type Align = "left" | "right" | "center";
 export type Color = string | number;
 export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
 
+// todo: add text-transform: uppercase
 export interface TextStyle extends Record<string, unknown> {
   align?: Align;
   breakWords?: boolean;

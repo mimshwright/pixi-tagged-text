@@ -44,16 +44,6 @@ export const injectAttributes = (
 ): TextStyleExtended => combineRecords(style, attributes);
 
 /**
- * Converts TagWithAttributes into a style object.
- * @param param0 A TagWithAttributes object that has a tag name matched with any optional attributes.
- * @param tagStyles Set of tag styles to search.
- */
-const tagWithAttributesToStyle = (
-  { tagName, attributes }: TagWithAttributes,
-  tagStyles: TextStyleSet
-): TextStyleExtended => getStyleForTag(tagName, tagStyles, attributes);
-
-/**
  * Looks up a tag in a list of tag styles (with optional attributes) and returns it.
  * @param tagName Tag name to check.
  * @param tagStyles Set of tag styles to search.
@@ -64,6 +54,16 @@ export const getStyleForTag = (
   tagStyles: TextStyleSet,
   attributes: AttributesList = {}
 ): TextStyleExtended => injectAttributes(attributes, tagStyles[tagName]);
+
+/**
+ * Converts TagWithAttributes into a style object.
+ * @param param0 A TagWithAttributes object that has a tag name matched with any optional attributes.
+ * @param tagStyles Set of tag styles to search.
+ */
+export const tagWithAttributesToStyle = (
+  { tagName, attributes }: TagWithAttributes,
+  tagStyles: TextStyleSet
+): TextStyleExtended => getStyleForTag(tagName, tagStyles, attributes);
 
 /**
  * Gets styles for several tags and returns a single combined style object.
