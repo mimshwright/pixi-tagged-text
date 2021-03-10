@@ -12,8 +12,7 @@
     "outDir": "dist",
     "declaration": true,
     "pretty": true,
-    "lib": ["es2019", "DOM"]
-    "pretty": true,
+    "lib": ["es2019", "DOM"],
     "esModuleInterop": true
   },
   "exclude": ["node_modules", "dist", "bower_components"],
