@@ -1,5 +1,5 @@
-import { TextStyleExtended } from "./types";
 import * as PIXI from "pixi.js";
+import { TextStyleExtended } from "./types";
 
 export const getFontString = (style: TextStyleExtended): string =>
   new PIXI.TextStyle(style).toFontString();
