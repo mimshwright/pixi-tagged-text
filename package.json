@@ -33,8 +33,6 @@
     "render",
     "2d"
   ],
-  "author": "Mims Wright, JT Smith, Tommy Leunen <tommy.leunen@gmail.com> (http://tommyleunen.com/)",
-  "license": "MIT",
   "dependencies": {},
   "peerDependencies": {
     "pixi.js": "^5.3"
