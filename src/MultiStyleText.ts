@@ -665,8 +665,6 @@ export default class MultiStyleText extends PIXI.Text {
                   bbcodeTags !== null
                 ) {
                   bbStyle[styleName] = Number(bbcodeTags[1]) || styleRules;
-                } else {
-                  bbStyle[styleName] = styleRules;
                 }
               });
 

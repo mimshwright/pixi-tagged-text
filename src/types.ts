@@ -11,12 +11,20 @@ export interface HitboxData {
   hitbox: PIXI.Rectangle;
 }
 
+export type SplitStyle = "words" | "characters";
+
+export interface RichTextOptions {
+  debug?: boolean;
+  splitStyle?: SplitStyle;
+}
+
 export type TagStyle = "bbcode" | "xml";
 export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
 export type Align = "left" | "right" | "center";
 export type Color = string | number;
 export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
-export interface TextStyle {
+
+export interface TextStyle extends Record<string, unknown> {
   align?: Align;
   breakWords?: boolean;
   dropShadow?: boolean;

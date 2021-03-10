@@ -1,37 +1,49 @@
-import {
-  tokensToString,
-  parseTags as parseTagsExt,
-  removeTags,
-  LINE_BREAK_TAG_NAME,
-} from "./Tags";
 import * as PIXI from "pixi.js";
+import { parseTags as parseTagsExt, removeTags } from "./tags";
 import {
+  RichTextOptions,
   TextStyleSet,
   TextStyleExtended,
   TaggedTextToken,
   TagWithAttributes,
   AttributesList,
-  Align,
 } from "./types";
+import { calculateMeasurements } from "./layout";
+import { combineAllStyles, getStyleForTag as getStyleForTagExt } from "./style";
 
 const DEFAULT_STYLE: TextStyleExtended = {
   align: "left",
   wordWrap: true,
   wordWrapWidth: 500,
 };
+
+const DEFAULT_OPTIONS: RichTextOptions = {
+  debug: false,
+  splitStyle: "words",
+};
 export default class RichText extends PIXI.Sprite {
-  constructor(text = "", tagStyles: TextStyleSet = {}, texture?: PIXI.Texture) {
+  constructor(
+    text = "",
+    tagStyles: TextStyleSet = {},
+    options: RichTextOptions = {},
+    texture?: PIXI.Texture
+  ) {
     super(texture);
 
     this._textContainer = new PIXI.Container();
     this.addChild(this.textContainer);
 
-    const mergedDefault = { ...DEFAULT_STYLE, ...tagStyles.default };
-    tagStyles.default = mergedDefault;
+    const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+    this.options = mergedOptions;
+
+    const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
+    tagStyles.default = mergedDefaultStyles;
     this.tagStyles = tagStyles;
 
     this.text = text;
   }
+
+  private options: RichTextOptions;
 
   private _text = "";
   public get text(): string {
@@ -62,33 +74,18 @@ export default class RichText extends PIXI.Sprite {
     // }
   }
 
-  public combineStyles(styles: TextStyleExtended[]): TextStyleExtended {
-    return styles.reduce(
-      (comboStyle, style) => (comboStyle = { ...comboStyle, ...style }),
-      {}
-    );
-  }
-
-  private injectAttributes(
-    style: TextStyleExtended,
-    attributes: AttributesList
-  ): TextStyleExtended {
-    return { ...style, ...attributes };
-  }
-
   public getStyleForTag(
     tag: string,
-    attributes: AttributesList
+    attributes: AttributesList = {}
   ): TextStyleExtended {
-    const style = this.tagStyles[tag];
-    const styleWithAttributes = this.injectAttributes(style, attributes);
-    return styleWithAttributes;
+    return getStyleForTagExt(tag, this.tagStyles, attributes);
   }
+
   public getStyleForTags(tags: TagWithAttributes[]): TextStyleExtended {
     const styles = tags.map(({ tagName, attributes }) =>
       this.getStyleForTag(tagName, attributes)
     );
-    return this.combineStyles(styles);
+    return combineAllStyles(styles);
   }
   public setStyleForTag(tag: string, styles: TextStyleExtended): boolean {
     // todo: check for deep equality
@@ -152,9 +149,10 @@ export default class RichText extends PIXI.Sprite {
       : Number.POSITIVE_INFINITY;
     const align = this.defaultStyle.align;
     const lineSpacing = this.defaultStyle.lineSpacing;
-    const measurements = this.calculateMeasurements(
+    const measurements = calculateMeasurements(
       tokens,
       wordWrapWidth,
+      this.tagStyles,
       align,
       lineSpacing
     );
@@ -173,7 +171,9 @@ export default class RichText extends PIXI.Sprite {
     this.addChildrenToTextContainer(textFields);
     this._textFields = textFields;
 
-    this.drawDebug();
+    if (this.options.debug) {
+      this.drawDebug();
+    }
 
     // console.log(this.untaggedText);
   }
@@ -191,7 +191,7 @@ export default class RichText extends PIXI.Sprite {
   private createTextFieldForToken(token: TaggedTextToken): PIXI.Text {
     return new PIXI.Text(
       token.text,
-      this.combineStyles([
+      combineAllStyles([
         this.defaultStyle,
         this.getStyleForTags(token.tags),
         { wordWrap: false },
@@ -209,77 +209,6 @@ export default class RichText extends PIXI.Sprite {
       d.x = m.x;
       d.y = m.y;
     }
-  }
-
-  private calculateMeasurements(
-    tokens: TaggedTextToken[],
-    maxLineWidth: number = Number.POSITIVE_INFINITY,
-    align: Align = "left",
-    lineSpacing = 0
-  ): PIXI.Rectangle[] {
-    const sizer = new PIXI.Text("");
-    const measurements = [];
-    let lastMeasurement = new PIXI.Rectangle(0, 0, 0, 0);
-    let largestLineHeight = 0;
-    const offset = new PIXI.Point(0, 0);
-
-    const updateOffsetForNewLine = (
-      offset: PIXI.Point,
-      largestLineHeight: number,
-      lineSpacing: number
-    ): PIXI.Point => {
-      // handle new line.
-      offset.x = 0;
-      offset.y += largestLineHeight;
-      offset.y += lineSpacing;
-      return offset;
-    };
-
-    const rectFromContainer = (
-      container: PIXI.Container,
-      offset: PIXI.Point
-    ): PIXI.Rectangle => {
-      const w = container.width;
-      const h = container.height;
-      const x = offset.x + container.x;
-      const y = offset.y + container.y;
-
-      return new PIXI.Rectangle(x, y, w, h);
-    };
-
-    // TODO: group measurements by line
-    for (const token of tokens) {
-      for (const tag of token.tags) {
-        if (tag.tagName === LINE_BREAK_TAG_NAME) {
-          updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
-          break;
-        }
-      }
-      if (token.text !== "") {
-        sizer.text = token.text;
-        sizer.style = this.combineStyles([
-          this.defaultStyle,
-          this.getStyleForTags(token.tags),
-          { wordWrap: false },
-        ]);
-
-        largestLineHeight = Math.max(lastMeasurement.height, largestLineHeight);
-
-        let size = rectFromContainer(sizer, offset);
-
-        // if new size would exceed the max line width...
-        if (size.right > maxLineWidth) {
-          updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
-          size = rectFromContainer(sizer, offset);
-        }
-
-        offset.x = size.right;
-
-        measurements.push(size);
-        lastMeasurement = size;
-      }
-    }
-    return measurements;
   }
 
   // FIXME: for some reason, this doesn't work on the first time it's used in the demos.

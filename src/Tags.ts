@@ -153,7 +153,7 @@ export const createTokens = (
   }
   if (activeTags.length > 0) {
     console.warn(
-      `Found ${activeTags.length} unclosed tags in ${this}\n${activeTags
+      `Found ${activeTags.length} unclosed tags in\n${activeTags
         .map((tag) => tag.tagName)
         .join("-")}`
     );
