@@ -7,6 +7,7 @@ import {
   TaggedTextToken,
   TagWithAttributes,
   AttributesList,
+  Measurement,
 } from "./types";
 import { calculateMeasurements } from "./layout";
 import { combineAllStyles, getStyleForTag as getStyleForTagExt } from "./style";
@@ -44,6 +45,8 @@ export default class RichText extends PIXI.Sprite {
   }
 
   private options: RichTextOptions;
+
+  private animationRequest = NaN;
 
   private _text = "";
   public get text(): string {
@@ -156,7 +159,6 @@ export default class RichText extends PIXI.Sprite {
       align,
       lineSpacing
     );
-    console.log(measurements);
 
     // console.log({
     //   wordWrap: this.defaultStyle.wordWrap,
@@ -165,6 +167,18 @@ export default class RichText extends PIXI.Sprite {
     //   wordWrapWidth: this.defaultStyle.wordWrapWidth,
     // });
 
+    // Wait one frame to draw so that this doesn't happen multiple times in one frame.
+    // if (this.animationRequest) {
+    //   window.cancelAnimationFrame(this.animationRequest);
+    // }
+    // this.animationRequest = window.requestAnimationFrame(
+    this.draw(tokens, measurements);
+    // );
+
+    // console.log(this.untaggedText);
+  }
+
+  private draw(tokens: TaggedTextToken[], measurements: Measurement[]): void {
     this.resetTextFields();
     const textFields = this.createTextFieldsForTokens(tokens);
     this.positionDisplayObjects(textFields, measurements);
@@ -174,8 +188,6 @@ export default class RichText extends PIXI.Sprite {
     if (this.options.debug) {
       this.drawDebug();
     }
-
-    // console.log(this.untaggedText);
   }
 
   private parseTags() {

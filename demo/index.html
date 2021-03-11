@@ -89,6 +89,87 @@
 
       <div class="example">
         <div class="code">
+          <h2>Alignment</h2>
+          <pre><code class="js">
+          </code></pre>
+        </div>
+        <div class="pixi" id="align">
+          <script>
+            // Alignment.
+            const str = `You can align left, right, center or justify.\nEt veniam nemo sunt ab facilis voluptatem voluptas est debitis.`;
+            const style = {
+              default: {
+                align: "left",
+                fill: "teal",
+                wordWrapWidth: 250,
+              },
+              b: {
+                fontWeight: "700",
+                fill: "white",
+              },
+            };
+            const opt = { debug: true };
+
+            let left = createComparisonText(
+              str.replace("left", "<b>left</b>"),
+              style,
+              {}
+            );
+            let right = new RichText(
+              str.replace("right", "<b>right</b>"),
+              {
+                ...style,
+                default: {
+                  align: "right",
+                  fill: "orange",
+                  wordWrapWidth: 250,
+                },
+              },
+              opt
+            );
+            right.x = 330;
+            right.y = 30;
+
+            let center = new RichText(
+              str.replace("center", "<b>center</b>"),
+              {
+                ...style,
+                default: {
+                  align: "center",
+                  fill: "yellow",
+                  wordWrapWidth: 250,
+                },
+              },
+              opt
+            );
+            center.x = 30;
+            center.y = 330;
+
+            let justify = new RichText(
+              str.replace("justify", "<b>justify</b>"),
+              {
+                ...style,
+                default: {
+                  align: "justify",
+                  fill: "pink",
+                  wordWrapWidth: 250,
+                },
+              },
+              opt
+            );
+            justify.x = 330;
+            justify.y = 330;
+
+            const [r, stage] = createDemo(left, "align");
+            stage.addChild(right);
+            stage.addChild(center);
+            stage.addChild(justify);
+            r.render(stage);
+          </script>
+        </div>
+      </div>
+      <div class="example">
+        <div class="code">
           <h2>Attributes</h2>
           <pre><code class="js">
           </code></pre>

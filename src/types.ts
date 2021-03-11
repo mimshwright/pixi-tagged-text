@@ -20,7 +20,7 @@ export interface RichTextOptions {
 
 export type TagStyle = "bbcode" | "xml";
 export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
-export type Align = "left" | "right" | "center";
+export type Align = "left" | "right" | "center" | "justify";
 export type Color = string | number;
 export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
 
@@ -195,4 +195,13 @@ export type TagStack = TagMatchData[];
 export interface TaggedTextToken {
   text: string;
   tags: TagWithAttributes[];
+}
+
+export type Measurement = PIXI.Rectangle;
+export type MeasurementLine = Measurement[];
+export type MeasurementLines = MeasurementLine[];
+
+export interface Point {
+  x: number;
+  y: number;
 }
