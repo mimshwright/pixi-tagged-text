@@ -1,5 +1,5 @@
+import { getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
-import { combineAllStyles, getStyleForTags } from "./style";
 import { LINE_BREAK_TAG_NAME } from "./tags";
 import {
   Align,
@@ -7,8 +7,9 @@ import {
   MeasurementLine,
   MeasurementLines,
   Point,
-  TaggedTextToken,
-  TextStyleSet,
+  TaggedTextTokenWithMeasurement,
+  TaggedTextTokenWithStyle,
+  VAlign,
 } from "./types";
 
 const updateOffsetForNewLine = (
@@ -94,6 +95,45 @@ export const justifyLine = (maxLineWidth: number) => (
   return line;
 };
 
+const getTallestHeight = (line: MeasurementLine): number =>
+  line.reduce((tallest, position) => Math.max(position.height, tallest), 0);
+
+export const valignTop = (line: MeasurementLine): MeasurementLine =>
+  line.map((position: Measurement) => {
+    const newPosition = position.clone();
+    newPosition.y = 0;
+    return newPosition;
+  });
+
+export const valignBottom = (line: MeasurementLine): MeasurementLine => {
+  const tallestHeight = getTallestHeight(line);
+  return line.map((position: Measurement) => {
+    const newPosition = position.clone();
+    newPosition.y = tallestHeight - newPosition.height;
+    return newPosition;
+  });
+};
+
+export const valignMiddle = (line: MeasurementLine): MeasurementLine => {
+  const tallestHeight = getTallestHeight(line);
+  return line.map((position: Measurement) => {
+    const newPosition = position.clone();
+    newPosition.y = (tallestHeight - newPosition.height) / 2;
+    return newPosition;
+  });
+};
+
+export const verticalAlignInLines = (
+  valign: VAlign,
+  lines: MeasurementLines
+): MeasurementLines =>
+  valign === "top"
+    ? lines.map(valignTop)
+    : valign === "middle"
+    ? lines.map(valignMiddle)
+    : valign === "bottom"
+    ? lines.map(valignBottom)
+    : lines;
 /**
  * Adjusts the values in the lines to match the current layout.
  */
@@ -129,25 +169,19 @@ export const alignTextInLines = (
  * @returns Array of Rectangle objects pertaining to each piece of text.
  */
 export const calculateMeasurements = (
-  tokens: TaggedTextToken[],
+  tokens: TaggedTextTokenWithStyle[],
   maxLineWidth: number = Number.POSITIVE_INFINITY,
-  tagStyles: TextStyleSet,
   align: Align = "left",
   lineSpacing = 0
-): Measurement[] => {
+): TaggedTextTokenWithMeasurement[] => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
 
-  const measurements: Measurement[] = [];
+  const lines: MeasurementLines = [[]];
   let previousMeasurement = new PIXI.Rectangle(0, 0, 0, 0);
   let largestLineHeight = 0;
   let offset = { x: 0, y: 0 };
-  const { default: defaultStyle } = tagStyles;
   let currentLine = 0;
-  const lines: MeasurementLines = [[]];
-
-  // Todo: use Align parameter.
-  align;
 
   // TODO: group measurements by line
   for (const token of tokens) {
@@ -160,11 +194,9 @@ export const calculateMeasurements = (
     }
     if (token.text !== "") {
       sizer.text = token.text;
-      sizer.style = combineAllStyles([
-        defaultStyle,
-        getStyleForTags(token.tags, tagStyles),
-        { wordWrap: false },
-      ]);
+      sizer.style = token.style;
+
+      const fontProperties = getFontPropertiesOfText(sizer, true);
 
       largestLineHeight = Math.max(
         previousMeasurement.height,
@@ -181,18 +213,26 @@ export const calculateMeasurements = (
       }
 
       if (lines[currentLine] === undefined) {
-        lines.push([]);
+        lines[currentLine] = [];
       }
       lines[currentLine].push(size);
 
       offset.x = size.right;
 
-      measurements.push(size);
       previousMeasurement = size;
     }
   }
 
   const aligned = alignTextInLines(align, maxLineWidth, lines);
+  const valigned = verticalAlignInLines("baseline", aligned).flat();
 
-  return aligned.flat();
+  const tokensWithTags = [];
+  for (let i = 0; i < tokens.length; i++) {
+    tokensWithTags[i] = {
+      ...tokens[i],
+      measurement: valigned[i],
+    };
+  }
+
+  return tokensWithTags;
 };

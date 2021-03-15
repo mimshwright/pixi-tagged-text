@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { parseTags as parseTagsExt, removeTags } from "./tags";
+import { parseTags, removeTags } from "./tags";
 import {
   RichTextOptions,
   TextStyleSet,
@@ -7,10 +7,15 @@ import {
   TaggedTextToken,
   TagWithAttributes,
   AttributesList,
-  Measurement,
+  TaggedTextTokenWithMeasurement,
+  TaggedTextTokenWithStyle,
 } from "./types";
 import { calculateMeasurements } from "./layout";
-import { combineAllStyles, getStyleForTag as getStyleForTagExt } from "./style";
+import {
+  combineAllStyles,
+  getStyleForTag as getStyleForTagExt,
+  getStyleForToken,
+} from "./style";
 
 const DEFAULT_STYLE: TextStyleExtended = {
   align: "left",
@@ -136,50 +141,55 @@ export default class RichText extends PIXI.Sprite {
   }
 
   private update() {
-    // TODO:
-    // position each text field correctly.
-    // draw?
+    // steps:
+    // Pre-process text.
+    // Parse tags in the text.
+    // Measure font for each style
+    // Assign styles to each segment.
+    // Measure each segment
+    // Create the text segments, position and add them. (draw)
 
-    // const rawText = this.text;
-    this.resetTextFields();
-
-    const tokens = this.parseTags();
+    const tokens = parseTags(this.text, this.tagStyles);
     // console.log(this.untaggedText);
-    // console.log(tokensToString(tokens));
 
+    const tagStyles = this.tagStyles;
+
+    const tokensWithStyle = tokens.map(
+      (t) =>
+        ({
+          ...t,
+          style: getStyleForToken(t, tagStyles),
+        } as TaggedTextTokenWithStyle)
+    );
+
+    // Determine default style properties
     const wordWrapWidth = this.defaultStyle.wordWrap
       ? this.defaultStyle.wordWrapWidth
       : Number.POSITIVE_INFINITY;
     const align = this.defaultStyle.align;
     const lineSpacing = this.defaultStyle.lineSpacing;
-    const measurements = calculateMeasurements(
-      tokens,
+
+    const measuredTokens = calculateMeasurements(
+      tokensWithStyle,
       wordWrapWidth,
-      this.tagStyles,
       align,
       lineSpacing
     );
-
-    // console.log({
-    //   wordWrap: this.defaultStyle.wordWrap,
-    //   width: this.width,
-    //   localBounds: this.getLocalBounds(),
-    //   wordWrapWidth: this.defaultStyle.wordWrapWidth,
-    // });
 
     // Wait one frame to draw so that this doesn't happen multiple times in one frame.
     // if (this.animationRequest) {
     //   window.cancelAnimationFrame(this.animationRequest);
     // }
     // this.animationRequest = window.requestAnimationFrame(
-    this.draw(tokens, measurements);
+    this.draw(measuredTokens);
     // );
 
     // console.log(this.untaggedText);
   }
 
-  private draw(tokens: TaggedTextToken[], measurements: Measurement[]): void {
+  private draw(tokens: TaggedTextTokenWithMeasurement[]): void {
     this.resetTextFields();
+    const measurements = tokens.map(({ measurement }) => measurement);
     const textFields = this.createTextFieldsForTokens(tokens);
     this.positionDisplayObjects(textFields, measurements);
     this.addChildrenToTextContainer(textFields);
@@ -188,10 +198,6 @@ export default class RichText extends PIXI.Sprite {
     if (this.options.debug) {
       this.drawDebug();
     }
-  }
-
-  private parseTags() {
-    return parseTagsExt(this.text, this.tagStyles);
   }
 
   private createTextFieldsForTokens(tokens: TaggedTextToken[]): PIXI.Text[] {

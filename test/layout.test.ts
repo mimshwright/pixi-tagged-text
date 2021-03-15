@@ -135,4 +135,37 @@ describe("layout module", () => {
       expect(justify).toMatchObject([j(lines[0]), j(lines[1]), j(lines[2])]);
     });
   });
+  describe("verticalAlignInLines()", () => {
+    it("should position text vertically in a line so that it fits correctly.", () => {
+      const lines = [
+        [new PIXI.Rectangle(0, 0, W, 20), new PIXI.Rectangle(100, 0, W, 40)],
+        [
+          new PIXI.Rectangle(0, 30, W, 30),
+          new PIXI.Rectangle(100, 30, W, 40),
+          new PIXI.Rectangle(200, 30, W, 10),
+        ],
+        [new PIXI.Rectangle(0, 60, W, 20)],
+      ];
+
+      const top = layout.verticalAlignInLines("top", lines);
+      const bottom = layout.verticalAlignInLines("bottom", lines);
+      const middle = layout.verticalAlignInLines("middle", lines);
+
+      expect(top).toMatchObject([
+        [{ y: 0 }, { y: 0 }],
+        [{ y: 0 }, { y: 0 }, { y: 0 }],
+        [{ y: 0 }],
+      ]);
+      expect(bottom).toMatchObject([
+        [{ y: 20 }, { y: 0 }],
+        [{ y: 10 }, { y: 0 }, { y: 30 }],
+        [{ y: 0 }],
+      ]);
+      expect(middle).toMatchObject([
+        [{ y: 10 }, { y: 0 }],
+        [{ y: 5 }, { y: 0 }, { y: 15 }],
+        [{ y: 0 }],
+      ]);
+    });
+  });
 });

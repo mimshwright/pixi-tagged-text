@@ -14,6 +14,7 @@ const initialFontProps = {
   fontSize: 13,
 };
 
+// TODO: Memoize
 export const getFontPropertiesOfText = (
   textField: PIXI.Text,
   forceUpdate = false
