@@ -54,22 +54,38 @@ describe("pixiUtils", () => {
       expect(fontProps.fontSize).toBe(34);
     });
 
-    it("should not throw an error if you happen to set your text to the same value as the initial values.", () => {
-      const trickyText = new PIXI.Text("Tricky", {
-        fontSize: 11,
-        fontFamily: "arial",
+    describe("What if the text you want is exactly what the initial value is?", () => {
+      it("should not throw an error if you happen to set your text to the same value as the initial values.", () => {
+        const trickyText = new PIXI.Text("Tricky", {
+          fontSize: 11,
+          fontFamily: "arial",
+        });
+        expect(() => {
+          const initialFontProps = pixiUtils.getFontPropertiesOfText(
+            trickyText,
+            false
+          );
+          const actualFontProps = pixiUtils.getFontPropertiesOfText(
+            trickyText,
+            true
+          );
+          expect(actualFontProps).toMatchObject(initialFontProps);
+        }).not.toThrowError();
       });
-      expect(() => {
-        const initialFontProps = pixiUtils.getFontPropertiesOfText(
-          trickyText,
-          false
-        );
-        const actualFontProps = pixiUtils.getFontPropertiesOfText(
-          trickyText,
-          true
-        );
-        expect(actualFontProps).toMatchObject(initialFontProps);
-      }).not.toThrowError();
+
+      it("...however, it will throw if the fontSize is a string (rather than trying to convert it to pxs) unless you use force.", () => {
+        const trickyText = new PIXI.Text("Tricky", {
+          fontSize: "0.688em",
+          fontFamily: "arial",
+        });
+        expect(() => {
+          pixiUtils.getFontPropertiesOfText(trickyText, false);
+        }).toThrowError();
+
+        expect(() => {
+          pixiUtils.getFontPropertiesOfText(trickyText, true);
+        }).not.toThrowError();
+      });
     });
   });
 });

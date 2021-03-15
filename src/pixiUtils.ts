@@ -27,10 +27,11 @@ export const getFontPropertiesOfText = (
     if (
       props.ascent === initialFontProps.ascent &&
       props.descent === initialFontProps.descent &&
-      textField.style.fontSize > initialFontProps.fontSize
+      (textField.style.fontSize > initialFontProps.fontSize ||
+        isNaN(textField.style.fontSize))
     ) {
       throw new Error(
-        "getFontPropertiesOfText() returned metrics associated with a Text field that has not been updated yet. Please try using the forceUpdate parameter when you call this function. If you think this error is a mistake, wrap it in a try/catch block."
+        "getFontPropertiesOfText() returned metrics associated with a Text field that has not been updated yet. Please try using the forceUpdate parameter when you call this function."
       );
     }
     return measureFont(textField.context);
