@@ -1,20 +1,11 @@
+import { combineRecords } from "./functionalUtils";
 import {
   AttributesList,
+  TaggedTextToken,
   TagWithAttributes,
   TextStyleExtended,
   TextStyleSet,
 } from "./types";
-
-export const combineRecords = <
-  A extends Record<string, unknown>,
-  B extends Record<string, unknown> = A
->(
-  a: A,
-  b: B
-): A & B => ({
-  ...a,
-  ...b,
-});
 
 /**
  * Combine 2 styles into one.
@@ -75,4 +66,13 @@ export const getStyleForTags = (
   tags: TagWithAttributes[],
   tagStyles: TextStyleSet
 ): TextStyleExtended =>
+  // TODO: Memoize
   combineAllStyles(tags.map((tag) => tagWithAttributesToStyle(tag, tagStyles)));
+
+/**
+ * Gets style associated with the stacked tags for the token.
+ */
+export const getStyleForToken = (
+  token: TaggedTextToken,
+  tagStyles: TextStyleSet
+): TextStyleExtended => getStyleForTags(token.tags, tagStyles);
