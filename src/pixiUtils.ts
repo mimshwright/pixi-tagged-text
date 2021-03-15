@@ -8,6 +8,33 @@ export const measureFont = (
   context: CanvasRenderingContext2D
 ): PIXI.IFontMetrics => PIXI.TextMetrics.measureFont(context.font);
 
+const initialFontProps = {
+  ascent: 10,
+  descent: 3,
+  fontSize: 13,
+};
+
+export const getFontPropertiesOfText = (
+  textField: PIXI.Text,
+  forceUpdate = false
+): PIXI.IFontMetrics => {
+  if (forceUpdate) {
+    textField.updateText(false);
+    return measureFont(textField.context);
+  } else {
+    const props = measureFont(textField.context);
+    if (
+      props.ascent === initialFontProps.ascent &&
+      props.descent === initialFontProps.descent &&
+      textField.style.fontSize > initialFontProps.fontSize
+    ) {
+      throw new Error(
+        "getFontPropertiesOfText() returned metrics associated with a Text field that has not been updated yet. Please try using the forceUpdate parameter when you call this function. If you think this error is a mistake, wrap it in a try/catch block."
+      );
+    }
+    return measureFont(textField.context);
+  }
+};
 /**
  * Shortcut function for getting text metrix data from a text string in the current context.
  */
