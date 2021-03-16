@@ -121,7 +121,7 @@ export const verticalAlignInLines = (
     );
     let tallestFont = getTallestFontProperties(fontPropertiesForLine);
 
-    if (line.length < 2) {
+    if (line.length === 1 && line[0].text === "") {
       tallestFont = previousTallestFont;
     }
 
