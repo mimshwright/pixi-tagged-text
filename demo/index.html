@@ -25,69 +25,64 @@
         var RichText = pixiMultistyleText.RichText;
         const opt = { debug: false };
 
-        function appendPixiRendererToId(
+        function createPixiApp(
           id,
           width = 600,
           height = 600,
           backgroundColor = 0x333333
         ) {
           PIXI.settings.RESOLUTION = 2;
-          let renderer = PIXI.autoDetectRenderer({
-            width,
-            height,
-          });
-          renderer.backgroundColor = backgroundColor;
-          document.getElementById(id).appendChild(renderer.view);
+          const app = new PIXI.Application({ width, height, backgroundColor });
+          document.getElementById(id).appendChild(app.view);
 
-          return renderer;
+          return app;
         }
 
-        function createPixiRendererAndStage(id) {
-          const renderer = appendPixiRendererToId(id);
-          const stage = new PIXI.Sprite();
-          const render = () => renderer.render(stage);
+        function createDemo(
+          id,
+          richTextExample,
+          multiStyleTextExample = undefined
+        ) {
+          const app = createPixiApp(id);
 
-          return [renderer, stage, render];
-        }
+          if (richTextExample !== undefined) {
+            richTextExample.x = 30;
+            richTextExample.y = 30;
+            app.stage.addChild(richTextExample);
+          }
 
-        function createDemo(children, id) {
-          const [renderer, stage] = createPixiRendererAndStage(id);
+          if (multiStyleTextExample !== undefined) {
+            //  multiStyleTextExample.x = 300 -  multiStyleTextExample.width / 2;
+            multiStyleTextExample.x = 30;
+            multiStyleTextExample.y = 30;
+            multiStyleTextExample.alpha = 0.5;
+            multiStyleTextExample.visible = false;
+            app.stage.addChild(multiStyleTextExample);
+          }
 
-          children.forEach((child) => {
-            // child.x = 300 - child.width / 2;
-            child.x = 30;
-            child.y = 30;
-            stage.addChild(child);
-          });
-          const [multistyle, richtext] = children;
-          multistyle.alpha = 0.5;
-          // multistyle.visible = false;
+          // const tf = new PIXI.Text(
+          //   "synthesize Senior Directives extranet Refined Delectus quisquam rerum doloremque quo veniam ut optio nesciunt dicta. Est dolorum asperiores. Aperiam rem et aut rerum dolorem. Numquam reprehenderit sunt. Cum illum corrupti.",
+          //   {
+          //     align: "left",
+          //     wordWrap: false,
+          //     wordWrapWidth: 500,
+          //     fill: "#FF00FF",
+          //   }
+          // );
+          // tf.x = children[1].x;
+          // tf.y = children[1].y;
+          // tf.visible = false;
+          // app.stage.addChild(tf);
 
-          const tf = new PIXI.Text(
-            "synthesize Senior Directives extranet Refined Delectus quisquam rerum doloremque quo veniam ut optio nesciunt dicta. Est dolorum asperiores. Aperiam rem et aut rerum dolorem. Numquam reprehenderit sunt. Cum illum corrupti.",
-            {
-              align: "left",
-              wordWrap: false,
-              wordWrapWidth: 500,
-              fill: "#FF00FF",
-            }
-          );
-          tf.x = children[1].x;
-          tf.y = children[1].y;
-          tf.visible = false;
-          stage.addChild(tf);
-
-          renderer.render(stage);
-
-          return [renderer, stage];
+          return app;
         }
 
         // For testing purposes, temporarily replace the code that creates
         // text fields to create two of them to compare against each other.
         function createComparisonText(text, styles, overrideOptions) {
           return [
-            new MultiStyleText(text, styles),
             new RichText(text, styles, overrideOptions || opt),
+            new MultiStyleText(text, styles),
           ];
         }
       </script>
@@ -151,7 +146,7 @@ fill: &quot;#ff8888&quot;
               // You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.
               valignStyle
             );
-            createDemo(valign, "valign");
+            createDemo("valign", ...valign);
           </script>
         </div>
       </div>
@@ -177,11 +172,12 @@ fill: &quot;#ff8888&quot;
               },
             };
 
-            let left = createComparisonText(
+            let [leftRich, leftMulti] = createComparisonText(
               str.replace("left", "<b>left</b>"),
               style,
               {}
             );
+
             let right = new RichText(
               str.replace("right", "<b>right</b>"),
               {
@@ -227,11 +223,10 @@ fill: &quot;#ff8888&quot;
             justify.x = 330;
             justify.y = 330;
 
-            const [r, stage] = createDemo(left, "align");
-            stage.addChild(right);
-            stage.addChild(center);
-            stage.addChild(justify);
-            r.render(stage);
+            const alignApp = createDemo("align", leftRich, leftMulti);
+            alignApp.stage.addChild(right);
+            alignApp.stage.addChild(center);
+            alignApp.stage.addChild(justify);
           </script>
         </div>
       </div>
@@ -260,7 +255,7 @@ fill: &quot;#ff8888&quot;
               }
             );
 
-            createDemo(attributes, "attributes");
+            createDemo("attributes", ...attributes);
           </script>
         </div>
       </div>
@@ -294,7 +289,7 @@ fill: &quot;#ff8888&quot;
         <div class="pixi" id="basic">
           <script>
             // Basics
-            let text = createComparisonText(
+            let basic = createComparisonText(
               "Let's make some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
               {
                 default: {
@@ -319,7 +314,7 @@ fill: &quot;#ff8888&quot;
               { debug: true }
             );
 
-            createDemo(text, "basic");
+            createDemo("basic", ...basic);
           </script>
         </div>
       </div>
@@ -339,7 +334,7 @@ fill: &quot;#ff8888&quot;
         <div class="pixi" id="bbcode">
           <script>
             // Tag Styles
-            let bbcode = createComparisonText(
+            let [bbcodeRich, bbcodeMulti] = createComparisonText(
               "Let's make some [b]bold[/b]\n [color=yellow][i]multistyle[/i][/color] [size=40]bbcode[/size] [outline=purple]tags[/outline] text for \n[spacing=10]Pixi.js![/spacing]",
               {
                 default: {
@@ -349,8 +344,8 @@ fill: &quot;#ff8888&quot;
                 },
               }
             );
-            bbcode[1].text = "bbcode not supported!";
-            createDemo(bbcode, "bbcode");
+            bbcodeRich.text = "bbcode not supported!";
+            createDemo("bbcode", bbcodeRich, bbcodeMulti);
           </script>
         </div>
       </div>
@@ -397,7 +392,7 @@ fill: &quot;#ff8888&quot;
                 large: { fontSize: "36px" },
               }
             );
-            createDemo(nested, "nested");
+            createDemo("nested", ...nested);
           </script>
         </div>
       </div>
@@ -442,7 +437,7 @@ stage.addChild(lineSpacing);
               }
             );
 
-            createDemo(spacing, "spacing");
+            createDemo("spacing", ...spacing);
           </script>
         </div>
       </div>
@@ -477,7 +472,7 @@ stage.addChild(lineSpacing);
                 },
               }
             );
-            createDemo(wrapping, "wrapping");
+            createDemo("wrapping", ...wrapping);
           </script>
         </div>
       </div>
@@ -521,7 +516,7 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
                 big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
               }
             );
-            createDemo(wrapping2, "wrapping2");
+            createDemo("wrapping2", ...wrapping2);
           </script>
         </div>
       </div>
@@ -579,7 +574,7 @@ let debug = new MultiStyleText(&quot;You can use &lt;code&gt;debug mode&lt;/code
             MultiStyleText.debugOptions.spans.enabled = true;
             MultiStyleText.debugOptions.objects.enabled = true;
 
-            createDemo(debug, "debug");
+            createDemo("debug", ...debug);
 
             MultiStyleText.debugOptions.spans.enabled = false;
             MultiStyleText.debugOptions.objects.enabled = false;
@@ -615,7 +610,7 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
         <div class="pixi" id="interaction">
           <script>
             // Interaction Events
-            let interaction = createComparisonText(
+            let [interactionRich, interactionMulti] = createComparisonText(
               `If you enable <link name="interaction">interaction</link>, you can get <link name="information">information</link> about which <link name="tag">tag</link> corresponded to the <link name="event">event</link>.`,
               {
                 default: {
@@ -632,18 +627,18 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
               }
             );
 
-            for (const text of interaction) {
-              text.interactive = true;
-              text.on("pointerdown", (e) => {
-                if (e.targetTag !== undefined && e.targetTag.name === "link") {
-                  alert(
-                    `You clicked on the link for "${e.targetTag.properties.name}"!`
-                  );
-                }
-              });
-            }
+            interactionRich.text = "Interactivity is not currently supported.";
 
-            createDemo(interaction, "interaction");
+            interactionMulti.interactive = true;
+            interactionMulti.on("pointerdown", (e) => {
+              if (e.targetTag !== undefined && e.targetTag.name === "link") {
+                alert(
+                  `You clicked on the link for "${e.targetTag.properties.name}"!`
+                );
+              }
+            });
+
+            createDemo("interaction", interactionRich, interactionMulti);
           </script>
         </div>
       </div>
@@ -698,27 +693,27 @@ requestAnimationFrame(animate);</code></pre>
               red: { fill: 0xff8888, stroke: 0xcc4444 },
             };
 
-            let animated = createComparisonText(
+            let [animatedRich, animatedMulti] = createComparisonText(
               "Now have fun making some <blue>beautiful</blue> <red>multistyle</red> text!",
               funStyles
             );
 
-            const [renderer, animatedStage] = createDemo(animated, "animated");
+            const app = createDemo("animated", animatedRich, animatedMulti);
 
             // Animate
             function animate() {
               requestAnimationFrame(animate);
-              renderer.render(animatedStage);
 
               funStyles.default.dropShadowAngle += 0.02;
               funStyles.default.dropShadowBlur =
                 Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
                 5;
-              animated[0].setStyles(funStyles);
-              animated[1].setStyleForTag("default", funStyles.default);
+
+              animatedMulti.setStyles(funStyles);
+              animatedRich.setStyleForTag("default", funStyles.default);
             }
 
-            // requestAnimationFrame(animate);
+            requestAnimationFrame(animate);
           </script>
         </div>
       </div>
