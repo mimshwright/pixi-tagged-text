@@ -679,41 +679,58 @@ requestAnimationFrame(animate);</code></pre>
             // Have Fun
             let funStyles = {
               default: {
-                fontFamily: "Arial",
-                fontSize: "24px",
+                fontFamily: "Recursive, Arial",
+                fontSize: "48px",
+                fontWeight: 900,
                 fill: "#cccccc",
                 strokeThickness: 1,
                 stroke: "#aaaaaa",
                 dropShadow: true,
-                dropShadowBlur: 10,
-                dropShadowDistance: 8,
+                dropShadowBlur: 20,
+                dropShadowDistance: 32,
                 dropShadowAngle: 0,
+                wordWrapWidth: 540,
+                lineSpacing: 40,
+                align: "center",
               },
-              blue: { fill: 0x4488ff, stroke: 0x2244cc },
+              blue: {
+                fill: 0x4488ff,
+                stroke: 0x2244cc,
+                fontSize: 22,
+              },
               red: { fill: 0xff8888, stroke: 0xcc4444 },
             };
 
-            let [animatedRich, animatedMulti] = createComparisonText(
-              "Now have fun making some <blue>beautiful</blue> <red>multistyle</red> text!",
-              funStyles
+            let [
+              animatedRich,
+              animatedMulti,
+            ] = createComparisonText(
+              "Now have fun making some\n<blue>B E A U T I F U L</blue>\n<red>multistyle</red>\ntext!",
+              funStyles,
+              { debug: true }
             );
 
             const app = createDemo("animated", animatedRich, animatedMulti);
 
+            const originalY = animatedRich.textFields.map((t) => t.y);
+            let time = 0;
+
             // Animate
-            function animate() {
-              requestAnimationFrame(animate);
+            const animate = (delta) => {
+              // funStyles.default.dropShadowAngle += 0.02;
+              // funStyles.default.dropShadowBlur =
+              //   Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
+              //   5;
 
-              funStyles.default.dropShadowAngle += 0.02;
-              funStyles.default.dropShadowBlur =
-                Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
-                5;
+              // // animatedMulti.setStyles(funStyles);
+              // animatedRich.setStyleForTag("default", funStyles.default);
 
-              animatedMulti.setStyles(funStyles);
-              animatedRich.setStyleForTag("default", funStyles.default);
-            }
-
-            requestAnimationFrame(animate);
+              time += delta;
+              animatedRich.textFields.map((t, i) => {
+                t.y = originalY[i] + Math.sin(time / 10 + i) * 10;
+              });
+            };
+            // app.ticker.add(animate);
           </script>
         </div>
       </div>
