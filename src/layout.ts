@@ -7,9 +7,9 @@ import {
   MeasurementLine,
   MeasurementLines,
   Point,
-  TaggedTextTokenWithMeasurement,
-  TaggedTextTokenWithStyle,
   VAlign,
+  TaggedTextTokenComplete,
+  TaggedTextToken,
 } from "./types";
 
 const updateOffsetForNewLine = (
@@ -64,37 +64,6 @@ export const lineWidth = (line: MeasurementLine): number => {
 
 export const center = (x: number, context: number): number => (context - x) / 2;
 
-export const justifyLine = (maxLineWidth: number) => (
-  line: MeasurementLine
-): MeasurementLine => {
-  const w = lineWidth(line);
-  const totalSpace = maxLineWidth - w;
-  const space = totalSpace / (line.length - 1);
-
-  if (line.length === 0) {
-    return [];
-  }
-  if (line.length < 2) {
-    line[0].x = center(line[0].x, maxLineWidth);
-  } else {
-    let previuosWord;
-    for (let i = 0; i < line.length; i++) {
-      const word = line[i];
-      const newWord = word.clone();
-      let x = 0;
-      if (previuosWord === undefined) {
-        x = 0;
-      } else {
-        x = previuosWord.right + space;
-      }
-      newWord.x = x;
-      previuosWord = newWord;
-      line[i] = newWord;
-    }
-  }
-  return line;
-};
-
 const getTallestHeight = (line: MeasurementLine): number =>
   line.reduce((tallest, position) => Math.max(position.height, tallest), 0);
 
@@ -134,6 +103,70 @@ export const verticalAlignInLines = (
     : valign === "bottom"
     ? lines.map(valignBottom)
     : lines;
+
+export const alignLeft = (line: MeasurementLine): MeasurementLine =>
+  line.reduce(
+    (allWords: MeasurementLine, { y, width: w, height: h }, i) =>
+      i === 0
+        ? [new PIXI.Rectangle(0, y, w, h)]
+        : [
+            ...allWords,
+            new PIXI.Rectangle(
+              allWords[i - 1].x + allWords[i - 1].width,
+              y,
+              w,
+              h
+            ),
+          ],
+    []
+  );
+
+export const alignRight = (maxWidth: number) => (
+  line: MeasurementLine
+): MeasurementLine =>
+  translateLine({
+    x: maxWidth - lineWidth(line),
+    y: 0,
+  })(line);
+
+export const alignCenter = (maxWidth: number) => (
+  line: MeasurementLine
+): MeasurementLine =>
+  translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(line);
+
+export const alignJustify = (maxLineWidth: number) => (
+  line: MeasurementLine
+): MeasurementLine => {
+  if (line.length === 0) {
+    return [];
+  }
+
+  if (line.length === 1) {
+    const { y, width, height } = line[0];
+    return [new PIXI.Rectangle(0, y, width, height)];
+  }
+
+  const result: MeasurementLine = [];
+  const w = lineWidth(line);
+  const totalSpace = maxLineWidth - w;
+  const spacerWidth = totalSpace / (line.length - 1);
+
+  let previousWord;
+  for (let i = 0; i < line.length; i++) {
+    const { y, width, height } = line[i];
+    let x;
+    if (previousWord === undefined) {
+      x = 0;
+    } else {
+      x = previousWord.right + spacerWidth;
+    }
+    const newWord: PIXI.Rectangle = new PIXI.Rectangle(x, y, width, height);
+    previousWord = newWord;
+    result[i] = newWord;
+  }
+  return result;
+};
+
 /**
  * Adjusts the values in the lines to match the current layout.
  */
@@ -143,20 +176,13 @@ export const alignTextInLines = (
   lines: MeasurementLines
 ): MeasurementLines =>
   align === "left"
-    ? lines
+    ? lines.map(alignLeft)
     : align === "right"
-    ? lines.map((line) =>
-        translateLine({
-          x: maxLineWidth - lineWidth(line),
-          y: 0,
-        })(line)
-      )
+    ? lines.map(alignRight(maxLineWidth))
     : align === "center"
-    ? lines.map((line) =>
-        translateLine({ x: center(lineWidth(line), maxLineWidth), y: 0 })(line)
-      )
+    ? lines.map(alignCenter(maxLineWidth))
     : align === "justify"
-    ? lines.map(justifyLine(maxLineWidth))
+    ? lines.map(alignJustify(maxLineWidth))
     : lines;
 
 /**
@@ -169,11 +195,11 @@ export const alignTextInLines = (
  * @returns Array of Rectangle objects pertaining to each piece of text.
  */
 export const calculateMeasurements = (
-  tokens: TaggedTextTokenWithStyle[],
+  tokens: TaggedTextToken[],
   maxLineWidth: number = Number.POSITIVE_INFINITY,
   align: Align = "left",
   lineSpacing = 0
-): TaggedTextTokenWithMeasurement[] => {
+): TaggedTextTokenComplete[] => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
 
@@ -192,47 +218,43 @@ export const calculateMeasurements = (
         break;
       }
     }
-    if (token.text !== "") {
-      sizer.text = token.text;
-      sizer.style = token.style;
+    sizer.text = token.text;
+    sizer.style = token.style;
 
-      const fontProperties = getFontPropertiesOfText(sizer, true);
+    const fontProperties = getFontPropertiesOfText(sizer, true);
+    token.fontProperties = fontProperties;
 
-      largestLineHeight = Math.max(
-        previousMeasurement.height,
-        largestLineHeight
-      );
+    largestLineHeight = Math.max(previousMeasurement.height, largestLineHeight);
 
-      let size = rectFromContainer(sizer, offset);
+    let size = rectFromContainer(sizer, offset);
 
-      // if new size would exceed the max line width...
-      if (size.right > maxLineWidth) {
-        offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
-        size = rectFromContainer(sizer, offset);
-        currentLine += 1;
-      }
-
-      if (lines[currentLine] === undefined) {
-        lines[currentLine] = [];
-      }
-      lines[currentLine].push(size);
-
-      offset.x = size.right;
-
-      previousMeasurement = size;
+    // if new size would exceed the max line width...
+    if (size.right > maxLineWidth) {
+      offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
+      size = rectFromContainer(sizer, offset);
+      currentLine += 1;
     }
+
+    if (lines[currentLine] === undefined) {
+      lines[currentLine] = [];
+    }
+    lines[currentLine].push(size);
+
+    offset.x = size.right;
+
+    previousMeasurement = size;
   }
 
   const aligned = alignTextInLines(align, maxLineWidth, lines);
-  const valigned = verticalAlignInLines("baseline", aligned).flat();
+  const valigned = verticalAlignInLines("baseline", aligned);
+  const finalMeasurements = valigned.flat();
 
-  const tokensWithTags = [];
   for (let i = 0; i < tokens.length; i++) {
-    tokensWithTags[i] = {
+    tokens[i] = {
       ...tokens[i],
-      measurement: valigned[i],
+      measurement: finalMeasurements[0],
     };
   }
 
-  return tokensWithTags;
+  return tokens as TaggedTextTokenComplete[];
 };
