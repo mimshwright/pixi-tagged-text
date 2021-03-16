@@ -75,4 +75,5 @@ export const getStyleForTags = (
 export const getStyleForToken = (
   token: TaggedTextToken,
   tagStyles: TextStyleSet
-): TextStyleExtended => getStyleForTags(token.tags, tagStyles);
+): TextStyleExtended =>
+  combineStyles(tagStyles.default, getStyleForTags(token.tags, tagStyles));

@@ -1,4 +1,3 @@
-import { TaggedTextToken, Measurement } from "./types";
 import * as PIXI from "pixi.js";
 
 export type TagProperties = Record<string, string>;
@@ -190,27 +189,27 @@ export interface TagMatchData extends TagWithAttributes {
   isOpening: boolean;
   index: number;
 }
-
 export type TagStack = TagMatchData[];
-
-export interface TaggedTextToken {
-  text: string;
-  tags: TagWithAttributes[];
-}
-
-export interface TaggedTextTokenWithStyle extends TaggedTextToken {
-  style: TextStyleExtended;
-}
-
-export type Measurement = PIXI.Rectangle;
-export type MeasurementLine = Measurement[];
-export type MeasurementLines = MeasurementLine[];
-
-export interface TaggedTextTokenWithMeasurement extends TaggedTextToken {
-  measurement: Measurement;
-}
 
 export interface Point {
   x: number;
   y: number;
+}
+export type Measurement = PIXI.Rectangle;
+export type MeasurementLine = Measurement[];
+export type MeasurementLines = MeasurementLine[];
+
+export interface TaggedTextToken {
+  text: string;
+  tags: TagWithAttributes[];
+  style?: TextStyleExtended;
+  fontProperties?: PIXI.IFontMetrics;
+  measurement?: Measurement;
+}
+
+// Same as TaggedTextToken but without any optional properties.
+export interface TaggedTextTokenComplete extends TaggedTextToken {
+  style: TextStyleExtended;
+  fontProperties: PIXI.IFontMetrics;
+  measurement: Measurement;
 }

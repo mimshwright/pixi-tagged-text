@@ -7,8 +7,7 @@ import {
   TaggedTextToken,
   TagWithAttributes,
   AttributesList,
-  TaggedTextTokenWithMeasurement,
-  TaggedTextTokenWithStyle,
+  TaggedTextTokenComplete,
 } from "./types";
 import { calculateMeasurements } from "./layout";
 import {
@@ -19,6 +18,7 @@ import {
 
 const DEFAULT_STYLE: TextStyleExtended = {
   align: "left",
+  valign: "baseline",
   wordWrap: true,
   wordWrapWidth: 500,
 };
@@ -27,6 +27,22 @@ const DEFAULT_OPTIONS: RichTextOptions = {
   debug: false,
   splitStyle: "words",
 };
+
+const DEBUG = {
+  WORD_STROKE_COLOR: 0x00ff00,
+  WORD_FILL_COLOR: 0xff00ff,
+  BASELINE_COLOR: 0x0033cc,
+  LINE_COLOR: 0xffff00,
+  OUTLINE_COLOR: 0xffcccc,
+  OUTLINE_SHADOW_COLOR: 0x000000,
+  TEXT_STYLE: {
+    fontFamily: "courier",
+    fontSize: 10,
+    fill: 0xffffff,
+    dropShadow: true,
+  },
+};
+
 export default class RichText extends PIXI.Sprite {
   constructor(
     text = "",
@@ -35,6 +51,11 @@ export default class RichText extends PIXI.Sprite {
     texture?: PIXI.Texture
   ) {
     super(texture);
+
+    this._debugContainer = new PIXI.Container();
+    if (options.debug) {
+      this.addChild(this._debugContainer);
+    }
 
     this._textContainer = new PIXI.Container();
     this.addChild(this.textContainer);
@@ -129,6 +150,12 @@ export default class RichText extends PIXI.Sprite {
   public get textContainer(): PIXI.Container {
     return this._textContainer;
   }
+  private _debugContainer: PIXI.Container;
+  public get debugContainer(): PIXI.Container {
+    return this._debugContainer;
+  }
+
+  private _debugGraphics: PIXI.Graphics | null = null;
 
   private addChildrenToTextContainer(children: PIXI.DisplayObject[]) {
     for (const child of children) {
@@ -154,13 +181,10 @@ export default class RichText extends PIXI.Sprite {
 
     const tagStyles = this.tagStyles;
 
-    const tokensWithStyle = tokens.map(
-      (t) =>
-        ({
-          ...t,
-          style: getStyleForToken(t, tagStyles),
-        } as TaggedTextTokenWithStyle)
-    );
+    const tokensWithStyle = tokens.map((t) => {
+      t.style = getStyleForToken(t, tagStyles);
+      return t;
+    });
 
     // Determine default style properties
     const wordWrapWidth = this.defaultStyle.wordWrap
@@ -187,16 +211,17 @@ export default class RichText extends PIXI.Sprite {
     // console.log(this.untaggedText);
   }
 
-  private draw(tokens: TaggedTextTokenWithMeasurement[]): void {
+  private draw(tokens: TaggedTextTokenComplete[][]): void {
     this.resetTextFields();
-    const measurements = tokens.map(({ measurement }) => measurement);
-    const textFields = this.createTextFieldsForTokens(tokens);
-    this.positionDisplayObjects(textFields, measurements);
+    const tokensFlat = tokens.flat();
+    const textFields = this.createTextFieldsForTokens(tokensFlat);
+    this.positionDisplayObjects(textFields, tokensFlat);
+
     this.addChildrenToTextContainer(textFields);
     this._textFields = textFields;
 
     if (this.options.debug) {
-      this.drawDebug();
+      this.drawDebug(tokens);
     }
   }
 
@@ -219,26 +244,81 @@ export default class RichText extends PIXI.Sprite {
 
   private positionDisplayObjects(
     displayObjects: PIXI.DisplayObject[],
-    measurements: PIXI.Rectangle[]
+    tokens: TaggedTextTokenComplete[]
   ): void {
     for (let i = 0; i < displayObjects.length; i++) {
       const d = displayObjects[i];
-      const m = measurements[i];
+      const { measurement: m } = tokens[i];
       d.x = m.x;
       d.y = m.y;
     }
   }
 
   // FIXME: for some reason, this doesn't work on the first time it's used in the demos.
-  public drawDebug(): void {
-    for (const text of this.textFields) {
-      const c = text.context;
-      c.save();
-      c.strokeStyle = "red";
-      c.lineWidth = 2;
-      c.rect(0, 0, text.width, text.height);
-      c.stroke();
-      c.restore();
+  public drawDebug(tokens: TaggedTextTokenComplete[][]): void {
+    if (this._debugGraphics === null) {
+      this._debugGraphics = new PIXI.Graphics();
+    }
+    this.debugContainer.removeChildren();
+    this.debugContainer.addChild(this._debugGraphics);
+
+    const g = this._debugGraphics;
+    g.clear();
+
+    g.lineStyle(2, DEBUG.OUTLINE_COLOR, 1);
+    g.beginFill();
+    g.drawRect(1, 1, this.width, this.height);
+    g.endFill();
+
+    g.lineStyle(2, DEBUG.OUTLINE_SHADOW_COLOR, 1);
+    g.beginFill();
+    g.drawRect(0, 0, this.width - 1, this.height - 1);
+    g.endFill();
+
+    for (const line of tokens) {
+      let lineY = Number.POSITIVE_INFINITY;
+      let lineHeight = 0;
+      for (const token of line) {
+        const { ascent } = token.fontProperties;
+        const { x, y, width, height } = token.measurement;
+
+        lineHeight = Math.max(lineHeight, height);
+        lineY = Math.min(lineY, y);
+
+        g.lineStyle(1, DEBUG.WORD_STROKE_COLOR, 1);
+        g.beginFill(DEBUG.WORD_FILL_COLOR, 0.2);
+        g.drawRect(x, y, width, height);
+        g.endFill();
+
+        g.lineStyle(1, DEBUG.BASELINE_COLOR, 1);
+        g.beginFill();
+        g.drawRect(x, y + ascent, width, 1);
+        g.endFill();
+
+        if (token.text !== "") {
+          const info = new PIXI.Text(
+            token.tags.map((t) => t.tagName).join(","),
+            DEBUG.TEXT_STYLE
+          );
+          info.x = x + 1;
+          info.y = y + 1;
+          this.debugContainer.addChild(info);
+        }
+
+        // const size = new PIXI.Text(
+        //   `(${x},${y},${width},${height})`,
+        //   DEBUG.TEXT_STYLE
+        // );
+        // size.x = x + 1;
+        // size.y = y + 13;
+        // this.debugContainer.addChild(size);
+      }
+      if (this.defaultStyle.wordWrap) {
+        const w = this.defaultStyle.wordWrapWidth ?? this.width;
+        g.lineStyle(0.5, DEBUG.LINE_COLOR, 0.2);
+        g.drawRect(0, lineY, w, lineHeight);
+        g.endFill();
+      }
     }
   }
 }

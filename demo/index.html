@@ -23,6 +23,7 @@
       <script>
         var MultiStyleText = pixiMultistyleText.MultiStyleText;
         var RichText = pixiMultistyleText.RichText;
+        const opt = { debug: false };
 
         function appendPixiRendererToId(
           id,
@@ -60,7 +61,7 @@
           });
           const [multistyle, richtext] = children;
           multistyle.alpha = 0.5;
-          multistyle.visible = false;
+          // multistyle.visible = false;
 
           const tf = new PIXI.Text(
             "synthesize Senior Directives extranet Refined Delectus quisquam rerum doloremque quo veniam ut optio nesciunt dicta. Est dolorum asperiores. Aperiam rem et aut rerum dolorem. Numquam reprehenderit sunt. Cum illum corrupti.",
@@ -84,7 +85,10 @@
         // For testing purposes, temporarily replace the code that creates
         // text fields to create two of them to compare against each other.
         function createComparisonText(text, styles) {
-          return [new MultiStyleText(text, styles), new RichText(text, styles)];
+          return [
+            new MultiStyleText(text, styles),
+            new RichText(text, styles, opt),
+          ];
         }
       </script>
       <div class="example">
@@ -137,16 +141,14 @@ fill: &quot;#ff8888&quot;
               custom3: { fontSize: "14px", valign: 25 },
             };
             let valign = createComparisonText(
-              `
-<top><code>Top</code> <small>Vertical</small>Alignment.</top>
+              `<top><code>Top</code> <small>Vertical</small> Alignment.</top>
 
-<middle><code>Middle</code> <small>Vertical</small>Alignment.</middle>
+<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>
 
-<bottom><code>Bottom</code> <small>Vertical</small>Alignment.</bottom>
+<bottom><code>Bottom</code> <small>Vertical</small> Alignment.</bottom>
 
-<baseline><code>Baseline</code> <small>Vertical</small>Alignment.</baseline>
-
-You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.`,
+<baseline><code>Baseline</code> <small>Vertical</small> Alignment.</baseline>`,
+              // You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.
               valignStyle
             );
             createDemo(valign, "valign");
@@ -174,7 +176,6 @@ You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline
                 fill: "white",
               },
             };
-            const opt = { debug: true };
 
             let left = createComparisonText(
               str.replace("left", "<b>left</b>"),
@@ -375,12 +376,16 @@ You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline
           <script>
             // Nesting Tags
             let nested = createComparisonText(
-              "You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like</large></shadow></thicker></i></red></b></outline>",
+              "You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like, dawg!</large></shadow></thicker></i></red></b></outline>",
               {
                 default: {
                   fontFamily: "Arial",
                   fontSize: "24px",
                   fill: "#cccccc",
+                  wordWrapWidth: 500,
+                  wordWrap: true,
+                  valign: "baseline",
+                  debug: true,
                 },
                 outline: { stroke: "black", strokeThickness: 2 },
                 b: { fontWeight: 700 },

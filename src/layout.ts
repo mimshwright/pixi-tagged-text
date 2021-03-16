@@ -7,9 +7,9 @@ import {
   MeasurementLine,
   MeasurementLines,
   Point,
-  VAlign,
   TaggedTextTokenComplete,
   TaggedTextToken,
+  VAlign,
 } from "./types";
 
 const updateOffsetForNewLine = (
@@ -67,6 +67,18 @@ export const center = (x: number, context: number): number => (context - x) / 2;
 const getTallestHeight = (line: MeasurementLine): number =>
   line.reduce((tallest, position) => Math.max(position.height, tallest), 0);
 
+const getTallestFontProperties = (
+  fontProps: PIXI.IFontMetrics[]
+): PIXI.IFontMetrics => {
+  let tallest = { ascent: 0, descent: 0, fontSize: 0 };
+  for (const font of fontProps) {
+    if (font.fontSize > tallest.fontSize) {
+      tallest = font;
+    }
+  }
+  return tallest;
+};
+
 export const valignTop = (line: MeasurementLine): MeasurementLine =>
   line.map((position: Measurement) => {
     const newPosition = position.clone();
@@ -93,29 +105,100 @@ export const valignMiddle = (line: MeasurementLine): MeasurementLine => {
 };
 
 export const verticalAlignInLines = (
-  valign: VAlign,
-  lines: MeasurementLines
-): MeasurementLines =>
-  valign === "top"
-    ? lines.map(valignTop)
-    : valign === "middle"
-    ? lines.map(valignMiddle)
-    : valign === "bottom"
-    ? lines.map(valignBottom)
-    : lines;
+  lines: TaggedTextTokenComplete[][],
+  lineSpacing: number,
+  overrideValign?: VAlign
+): TaggedTextTokenComplete[][] => {
+  let previousTallestFont = { ascent: 0, descent: 0, fontSize: 0 };
+  let previousY = 0;
+  const newLines = [];
+
+  for (const line of lines) {
+    const newLine: TaggedTextTokenComplete[] = [];
+
+    const fontPropertiesForLine: PIXI.IFontMetrics[] = line.map(
+      (token) => token.fontProperties
+    );
+    let tallestFont = getTallestFontProperties(fontPropertiesForLine);
+
+    if (line.length < 2) {
+      tallestFont = previousTallestFont;
+    }
+
+    if (tallestFont.fontSize === 0) {
+      tallestFont = previousTallestFont;
+    } else {
+      previousTallestFont = tallestFont;
+    }
+
+    for (const word of line) {
+      const {
+        measurement: { x, y, width, height },
+        fontProperties,
+        style,
+      } = word;
+      const newMeasurement: Measurement = new PIXI.Rectangle(
+        x,
+        y,
+        width,
+        height
+      );
+      const valign = overrideValign ?? style.valign;
+      const currentFontHeight = fontProperties?.ascent ?? 0;
+
+      // console.log("valign", valign, word);
+
+      let newY = 0;
+      switch (valign) {
+        case "baseline":
+          newY = previousY + tallestFont.ascent - currentFontHeight;
+          break;
+        case "bottom":
+          newY = previousY + tallestFont.fontSize - fontProperties.fontSize;
+          break;
+        case "middle":
+          newY =
+            previousY + (tallestFont.fontSize - fontProperties.fontSize) / 2;
+          break;
+        case "top":
+        default:
+          newY = previousY;
+      }
+
+      newMeasurement.y = newY;
+
+      const newWord = {
+        ...word,
+        measurement: newMeasurement,
+      };
+      newLine.push(newWord);
+    }
+
+    previousY += (tallestFont?.fontSize ?? 0) + lineSpacing;
+    newLines.push(newLine);
+  }
+
+  return newLines;
+};
+// ? lines.map(valignTop)
+//   : valign === "middle"
+//   ? lines.map(valignMiddle)
+//   : valign === "bottom"
+//   ? lines.map(valignBottom)
+//   : lines;
 
 export const alignLeft = (line: MeasurementLine): MeasurementLine =>
   line.reduce(
-    (allWords: MeasurementLine, { y, width: w, height: h }, i) =>
+    (allWords: MeasurementLine, { y, width, height }, i) =>
       i === 0
-        ? [new PIXI.Rectangle(0, y, w, h)]
+        ? [new PIXI.Rectangle(0, y, width, height)]
         : [
             ...allWords,
             new PIXI.Rectangle(
               allWords[i - 1].x + allWords[i - 1].width,
               y,
-              w,
-              h
+              width,
+              height
             ),
           ],
     []
@@ -174,16 +257,19 @@ export const alignTextInLines = (
   align: Align,
   maxLineWidth: number,
   lines: MeasurementLines
-): MeasurementLines =>
-  align === "left"
-    ? lines.map(alignLeft)
-    : align === "right"
-    ? lines.map(alignRight(maxLineWidth))
-    : align === "center"
-    ? lines.map(alignCenter(maxLineWidth))
-    : align === "justify"
-    ? lines.map(alignJustify(maxLineWidth))
-    : lines;
+): MeasurementLines => {
+  const output =
+    align === "left"
+      ? lines.map(alignLeft)
+      : align === "right"
+      ? lines.map(alignRight(maxLineWidth))
+      : align === "center"
+      ? lines.map(alignCenter(maxLineWidth))
+      : align === "justify"
+      ? lines.map(alignJustify(maxLineWidth))
+      : lines;
+  return output;
+};
 
 /**
  *
@@ -199,7 +285,7 @@ export const calculateMeasurements = (
   maxLineWidth: number = Number.POSITIVE_INFINITY,
   align: Align = "left",
   lineSpacing = 0
-): TaggedTextTokenComplete[] => {
+): TaggedTextTokenComplete[][] => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
 
@@ -208,6 +294,7 @@ export const calculateMeasurements = (
   let largestLineHeight = 0;
   let offset = { x: 0, y: 0 };
   let currentLine = 0;
+  let size;
 
   // TODO: group measurements by line
   for (const token of tokens) {
@@ -218,15 +305,20 @@ export const calculateMeasurements = (
         break;
       }
     }
+    if (token.text === "") {
+      continue;
+    }
+
     sizer.text = token.text;
     sizer.style = token.style;
+    sizer.style.wordWrap = false;
 
     const fontProperties = getFontPropertiesOfText(sizer, true);
     token.fontProperties = fontProperties;
 
     largestLineHeight = Math.max(previousMeasurement.height, largestLineHeight);
 
-    let size = rectFromContainer(sizer, offset);
+    size = rectFromContainer(sizer, offset);
 
     // if new size would exceed the max line width...
     if (size.right > maxLineWidth) {
@@ -245,16 +337,35 @@ export const calculateMeasurements = (
     previousMeasurement = size;
   }
 
-  const aligned = alignTextInLines(align, maxLineWidth, lines);
-  const valigned = verticalAlignInLines("baseline", aligned);
-  const finalMeasurements = valigned.flat();
+  const measurements = alignTextInLines(align, maxLineWidth, lines);
+  // const valigned = verticalAlignInLines("bottom", aligned);
+  // const finalMeasurements = valigned.flat();
 
-  for (let i = 0; i < tokens.length; i++) {
-    tokens[i] = {
-      ...tokens[i],
-      measurement: finalMeasurements[0],
-    };
+  const filteredTokens = tokens.filter(({ text }) => text !== "");
+  const measuredTokens: TaggedTextTokenComplete[][] = [];
+
+  let i = 0;
+  for (let line = 0; line < measurements.length; line++) {
+    measuredTokens[line] = [];
+    const measurementLine = measurements[line];
+
+    if (measurementLine && measurementLine.length > 0) {
+      for (let word = 0; word < measurementLine.length; word++) {
+        const measurement = measurementLine[word];
+        measuredTokens[line][word] = {
+          ...filteredTokens[i],
+          measurement,
+        } as TaggedTextTokenComplete;
+        i++;
+      }
+    }
   }
+  // console.log(measuredTokens);
 
-  return tokens as TaggedTextTokenComplete[];
+  if (measuredTokens.length === 0) {
+    return measuredTokens;
+  }
+  const vAligned = verticalAlignInLines(measuredTokens, lineSpacing);
+
+  return vAligned;
 };
