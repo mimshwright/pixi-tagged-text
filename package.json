@@ -2,14 +2,8 @@
   "name": "@plainblack/pixi-multistyle-text",
   "version": "1.0.0",
   "description": "Multi-Style Text for pixi.js",
-  "source": "src/index.ts",
-  "main": "dist/pixi-multistyle-text.js",
-  "umd:main": "dist/pixi-multistyle-text.umd.js",
-  "module": "dist/pixi-multistyle-text.m.js",
-  "types": "dist/pixi-multistyle-text.d.ts",
-  "files": [
-    "dist"
-  ],
+  "author": "Mims Wright, JT Smith, Tommy Leunen <tommy.leunen@gmail.com> (http://tommyleunen.com/)",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git://github.com/plainblack/pixi-multistyle-text.git"
@@ -18,6 +12,14 @@
     "url": "https://github.com/plainblack/pixi-multistyle-text/issues"
   },
   "homepage": "https://github.com/plainblack/pixi-multistyle-text",
+  "source": "src/index.ts",
+  "main": "dist/pixi-multistyle-text.js",
+  "umd:main": "dist/pixi-multistyle-text.umd.js",
+  "module": "dist/pixi-multistyle-text.m.js",
+  "types": "dist/pixi-multistyle-text.d.ts",
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "pixi",
     "pixi.js",
@@ -31,10 +33,9 @@
     "render",
     "2d"
   ],
-  "author": "JT Smith, Mims Wright, Tommy Leunen <tommy.leunen@gmail.com> (http://tommyleunen.com/)",
-  "license": "MIT",
-  "dependencies": {
-    "husky-run": "^0.0.0"
+  "dependencies": {},
+  "peerDependencies": {
+    "pixi.js": "^5.3"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
@@ -65,13 +66,13 @@
     "dev": "microbundle watch  --name MultiStyleText --globals 'pixi.js'=PIXI",
     "build": "microbundle --name MultiStyleText --globals 'pixi.js'=PIXI",
     "prepublishOnly": "npm run build",
-    "precommit": "npm run lint & npm run test",
     "release": "standard-version",
     "test": "jest",
-    "lint": "prettier -l ./**/*.{ts,js,tsx,jsx,json,html,css,md}",
-    "lint:fix": "npm run lint --write"
-  },
-  "husky": {
-    "hooks": {}
+    "prettier": "prettier -l ./**/*.{ts,js,json,html,css,md}",
+    "prettier:fix": "npm run prettier --write",
+    "eslint": "eslint ./src/**/*.ts",
+    "lint": "npm run prettier && npm run eslint",
+    "postinstall": "husky install",
+    "pre-commit": "npm run lint && npm run test"
   }
 }
