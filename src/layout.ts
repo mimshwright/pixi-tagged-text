@@ -7,8 +7,8 @@ import {
   MeasurementLine,
   MeasurementLines,
   Point,
-  TaggedTextTokenComplete,
   TaggedTextToken,
+  TaggedTextTokenPartial,
   VAlign,
 } from "./types";
 
@@ -105,16 +105,16 @@ export const valignMiddle = (line: MeasurementLine): MeasurementLine => {
 };
 
 export const verticalAlignInLines = (
-  lines: TaggedTextTokenComplete[][],
+  lines: TaggedTextToken[][],
   lineSpacing: number,
   overrideValign?: VAlign
-): TaggedTextTokenComplete[][] => {
+): TaggedTextToken[][] => {
   let previousTallestFont = { ascent: 0, descent: 0, fontSize: 0 };
   let previousY = 0;
   const newLines = [];
 
   for (const line of lines) {
-    const newLine: TaggedTextTokenComplete[] = [];
+    const newLine: TaggedTextToken[] = [];
 
     const fontPropertiesForLine: PIXI.IFontMetrics[] = line.map(
       (token) => token.fontProperties
@@ -145,8 +145,6 @@ export const verticalAlignInLines = (
       );
       const valign = overrideValign ?? style.valign;
       const currentFontHeight = fontProperties?.ascent ?? 0;
-
-      // console.log("valign", valign, word);
 
       let newY = 0;
       switch (valign) {
@@ -281,11 +279,11 @@ export const alignTextInLines = (
  * @returns Array of Rectangle objects pertaining to each piece of text.
  */
 export const calculateMeasurements = (
-  tokens: TaggedTextToken[],
+  tokens: TaggedTextTokenPartial[],
   maxLineWidth: number = Number.POSITIVE_INFINITY,
   align: Align = "left",
   lineSpacing = 0
-): TaggedTextTokenComplete[][] => {
+): TaggedTextToken[][] => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
 
@@ -342,7 +340,7 @@ export const calculateMeasurements = (
   // const finalMeasurements = valigned.flat();
 
   const filteredTokens = tokens.filter(({ text }) => text !== "");
-  const measuredTokens: TaggedTextTokenComplete[][] = [];
+  const measuredTokens: TaggedTextToken[][] = [];
 
   let i = 0;
   for (let line = 0; line < measurements.length; line++) {
@@ -355,7 +353,7 @@ export const calculateMeasurements = (
         measuredTokens[line][word] = {
           ...filteredTokens[i],
           measurement,
-        } as TaggedTextTokenComplete;
+        } as TaggedTextToken;
         i++;
       }
     }

@@ -1,7 +1,7 @@
 import { combineRecords } from "./functionalUtils";
 import {
   AttributesList,
-  TaggedTextToken,
+  TaggedTextTokenPartial,
   TagWithAttributes,
   TextStyleExtended,
   TextStyleSet,
@@ -73,7 +73,7 @@ export const getStyleForTags = (
  * Gets style associated with the stacked tags for the token.
  */
 export const getStyleForToken = (
-  token: TaggedTextToken,
+  token: TaggedTextTokenPartial,
   tagStyles: TextStyleSet
 ): TextStyleExtended =>
   combineStyles(tagStyles.default, getStyleForTags(token.tags, tagStyles));

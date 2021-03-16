@@ -199,7 +199,7 @@ export type Measurement = PIXI.Rectangle;
 export type MeasurementLine = Measurement[];
 export type MeasurementLines = MeasurementLine[];
 
-export interface TaggedTextToken {
+export interface TaggedTextTokenPartial {
   text: string;
   tags: TagWithAttributes[];
   style?: TextStyleExtended;
@@ -208,7 +208,7 @@ export interface TaggedTextToken {
 }
 
 // Same as TaggedTextToken but without any optional properties.
-export interface TaggedTextTokenComplete extends TaggedTextToken {
+export interface TaggedTextToken extends TaggedTextTokenPartial {
   style: TextStyleExtended;
   fontProperties: PIXI.IFontMetrics;
   measurement: Measurement;

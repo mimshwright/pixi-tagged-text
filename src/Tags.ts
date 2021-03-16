@@ -3,7 +3,7 @@ import {
   TextStyleSet,
   AttributesList,
   TagWithAttributes,
-  TaggedTextToken,
+  TaggedTextTokenPartial,
   TagStack,
 } from "./types";
 
@@ -107,7 +107,10 @@ export const tagMatchDataToTagWithAttributes = (
   attributes: tag.attributes,
 });
 
-const Token = (text: string, tags: TagWithAttributes[]): TaggedTextToken => ({
+const Token = (
+  text: string,
+  tags: TagWithAttributes[]
+): TaggedTextTokenPartial => ({
   text,
   tags,
 });
@@ -115,7 +118,9 @@ const Token = (text: string, tags: TagWithAttributes[]): TaggedTextToken => ({
 const splitWords = (input: string): string[] =>
   input.split(" ").map((s, i, { length }) => s + (i < length - 1 ? " " : ""));
 
-const splitTokensIntoWords = (tokens: TaggedTextToken[]): TaggedTextToken[] =>
+const splitTokensIntoWords = (
+  tokens: TaggedTextTokenPartial[]
+): TaggedTextTokenPartial[] =>
   tokens.flatMap(({ text, tags }) =>
     splitWords(text).map((word) => Token(word, tags))
   );
@@ -123,13 +128,13 @@ const splitTokensIntoWords = (tokens: TaggedTextToken[]): TaggedTextToken[] =>
 export const createTokens = (
   segments: string[],
   tags: TagMatchData[]
-): TaggedTextToken[] => {
+): TaggedTextTokenPartial[] => {
   // Add the entire text with no tag as a default value in case there are no tags.
-  const firstSegmentWithoutTags: TaggedTextToken = {
+  const firstSegmentWithoutTags: TaggedTextTokenPartial = {
     text: segments[0],
     tags: [],
   };
-  const tokens: TaggedTextToken[] = [firstSegmentWithoutTags];
+  const tokens: TaggedTextTokenPartial[] = [firstSegmentWithoutTags];
 
   // Track which tags are opened and closed and add them to the list.
   const activeTags: TagStack = [];
@@ -209,7 +214,7 @@ export const replaceLineBreaks = (input: string): string =>
 export const parseTags = (
   input: string,
   tagStyles?: TextStyleSet
-): TaggedTextToken[] => {
+): TaggedTextTokenPartial[] => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
 
   const tagNames = tagStyles ? Object.keys(tagStyles) : undefined;
@@ -258,13 +263,13 @@ const tagsToString = (tags: TagWithAttributes[]) =>
     )
     .join(",");
 
-const tokenToString = ({ tags, text }: TaggedTextToken): string =>
+const tokenToString = ({ tags, text }: TaggedTextTokenPartial): string =>
   tags ? `"${text.replace(/\n/, "\\n")}"  -> ${tagsToString(tags)}` : "";
 /**
  * Converts the tagged text tokens into a string format where each string
  * segment is listed with its stack of tags.
  */
-export const tokensToString = (tokens: TaggedTextToken[]): string =>
+export const tokensToString = (tokens: TaggedTextTokenPartial[]): string =>
   tokens
     .filter((t) => t.tags[0]?.tagName === LINE_BREAK_TAG_NAME || t.text !== "")
     .reduce((acc, token) => `${acc}${tokenToString(token)}\n`, "");

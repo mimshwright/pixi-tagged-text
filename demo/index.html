@@ -84,10 +84,10 @@
 
         // For testing purposes, temporarily replace the code that creates
         // text fields to create two of them to compare against each other.
-        function createComparisonText(text, styles) {
+        function createComparisonText(text, styles, overrideOptions) {
           return [
             new MultiStyleText(text, styles),
-            new RichText(text, styles, opt),
+            new RichText(text, styles, overrideOptions || opt),
           ];
         }
       </script>

@@ -4,10 +4,9 @@ import {
   RichTextOptions,
   TextStyleSet,
   TextStyleExtended,
-  TaggedTextToken,
   TagWithAttributes,
   AttributesList,
-  TaggedTextTokenComplete,
+  TaggedTextToken,
 } from "./types";
 import { calculateMeasurements } from "./layout";
 import {
@@ -208,10 +207,36 @@ export default class RichText extends PIXI.Sprite {
     this.draw(measuredTokens);
     // );
 
-    // console.log(this.untaggedText);
+    if (this.options.debug) {
+      console.log(this.untaggedText);
+      console.log(
+        measuredTokens
+          .map((line, lineNumber) =>
+            line
+              .map((token, tokenNumber) => {
+                const nl = "\n    ";
+                let s = `  "${token.text}":`;
+                s += `${nl}line: ${lineNumber}, word: ${tokenNumber}`;
+                s += `${nl}tags: ${
+                  token.tags.length === 0
+                    ? "<none>"
+                    : token.tags.map((tag) => tag.tagName).join("")
+                }`;
+                s += `${nl}style: ${Object.entries(token.style)
+                  .map((e) => e.join(":"))
+                  .join("; ")}`;
+                s += `${nl}size: x:${token.measurement.x} y:${token.measurement.y} width:${token.measurement.width} height:${token.measurement.height} / left:${token.measurement.left} right:${token.measurement.right} top:${token.measurement.top} bottom:${token.measurement.bottom}`;
+                s += `${nl}font: fontSize:${token.fontProperties.fontSize} ascent:${token.fontProperties.ascent} descent:${token.fontProperties.descent}`;
+                return s;
+              })
+              .join("\n")
+          )
+          .join("\n")
+      );
+    }
   }
 
-  private draw(tokens: TaggedTextTokenComplete[][]): void {
+  private draw(tokens: TaggedTextToken[][]): void {
     this.resetTextFields();
     const tokensFlat = tokens.flat();
     const textFields = this.createTextFieldsForTokens(tokensFlat);
@@ -232,19 +257,12 @@ export default class RichText extends PIXI.Sprite {
   }
 
   private createTextFieldForToken(token: TaggedTextToken): PIXI.Text {
-    return new PIXI.Text(
-      token.text,
-      combineAllStyles([
-        this.defaultStyle,
-        this.getStyleForTags(token.tags),
-        { wordWrap: false },
-      ])
-    );
+    return new PIXI.Text(token.text, token.style);
   }
 
   private positionDisplayObjects(
     displayObjects: PIXI.DisplayObject[],
-    tokens: TaggedTextTokenComplete[]
+    tokens: TaggedTextToken[]
   ): void {
     for (let i = 0; i < displayObjects.length; i++) {
       const d = displayObjects[i];
@@ -255,7 +273,7 @@ export default class RichText extends PIXI.Sprite {
   }
 
   // FIXME: for some reason, this doesn't work on the first time it's used in the demos.
-  public drawDebug(tokens: TaggedTextTokenComplete[][]): void {
+  public drawDebug(tokens: TaggedTextToken[][]): void {
     if (this._debugGraphics === null) {
       this._debugGraphics = new PIXI.Graphics();
     }
