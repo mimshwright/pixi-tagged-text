@@ -118,6 +118,11 @@ describe("style module", () => {
         text: "",
         tags: [{ tagName: "img", attributes: { src: "icon" } }],
       };
+      const imgTokenWithoutAttributes: TaggedTextTokenPartial = {
+        text: "",
+        tags: [{ tagName: "img", attributes: {} }],
+        style: { src: "icon" },
+      };
       const srcOnlyToken: TaggedTextTokenPartial = {
         text: "",
         tags: [{ tagName: "span", attributes: { src: "icon" } }],
@@ -129,6 +134,7 @@ describe("style module", () => {
 
       expect(style.isTokenImage(plainToken)).toBeFalsy();
       expect(style.isTokenImage(imgToken)).toBeTruthy();
+      expect(style.isTokenImage(imgTokenWithoutAttributes)).toBeTruthy();
       expect(style.isTokenImage(srcOnlyToken)).toBeTruthy();
       expect(style.isTokenImage(trickyToken)).toBeFalsy();
     });

@@ -129,11 +129,8 @@ export default class RichText extends PIXI.Sprite {
 
     this.resetChildren();
 
-    console.log({ options });
-
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
     this.options = mergedOptions;
-    console.log({ mergedOptions });
 
     const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
     tagStyles.default = mergedDefaultStyles;

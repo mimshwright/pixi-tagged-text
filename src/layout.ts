@@ -1,4 +1,5 @@
-import { IMG_STYLE_NAME, IMG_TAG_NAME } from "./Tags";
+import { isTokenImage } from "./style";
+import { IMG_STYLE_NAME } from "./Tags";
 import { getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import { LINE_BREAK_TAG_NAME } from "./tags";
@@ -313,20 +314,18 @@ export const calculateMeasurements = (
 
   // TODO: group measurements by line
   for (const token of tokens) {
-    let sprite: PIXI.Container | undefined = undefined;
-
     for (const tag of token.tags) {
-      if (tag.tagName === IMG_TAG_NAME) {
+      if (isTokenImage(token)) {
         const src = token.style?.src;
         if (src === undefined) {
           throw new Error(
-            `An image tag (<${IMG_TAG_NAME}>) was used but there was no ${IMG_STYLE_NAME} defined for it.`
+            `An image tag (<${tag.tagName}>) was used but there was no ${IMG_STYLE_NAME} defined for it. Either create a style or use a ${IMG_STYLE_NAME} attribute on the tag.`
           );
         }
-        sprite = spriteMap[src];
+        const sprite = spriteMap[src];
         if (sprite === undefined) {
           throw new Error(
-            `An image tag (<${IMG_TAG_NAME}>) with ${IMG_STYLE_NAME}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the spriteMap property in the options in your RichText constructor.`
+            `An image tag (<${tag.tagName}>) with ${IMG_STYLE_NAME}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the spriteMap property in the options in your RichText constructor.`
           );
         }
         token.text = " ";
@@ -339,7 +338,7 @@ export const calculateMeasurements = (
         break;
       }
     }
-    if (sprite === undefined && token.text === "") {
+    if (token.sprite === undefined && token.text === "") {
       continue;
     }
 
@@ -359,8 +358,8 @@ export const calculateMeasurements = (
 
     largestLineHeight = Math.max(previousMeasurement.height, largestLineHeight);
 
-    if (sprite !== undefined) {
-      size = rectFromContainer(sprite, offset);
+    if (token.sprite !== undefined) {
+      size = rectFromContainer(token.sprite, offset);
     } else {
       size = rectFromContainer(sizer, offset);
     }
