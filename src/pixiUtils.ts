@@ -65,3 +65,8 @@ export const checkPixiVersion = (
   }
   return 0;
 };
+
+export const addChildrenToContainer = (
+  children: PIXI.DisplayObject[],
+  container: PIXI.Container
+): void => children.forEach((child) => container.addChild(child));

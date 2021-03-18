@@ -8,4 +8,23 @@ describe("tags module", () => {
       expect(s).toEqual(`Multi-<${BR}></${BR}>line<${BR}></${BR}>TEXT!`);
     });
   });
+
+  describe("Token()", () => {
+    it("should create a new Token (partial)", () => {
+      expect(
+        tags.Token("Hello", [
+          { tagName: "b", attributes: { fontWeight: "700" } },
+        ])
+      ).toMatchObject({
+        text: "Hello",
+        tags: [{ tagName: "b", attributes: { fontWeight: "700" } }],
+      });
+    });
+    it("should provide empty string and empty array as default values", () => {
+      expect(tags.Token()).toMatchObject({
+        text: "",
+        tags: [],
+      });
+    });
+  });
 });

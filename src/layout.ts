@@ -1,3 +1,4 @@
+import { IMG_STYLE_NAME, IMG_TAG_NAME } from "./Tags";
 import { getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import { LINE_BREAK_TAG_NAME } from "./tags";
@@ -7,6 +8,7 @@ import {
   MeasurementLine,
   MeasurementLines,
   Point,
+  SpriteMap,
   TaggedTextToken,
   TaggedTextTokenPartial,
   VAlign,
@@ -67,17 +69,24 @@ export const center = (x: number, context: number): number => (context - x) / 2;
 const getTallestHeight = (line: MeasurementLine): number =>
   line.reduce((tallest, position) => Math.max(position.height, tallest), 0);
 
-const getTallestFontProperties = (
-  fontProps: PIXI.IFontMetrics[]
-): PIXI.IFontMetrics => {
-  let tallest = { ascent: 0, descent: 0, fontSize: 0 };
-  for (const font of fontProps) {
-    if (font.fontSize > tallest.fontSize) {
-      tallest = font;
+const getTallestToken = (line: TaggedTextToken[]): TaggedTextToken =>
+  line.reduce(
+    (tallest, current) => {
+      if (
+        (current.measurement?.height ?? 0) > (tallest?.measurement?.height ?? 0)
+      ) {
+        return current;
+      }
+      return tallest;
+    },
+    {
+      text: "Tallest",
+      tags: [],
+      measurement: new PIXI.Rectangle(0, 0, 0, 0),
+      style: {},
+      fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
     }
-  }
-  return tallest;
-};
+  );
 
 export const valignTop = (line: MeasurementLine): MeasurementLine =>
   line.map((position: Measurement) => {
@@ -109,26 +118,33 @@ export const verticalAlignInLines = (
   lineSpacing: number,
   overrideValign?: VAlign
 ): TaggedTextToken[][] => {
-  let previousTallestFont = { ascent: 0, descent: 0, fontSize: 0 };
+  let previousTallestToken: TaggedTextToken = {
+    text: "previousTallestToken",
+    tags: [],
+    measurement: new PIXI.Rectangle(0, 0, 0, 0),
+    fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
+    style: {},
+  };
+
   let previousY = 0;
   const newLines = [];
 
   for (const line of lines) {
     const newLine: TaggedTextToken[] = [];
+    let tallestToken = getTallestToken(line);
+    let tallestHeight;
 
-    const fontPropertiesForLine: PIXI.IFontMetrics[] = line.map(
-      (token) => token.fontProperties
-    );
-    let tallestFont = getTallestFontProperties(fontPropertiesForLine);
+    const previousTallestHeight = previousTallestToken.measurement.height;
+    tallestHeight = tallestToken.measurement?.height ?? 0;
 
     if (line.length === 1 && line[0].text === "") {
-      tallestFont = previousTallestFont;
+      tallestHeight = previousTallestHeight;
     }
 
-    if (tallestFont.fontSize === 0) {
-      tallestFont = previousTallestFont;
+    if (tallestHeight === 0) {
+      tallestToken = previousTallestToken;
     } else {
-      previousTallestFont = tallestFont;
+      previousTallestToken = tallestToken;
     }
 
     for (const word of line) {
@@ -149,14 +165,14 @@ export const verticalAlignInLines = (
       let newY = 0;
       switch (valign) {
         case "baseline":
-          newY = previousY + tallestFont.ascent - currentFontHeight;
+          newY =
+            previousY + tallestToken.fontProperties.ascent - currentFontHeight;
           break;
         case "bottom":
-          newY = previousY + tallestFont.fontSize - fontProperties.fontSize;
+          newY = previousY + tallestHeight - fontProperties.fontSize;
           break;
         case "middle":
-          newY =
-            previousY + (tallestFont.fontSize - fontProperties.fontSize) / 2;
+          newY = previousY + (tallestHeight - fontProperties.fontSize) / 2;
           break;
         case "top":
         default:
@@ -172,7 +188,7 @@ export const verticalAlignInLines = (
       newLine.push(newWord);
     }
 
-    previousY += (tallestFont?.fontSize ?? 0) + lineSpacing;
+    previousY += tallestHeight + lineSpacing;
     newLines.push(newLine);
   }
 
@@ -280,6 +296,7 @@ export const alignTextInLines = (
  */
 export const calculateMeasurements = (
   tokens: TaggedTextTokenPartial[],
+  spriteMap: SpriteMap,
   maxLineWidth: number = Number.POSITIVE_INFINITY,
   align: Align = "left",
   lineSpacing = 0
@@ -296,27 +313,58 @@ export const calculateMeasurements = (
 
   // TODO: group measurements by line
   for (const token of tokens) {
+    let sprite: PIXI.Container | undefined = undefined;
+
     for (const tag of token.tags) {
+      if (tag.tagName === IMG_TAG_NAME) {
+        const src = token.style?.src;
+        if (src === undefined) {
+          throw new Error(
+            `An image tag (<${IMG_TAG_NAME}>) was used but there was no ${IMG_STYLE_NAME} defined for it.`
+          );
+        }
+        sprite = spriteMap[src];
+        if (sprite === undefined) {
+          throw new Error(
+            `An image tag (<${IMG_TAG_NAME}>) with ${IMG_STYLE_NAME}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the spriteMap property in the options in your RichText constructor.`
+          );
+        }
+        token.text = " ";
+        token.sprite = sprite;
+      }
+
       if (tag.tagName === LINE_BREAK_TAG_NAME) {
         offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
         currentLine += 1;
         break;
       }
     }
-    if (token.text === "") {
+    if (sprite === undefined && token.text === "") {
       continue;
     }
 
     sizer.text = token.text;
-    sizer.style = token.style;
-    sizer.style.wordWrap = false;
+    sizer.style = {
+      ...token.style,
+      // Override some styles for the purposes of sizing text.
+      wordWrap: false,
+      dropShadowBlur: 0,
+      dropShadowDistance: 0,
+      dropShadowAngle: 0,
+      dropShadow: false,
+    };
 
     const fontProperties = getFontPropertiesOfText(sizer, true);
     token.fontProperties = fontProperties;
 
     largestLineHeight = Math.max(previousMeasurement.height, largestLineHeight);
 
-    size = rectFromContainer(sizer, offset);
+    if (sprite !== undefined) {
+      size = rectFromContainer(sprite, offset);
+    } else {
+      size = rectFromContainer(sizer, offset);
+    }
+    size.height = Math.max(size.height, fontProperties.fontSize);
 
     // if new size would exceed the max line width...
     if (size.right > maxLineWidth) {

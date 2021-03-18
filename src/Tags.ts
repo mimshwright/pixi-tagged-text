@@ -8,6 +8,8 @@ import {
 } from "./types";
 
 export const LINE_BREAK_TAG_NAME = "br";
+export const IMG_TAG_NAME = "img";
+export const IMG_STYLE_NAME = "src";
 
 // TODO: this can probably be just a static value without all the options and parameters.
 // Seems doing one pass will be enough to gather all relevant info.
@@ -107,9 +109,9 @@ export const tagMatchDataToTagWithAttributes = (
   attributes: tag.attributes,
 });
 
-const Token = (
-  text: string,
-  tags: TagWithAttributes[]
+export const Token = (
+  text = "",
+  tags: TagWithAttributes[] = []
 ): TaggedTextTokenPartial => ({
   text,
   tags,
@@ -130,10 +132,7 @@ export const createTokens = (
   tags: TagMatchData[]
 ): TaggedTextTokenPartial[] => {
   // Add the entire text with no tag as a default value in case there are no tags.
-  const firstSegmentWithoutTags: TaggedTextTokenPartial = {
-    text: segments[0],
-    tags: [],
-  };
+  const firstSegmentWithoutTags: TaggedTextTokenPartial = Token(segments[0]);
   const tokens: TaggedTextTokenPartial[] = [firstSegmentWithoutTags];
 
   // Track which tags are opened and closed and add them to the list.
@@ -216,7 +215,6 @@ export const parseTags = (
   tagStyles?: TextStyleSet
 ): TaggedTextTokenPartial[] => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
-
   const tagNames = tagStyles ? Object.keys(tagStyles) : undefined;
 
   input = replaceLineBreaks(input);
@@ -234,13 +232,6 @@ export const parseTags = (
   const segments = extractSegments(input, tagMatches);
 
   const tokens = createTokens(segments, tagMatches);
-
-  // console.log({
-  //   matchesRaw,
-  //   segments,
-  //   tags: tagMatches,
-  //   tokens,
-  // });
 
   return tokens;
 };

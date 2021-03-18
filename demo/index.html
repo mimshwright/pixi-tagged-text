@@ -144,9 +144,53 @@ fill: &quot;#ff8888&quot;
 
 <baseline><code>Baseline</code> <small>Vertical</small> Alignment.</baseline>`,
               // You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.
-              valignStyle
+              valignStyle,
+              { debug: true }
             );
             createDemo("valign", ...valign);
+          </script>
+        </div>
+      </div>
+      <div class="example">
+        <div class="code">
+          <h2>Inline images</h2>
+          <pre><code class="js">
+
+          </code></pre>
+        </div>
+        <div class="pixi" id="img">
+          <script>
+            const thinking = PIXI.Sprite.from("./icon.png");
+            const doot = PIXI.Sprite.from("./doot.png");
+
+            const imgStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#FFFFCC",
+              },
+              h2: {
+                fontSize: 36,
+                fill: "#44CC99",
+              },
+              img: {},
+              icon: { src: "thinking" },
+            };
+
+            const [imgRichText, imgMultiText] = createComparisonText(
+              `<h2>Inline Images!</h2>
+Put an icon <icon src="thinking"></icon> in there.
+<img src="doot"></img>
+Or do a block image.`,
+              imgStyle,
+              {
+                debug: true,
+                spriteMap: { thinking, doot },
+              }
+            );
+            imgMultiText.text = "Images not supported in multiText";
+
+            const imgApp = createDemo("img", imgRichText, imgMultiText);
           </script>
         </div>
       </div>
@@ -310,11 +354,10 @@ fill: &quot;#ff8888&quot;
                   fontSize: "64px",
                   fill: "#efefef",
                 },
-              },
-              { debug: true }
+              }
             );
 
-            createDemo("basic", ...basic);
+            createDemo("basic", ...basic, { debug: true });
           </script>
         </div>
       </div>
@@ -381,7 +424,6 @@ fill: &quot;#ff8888&quot;
                   wordWrapWidth: 500,
                   wordWrap: true,
                   valign: "baseline",
-                  debug: true,
                 },
                 outline: { stroke: "black", strokeThickness: 2 },
                 b: { fontWeight: 700 },
@@ -701,13 +743,9 @@ requestAnimationFrame(animate);</code></pre>
               red: { fill: 0xff8888, stroke: 0xcc4444 },
             };
 
-            let [
-              animatedRich,
-              animatedMulti,
-            ] = createComparisonText(
+            let [animatedRich, animatedMulti] = createComparisonText(
               "Now have fun making some\n<blue>B E A U T I F U L</blue>\n<red>multistyle</red>\ntext!",
-              funStyles,
-              { debug: true }
+              funStyles
             );
 
             const app = createDemo("animated", animatedRich, animatedMulti);
