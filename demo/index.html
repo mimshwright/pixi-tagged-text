@@ -88,75 +88,33 @@
       </script>
       <div class="example">
         <div class="code">
-          <h2>Vertical Alignment</h2>
-          <pre><code class="js">let valign = new MultiStyleText(&quot;You can use &lt;code&gt;valign&lt;/code&gt; &lt;top&gt;to&lt;/top&gt; &lt;middle&gt;control&lt;/middle&gt; &lt;baseline&gt;the&lt;/baseline&gt; &lt;bottom&gt;vertical&lt;/bottom&gt; &lt;custom1&gt;alignment&lt;/custom1&gt; &lt;custom2&gt;of&lt;/custom2&gt; &lt;custom3&gt;text&lt;/custom3&gt;.&quot;,
-{
-&quot;default&quot;: {
-fontFamily: &quot;Arial&quot;,
-fontSize: &quot;24px&quot;,
-fill: &quot;#cccccc&quot;
-},
-&quot;code&quot;: {
-fontFamily: &quot;Inconsolata&quot;,
-fontSize: &quot;36px&quot;,
-fill: &quot;#ff8888&quot;
-},
-&quot;top&quot;: { fontSize: &quot;14px&quot;, valign: &quot;top&quot; },
-&quot;middle&quot;: { fontSize: &quot;14px&quot;, valign: &quot;middle&quot; },
-&quot;bottom&quot;: { fontSize: &quot;14px&quot;, valign: &quot;bottom&quot; },
-&quot;baseline&quot;: { fontSize: &quot;14px&quot;, valign: &quot;baseline&quot; },
-&quot;custom1&quot;: { fontSize: &quot;14px&quot;, valign: 5 },
-&quot;custom2&quot;: { fontSize: &quot;14px&quot;, valign: -70 },
-&quot;custom3&quot;: { fontSize: &quot;14px&quot;, valign: 25 }
-});</code></pre>
-        </div>
-        <div class="pixi" id="valign">
-          <script>
-            // Vertical Alignment
-            const valignStyle = {
-              default: {
-                fontFamily: "Arial",
-                fontSize: "24px",
-                fill: "#cccccc",
-                align: "left",
-                valign: "baseline",
-              },
-              code: {
-                fontFamily: "Courier",
-                fontSize: "36px",
-                fill: "#ff8888",
-              },
-              small: { fontSize: "14px" },
-              top: { valign: "top" },
-              middle: { valign: "middle" },
-              bottom: { valign: "bottom" },
-              baseline: { valign: "baseline" },
-              custom1: { fontSize: "14px", valign: 5 },
-              custom2: { fontSize: "14px", valign: -70 },
-              custom3: { fontSize: "14px", valign: 25 },
-            };
-            let valign = createComparisonText(
-              `<top><code>Top</code> <small>Vertical</small> Alignment.</top>
-
-<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>
-
-<bottom><code>Bottom</code> <small>Vertical</small> Alignment.</bottom>
-
-<baseline><code>Baseline</code> <small>Vertical</small> Alignment.</baseline>`,
-              // You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.
-              valignStyle,
-              { debug: true }
-            );
-            createDemo("valign", ...valign);
-          </script>
-        </div>
-      </div>
-      <div class="example">
-        <div class="code">
           <h2>Inline images</h2>
           <pre><code class="js">
+const thinking = PIXI.Sprite.from("./icon.png");
+const doot = PIXI.Sprite.from("./doot.png");
 
-          </code></pre>
+const text = `&lt;h2&gt;Inline Images!&lt;/h2&gt;
+Add an image.
+&lt;img src="doot" imageDisplay="inline"&gt;&lt;/img&gt;
+Or, put an icon &lt;icon src="thinking" imageDisplay="icon"&gt;&lt;/icon&gt; in there, bro!`;
+
+const style = {
+  default: {
+    fontFamily: "Arial",
+    fontSize: "24px",
+    fill: "#FFFFCC",
+  },
+  h2: {
+    fontSize: 36,
+    fill: "#44CC99",
+  },
+  img: {},
+  icon: {},
+}
+const options = {spriteMap: { thinking, doot }};
+
+const imgText = new RichText(text, style, options);
+      </code></pre>
         </div>
         <div class="pixi" id="img">
           <script>
@@ -168,20 +126,22 @@ fill: &quot;#ff8888&quot;
                 fontFamily: "Arial",
                 fontSize: "24px",
                 fill: "#FFFFCC",
+                align: "center",
               },
               h2: {
                 fontSize: 36,
                 fill: "#44CC99",
               },
               img: {},
-              icon: { src: "thinking" },
+              icon: {},
             };
 
             const [imgRichText, imgMultiText] = createComparisonText(
               `<h2>Inline Images!</h2>
-Put an icon <icon src="thinking"></icon> in there.
-Doot <img src="doot"></img> Doot!
-Or do a block image.`,
+Add an image.
+<img src="doot" imageDisplay="inline"></img>
+Or, put an icon <icon src="thinking" imageDisplay="icon"></icon> in there, bro!
+`,
               imgStyle,
               {
                 debug: true,
@@ -198,7 +158,7 @@ Or do a block image.`,
         <div class="code">
           <h2>Alignment</h2>
           <pre><code class="js">
-          </code></pre>
+      </code></pre>
         </div>
         <div class="pixi" id="align">
           <script>
@@ -274,6 +234,72 @@ Or do a block image.`,
           </script>
         </div>
       </div>
+
+      <div class="example">
+        <div class="code">
+          <h2>Vertical Alignment</h2>
+          <pre><code class="js">let valign = new MultiStyleText(&quot;You can use &lt;code&gt;valign&lt;/code&gt; &lt;top&gt;to&lt;/top&gt; &lt;middle&gt;control&lt;/middle&gt; &lt;baseline&gt;the&lt;/baseline&gt; &lt;bottom&gt;vertical&lt;/bottom&gt; &lt;custom1&gt;alignment&lt;/custom1&gt; &lt;custom2&gt;of&lt;/custom2&gt; &lt;custom3&gt;text&lt;/custom3&gt;.&quot;,
+{
+&quot;default&quot;: {
+fontFamily: &quot;Arial&quot;,
+fontSize: &quot;24px&quot;,
+fill: &quot;#cccccc&quot;
+},
+&quot;code&quot;: {
+fontFamily: &quot;Inconsolata&quot;,
+fontSize: &quot;36px&quot;,
+fill: &quot;#ff8888&quot;
+},
+&quot;top&quot;: { fontSize: &quot;14px&quot;, valign: &quot;top&quot; },
+&quot;middle&quot;: { fontSize: &quot;14px&quot;, valign: &quot;middle&quot; },
+&quot;bottom&quot;: { fontSize: &quot;14px&quot;, valign: &quot;bottom&quot; },
+&quot;baseline&quot;: { fontSize: &quot;14px&quot;, valign: &quot;baseline&quot; },
+&quot;custom1&quot;: { fontSize: &quot;14px&quot;, valign: 5 },
+&quot;custom2&quot;: { fontSize: &quot;14px&quot;, valign: -70 },
+&quot;custom3&quot;: { fontSize: &quot;14px&quot;, valign: 25 }
+});</code></pre>
+        </div>
+        <div class="pixi" id="valign">
+          <script>
+            // Vertical Alignment
+            const valignStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                align: "left",
+                valign: "baseline",
+              },
+              code: {
+                fontFamily: "Courier",
+                fontSize: "36px",
+                fill: "#ff8888",
+              },
+              small: { fontSize: "14px" },
+              top: { valign: "top" },
+              middle: { valign: "middle" },
+              bottom: { valign: "bottom" },
+              baseline: { valign: "baseline" },
+              custom1: { fontSize: "14px", valign: 5 },
+              custom2: { fontSize: "14px", valign: -70 },
+              custom3: { fontSize: "14px", valign: 25 },
+            };
+            let valign = createComparisonText(
+              `<top><code>Top</code> <small>Vertical</small> Alignment.</top>
+
+<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>
+
+<bottom><code>Bottom</code> <small>Vertical</small> Alignment.</bottom>
+
+<baseline><code>Baseline</code> <small>Vertical</small> Alignment.</baseline>`,
+              // You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.
+              valignStyle
+            );
+            createDemo("valign", ...valign);
+          </script>
+        </div>
+      </div>
+
       <div class="example">
         <div class="code">
           <h2>Attributes</h2>

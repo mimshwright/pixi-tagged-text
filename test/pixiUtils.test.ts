@@ -2,8 +2,14 @@ import * as PIXI from "pixi.js";
 import * as pixiUtils from "../src/pixiUtils";
 
 describe("pixiUtils", () => {
-  it("should exist", () => {
-    expect(pixiUtils).toBeDefined();
+  describe("cloneSprite()", () => {
+    it("should create a shallow copy of a sprite.", () => {
+      const originalSprite = PIXI.Sprite.from("./icon.png");
+      const cloneSprite = pixiUtils.cloneSprite(originalSprite);
+
+      expect(cloneSprite).not.toBe(originalSprite);
+      expect(cloneSprite.texture).toBe(originalSprite.texture);
+    });
   });
 
   describe("checkPixiVersion()", () => {

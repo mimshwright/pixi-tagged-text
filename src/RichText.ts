@@ -19,6 +19,7 @@ import { addChildrenToContainer } from "./pixiUtils";
 const DEFAULT_STYLE: TextStyleExtended = {
   align: "left",
   valign: "baseline",
+  imageDisplay: "inline",
   wordWrap: true,
   wordWrapWidth: 500,
 };
@@ -94,8 +95,8 @@ export default class RichText extends PIXI.Sprite {
   public get textContainer(): PIXI.Container {
     return this._textContainer;
   }
-  private _sprites: PIXI.Container[] = [];
-  public get sprites(): PIXI.Container[] {
+  private _sprites: PIXI.Sprite[] = [];
+  public get sprites(): PIXI.Sprite[] {
     return this._sprites;
   }
   private _spriteContainer: PIXI.Container;
@@ -139,7 +140,7 @@ export default class RichText extends PIXI.Sprite {
     // Listen for changes to sprites (e.g. when they load.)
     if (this.options.spriteMap) {
       Object.values(this.options.spriteMap).forEach((sprite) => {
-        const texture = (sprite as PIXI.Sprite)?.texture;
+        const texture = sprite.texture;
         if (texture !== undefined) {
           texture.baseTexture.addListener("update", () => this.update());
         }
@@ -291,10 +292,10 @@ export default class RichText extends PIXI.Sprite {
       .map((t) => this.createTextFieldForToken(t));
   }
 
-  private getSpritesFromTokens(tokens: TaggedTextToken[]): PIXI.Container[] {
-    return tokens
-      .map(({ sprite }) => sprite)
-      .filter((sprite) => sprite !== undefined) as PIXI.Container[];
+  private getSpritesFromTokens(tokens: TaggedTextToken[]): PIXI.Sprite[] {
+    const spriteTokens = tokens.filter(({ sprite }) => sprite !== undefined);
+    const sprites = spriteTokens.map(({ sprite }) => sprite) as PIXI.Sprite[];
+    return sprites;
   }
 
   private createTextFieldForToken(token: TaggedTextToken): PIXI.Text {

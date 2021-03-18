@@ -1,6 +1,6 @@
 import { isTokenImage } from "./style";
 import { IMG_STYLE_NAME } from "./Tags";
-import { getFontPropertiesOfText } from "./pixiUtils";
+import { cloneSprite, getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import { LINE_BREAK_TAG_NAME } from "./tags";
 import {
@@ -314,15 +314,19 @@ export const calculateMeasurements = (
 
   // TODO: group measurements by line
   for (const token of tokens) {
+    const isImage = isTokenImage(token);
+    let isBlockImage = false;
+    let isIcon = false;
+    let sprite;
     for (const tag of token.tags) {
-      if (isTokenImage(token)) {
+      if (isImage) {
         const src = token.style?.src;
         if (src === undefined) {
           throw new Error(
             `An image tag (<${tag.tagName}>) was used but there was no ${IMG_STYLE_NAME} defined for it. Either create a style or use a ${IMG_STYLE_NAME} attribute on the tag.`
           );
         }
-        const sprite = spriteMap[src];
+        sprite = cloneSprite(spriteMap[src]);
         if (sprite === undefined) {
           throw new Error(
             `An image tag (<${tag.tagName}>) with ${IMG_STYLE_NAME}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the spriteMap property in the options in your RichText constructor.`
@@ -330,9 +334,12 @@ export const calculateMeasurements = (
         }
         token.text = " ";
         token.sprite = sprite;
+
+        isBlockImage = token.style?.imageDisplay === "block";
+        isIcon = token.style?.imageDisplay === "icon";
       }
 
-      if (tag.tagName === LINE_BREAK_TAG_NAME) {
+      if (tag.tagName === LINE_BREAK_TAG_NAME || isBlockImage) {
         offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
         currentLine += 1;
         break;
@@ -358,12 +365,26 @@ export const calculateMeasurements = (
 
     largestLineHeight = Math.max(previousMeasurement.height, largestLineHeight);
 
-    if (token.sprite !== undefined) {
-      size = rectFromContainer(token.sprite, offset);
+    if (sprite) {
+      if (isIcon) {
+        const h = sprite?.height ?? -1;
+
+        // if it's height is zero or one it probably hasn't loaded yet.
+        if (h > 1 && sprite.scale.y === 1) {
+          const ratio = fontProperties.ascent / h;
+          // console.log(
+          //   `Setting scale to ${fontProperties.ascent}/${h}=${ratio}`
+          // );
+
+          sprite?.scale.set(ratio);
+        }
+      }
+
+      size = rectFromContainer(sprite, offset);
     } else {
       size = rectFromContainer(sizer, offset);
+      size.height = Math.max(size.height, fontProperties.fontSize);
     }
-    size.height = Math.max(size.height, fontProperties.fontSize);
 
     // if new size would exceed the max line width...
     if (size.right > maxLineWidth) {

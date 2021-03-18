@@ -15,7 +15,7 @@ export interface HitboxData {
 
 // TODO: implement splitStyle: characters
 export type SplitStyle = "words" | "characters";
-export type SpriteMap = Record<string, PIXI.Container>;
+export type SpriteMap = Record<string, PIXI.Sprite>;
 export interface RichTextOptions {
   debug?: boolean;
   splitStyle?: SplitStyle;
@@ -34,12 +34,14 @@ export interface TextStyle
 // todo: add text-transform: uppercase
 export type TagStyle = "bbcode" | "xml";
 export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
+export type ImageDisplay = "icon" | "block" | "inline";
 export interface TextStyleExtended extends TextStyle {
   lineSpacing?: number;
   valign?: VAlign;
   tagStyle?: TagStyle;
   debug?: boolean;
   src?: string;
+  imageDisplay?: ImageDisplay;
 }
 
 export interface TextStyleExtendedWithDefault extends TextStyleExtended {
