@@ -56,7 +56,7 @@
             multiStyleTextExample.x = 30;
             multiStyleTextExample.y = 30;
             multiStyleTextExample.alpha = 0.5;
-            multiStyleTextExample.visible = false;
+            // multiStyleTextExample.visible = false;
             app.stage.addChild(multiStyleTextExample);
           }
 
@@ -285,13 +285,7 @@ fill: &quot;#ff8888&quot;
               custom3: { fontSize: "14px", valign: 25 },
             };
             let valign = createComparisonText(
-              `<top><code>Top</code> <small>Vertical</small> Alignment.</top>
-
-<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>
-
-<bottom><code>Bottom</code> <small>Vertical</small> Alignment.</bottom>
-
-<baseline><code>Baseline</code> <small>Vertical</small> Alignment.</baseline>`,
+              `<top><code>Top</code> <small>Vertical</small> Alignment.</top>\n \n\n<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>\n\n<bottom><code>Bottom</code> <small>Vertical</small> Alignment.</bottom>\n\n<baseline><code>Baseline</code> <small>Vertical</small> Alignment.</baseline>`,
               // You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.
               valignStyle
             );
@@ -757,7 +751,7 @@ requestAnimationFrame(animate);</code></pre>
                 dropShadowBlur: 20,
                 dropShadowDistance: 32,
                 dropShadowAngle: 0,
-                wordWrapWidth: 540,
+                wordWrapWidth: 380,
                 lineSpacing: 40,
                 align: "center",
               },
