@@ -137,13 +137,17 @@ export default class RichText extends PIXI.Sprite {
     tagStyles.default = mergedDefaultStyles;
     this.tagStyles = tagStyles;
 
-    // Listen for changes to sprites (e.g. when they load.)
     if (this.options.spriteMap) {
-      Object.values(this.options.spriteMap).forEach((sprite) => {
+      Object.entries(this.options.spriteMap).forEach(([key, sprite]) => {
+        // Listen for changes to sprites (e.g. when they load.)
         const texture = sprite.texture;
         if (texture !== undefined) {
           texture.baseTexture.addListener("update", () => this.update());
         }
+
+        // register a style for each of these by default.
+        const style = { src: key };
+        this.setStyleForTag(key, style);
       });
     }
 
