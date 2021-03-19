@@ -198,6 +198,15 @@ export const extractSegments = (
   return segments;
 };
 
+const selfClosingTagSearch = /<\s*(\w[^\s/]*)([^/]*)\/>/gs;
+export const replaceSelfClosingTags = (input: string): string =>
+  input.replace(selfClosingTagSearch, (_, tag, attributes = "") => {
+    let output = `<${tag}${attributes}></${tag}>`;
+    output = output.replace(/\s+/g, " ");
+    output = output.replace(/\s>/g, ">");
+    return output;
+  });
+
 /**
  * Replaces \n with special tags that will be recognized by the parser.
  */
@@ -217,6 +226,7 @@ export const parseTags = (
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
   const tagNames = tagStyles ? Object.keys(tagStyles) : undefined;
 
+  input = replaceSelfClosingTags(input);
   input = replaceLineBreaks(input);
   const re = getTagRegex(tagNames);
   const matchesRaw: RegExpExecArray[] = [];
