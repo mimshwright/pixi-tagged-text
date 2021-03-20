@@ -37,7 +37,7 @@ let text = new MultiStyleText(
 
 ## Build instructions
 
-```
+```bash
 $ yarn install
 $ yarn build
 ```
@@ -62,7 +62,7 @@ If text is rendered without any value assigned to a given parameter, Pixi's defa
 
 ## Demo
 
-```
+```bash
 $ yarn demo
 ```
 
