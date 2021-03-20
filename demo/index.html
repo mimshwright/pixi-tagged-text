@@ -11,7 +11,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.2.0/pixi.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
-    <script src="../dist/pixi-multistyle-text.umd.js"></script>
+    <!-- RichText -->
+    <script src="../dist/pixi-rich-text.umd.js"></script>
+    <!-- Old MultiStyleText -->
+    <script src="./pixi-multistyle-text.umd.js"></script>
     <script>
       hljs.initHighlightingOnLoad();
     </script>
@@ -21,8 +24,6 @@
     <h1>Pixi Multistyle Text Demo</h1>
     <main>
       <script>
-        var MultiStyleText = pixiMultistyleText.MultiStyleText;
-        var RichText = pixiMultistyleText.RichText;
         const opt = { debug: false };
 
         function createPixiApp(
@@ -52,27 +53,12 @@
           }
 
           if (multiStyleTextExample !== undefined) {
-            //  multiStyleTextExample.x = 300 -  multiStyleTextExample.width / 2;
             multiStyleTextExample.x = 30;
             multiStyleTextExample.y = 30;
             multiStyleTextExample.alpha = 0.5;
-            // multiStyleTextExample.visible = false;
+            multiStyleTextExample.visible = false;
             app.stage.addChild(multiStyleTextExample);
           }
-
-          // const tf = new PIXI.Text(
-          //   "synthesize Senior Directives extranet Refined Delectus quisquam rerum doloremque quo veniam ut optio nesciunt dicta. Est dolorum asperiores. Aperiam rem et aut rerum dolorem. Numquam reprehenderit sunt. Cum illum corrupti.",
-          //   {
-          //     align: "left",
-          //     wordWrap: false,
-          //     wordWrapWidth: 500,
-          //     fill: "#FF00FF",
-          //   }
-          // );
-          // tf.x = children[1].x;
-          // tf.y = children[1].y;
-          // tf.visible = false;
-          // app.stage.addChild(tf);
 
           return app;
         }
@@ -88,69 +74,58 @@
       </script>
       <div class="example">
         <div class="code">
-          <h2>Inline images</h2>
-          <pre><code class="js">
-const thinking = PIXI.Sprite.from("./icon.png");
-const doot = PIXI.Sprite.from("./doot.png");
-
-const text = `&lt;h2&gt;Inline Images!&lt;/h2&gt;
-Add an image.
-&lt;img src="doot" imageDisplay="inline"&gt;&lt;/img&gt;
-Or, put an icon &lt;icon src="thinking" imageDisplay="icon"&gt;&lt;/icon&gt; in there, bro!`;
-
-const style = {
-  default: {
-    fontFamily: "Arial",
-    fontSize: "24px",
-    fill: "#FFFFCC",
-  },
-  h2: {
-    fontSize: 36,
-    fill: "#44CC99",
-  },
-  img: {},
-  icon: {},
-}
-const options = {spriteMap: { thinking, doot }};
-
-const imgText = new RichText(text, style, options);
-      </code></pre>
+          <h2>Basics</h2>
+          <pre><code class="js">let text = new MultiStyleText(&quot;Let's make some &lt;ml&gt;multiline&lt;/ml&gt;\nand &lt;ms&gt;multistyle&lt;/ms&gt; text for\n&lt;pixi&gt;Pixi.js!&lt;/pixi&gt;&quot;,
+          {
+            &quot;default&quot;: {
+              fontFamily: &quot;Arial&quot;,
+              fontSize: &quot;24px&quot;,
+              fill: &quot;#cccccc&quot;,
+              align: &quot;center&quot;
+            },
+            &quot;ml&quot;: {
+              fontStyle: &quot;italic&quot;,
+              fill: &quot;#ff8888&quot;
+            },
+            &quot;ms&quot;: {
+              fontStyle: &quot;italic&quot;,
+              fill: &quot;#4488ff&quot;
+            },
+            &quot;pixi&quot;: {
+              fontSize: &quot;64px&quot;,
+              fill: &quot;#efefef&quot;
+            }
+          });</code></pre>
         </div>
-        <div class="pixi" id="img">
+
+        <div class="pixi" id="basic">
           <script>
-            const thinking = PIXI.Sprite.from("./icon.png");
-            const doot = PIXI.Sprite.from("./doot.png");
-
-            const imgStyle = {
-              default: {
-                fontFamily: "Arial",
-                fontSize: "24px",
-                fill: "#FFFFCC",
-                align: "center",
-              },
-              h2: {
-                fontSize: 36,
-                fill: "#44CC99",
-              },
-              img: {},
-              icon: {},
-            };
-
-            const [imgRichText, imgMultiText] = createComparisonText(
-              `<h2>Inline Images!</h2>
-Add an image.
-<img src="doot" imageDisplay="inline" />
-Or, put an icon <icon src="thinking" imageDisplay="icon" /> in there, bro!
-`,
-              imgStyle,
+            // Basics
+            let basic = createComparisonText(
+              "Let's make some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
               {
-                debug: true,
-                spriteMap: { thinking, doot },
+                default: {
+                  fontFamily: "Arial",
+                  fontSize: "24px",
+                  fill: "#cccccc",
+                  align: "center",
+                },
+                ml: {
+                  fontStyle: "italic",
+                  fill: "#ff8888",
+                },
+                ms: {
+                  fontWeight: "bold",
+                  fill: "#4488ff",
+                },
+                pixi: {
+                  fontSize: "64px",
+                  fill: "#efefef",
+                },
               }
             );
-            imgMultiText.text = "Images not supported in multiText";
 
-            const imgApp = createDemo("img", imgRichText, imgMultiText);
+            createDemo("basic", ...basic, { debug: true });
           </script>
         </div>
       </div>
@@ -234,7 +209,154 @@ Or, put an icon <icon src="thinking" imageDisplay="icon" /> in there, bro!
           </script>
         </div>
       </div>
-
+      <div class="example">
+          <div class="code">
+              <h2>Inline images</h2>
+              <pre><code class="js">
+                  const thinking = PIXI.Sprite.from("./icon.png");
+                  const doot = PIXI.Sprite.from("./doot.png");
+                  
+                  const text = `&lt;h2&gt;Inline Images!&lt;/h2&gt;
+                  Add an image.
+                  &lt;img src="doot" imageDisplay="inline"&gt;&lt;/img&gt;
+                  Or, put an icon &lt;icon src="thinking" imageDisplay="icon"&gt;&lt;/icon&gt; in there, bro!`;
+                  
+                  const style = {
+                  default: {
+                  fontFamily: "Arial",
+                  fontSize: "24px",
+                  fill: "#FFFFCC",
+                  },
+                  h2: {
+                  fontSize: 36,
+                  fill: "#44CC99",
+                  },
+                  img: {},
+                  icon: {},
+                  }
+                  const options = {spriteMap: { thinking, doot }};
+                  
+                  const imgText = new RichText(text, style, options);
+              </code></pre>
+          </div>
+          <div class="pixi" id="img">
+              <script>
+                  const thinking = PIXI.Sprite.from("./icon.png");
+                  const doot = PIXI.Sprite.from("./doot.png");
+                  
+                  const imgStyle = {
+                      default: {
+                          fontFamily: "Arial",
+                          fontSize: "24px",
+                          fill: "#FFFFCC",
+                          align: "center",
+                      },
+                      h2: {
+                          fontSize: 36,
+                          fill: "#44CC99",
+                      },
+                      img: {},
+                      icon: {},
+                  };
+              
+              const [imgRichText, imgMultiText] = createComparisonText(
+                                                                       `<h2>Inline Images!</h2>
+                                                                       Add an image.
+                                                                       <img src="doot" imageDisplay="inline" />
+                                                                       Or, put an icon <icon src="thinking" imageDisplay="icon" /> in there, bro!
+                                                                       `,
+                                                                       imgStyle,
+                                                                       {
+                                                                       debug: true,
+                                                                       spriteMap: { thinking, doot },
+                                                                       }
+                                                                       );
+                                                                       imgMultiText.text = "Images not supported in multiText";
+                                                                       
+                                                                       const imgApp = createDemo("img", imgRichText, imgMultiText);
+                  </script>
+          </div>
+      </div>
+      <div class="example">
+          <div class="code">
+              <h2>Alignment</h2>
+              <pre><code class="js">
+              </code></pre>
+          </div>
+          <div class="pixi" id="align">
+              <script>
+                  // Alignment.
+                  const str = `You can align left, right, center or justify.\nEt veniam nemo sunt ab facilis voluptatem voluptas est debitis.`;
+                  const style = {
+                      default: {
+                          align: "left",
+                          fill: "teal",
+                          wordWrapWidth: 250,
+                      },
+                      b: {
+                          fontWeight: "700",
+                          fill: "white",
+                      },
+                  };
+              
+              let [leftRich, leftMulti] = createComparisonText(
+                                                               str.replace("left", "<b>left</b>"),
+                                                               style,
+                                                               {}
+                                                               );
+                                                               
+                                                               let right = new RichText(
+                                                                                        str.replace("right", "<b>right</b>"),
+                                                                                        {
+                                                                                        ...style,
+                                                                                        default: {
+                                                                                        align: "right",
+                                                                                        fill: "orange",
+                                                                                        wordWrapWidth: 250,
+                                                                                        },
+                                                                                        },
+                                                                                        opt
+                                                                                        );
+                                                                                        right.x = 330;
+                                                                                        right.y = 30;
+                                                                                        
+                                                                                        let center = new RichText(
+                                                                                                                  str.replace("center", "<b>center</b>"),
+                                                                                                                  {
+                                                                                                                  ...style,
+                                                                                                                  default: {
+                                                                                                                  align: "center",
+                                                                                                                  fill: "yellow",
+                                                                                                                  wordWrapWidth: 250,
+                                                                                                                  },
+                                                                                                                  },
+                                                                                                                  opt
+                                                                                                                  );
+                                                                                                                  center.x = 30;
+                                                                                                                  center.y = 330;
+                                                                                                                  
+                                                                                                                  let justify = new RichText(
+                                                                                                                                             str.replace("justify", "<b>justify</b>"),
+                                                                                                                                             {
+                                                                                                                                             ...style,
+                                                                                                                                             default: {
+                                                                                                                                             align: "justify",
+                                                                                                                                             fill: "pink",
+                                                                                                                                             wordWrapWidth: 250,
+                                                                                                                                             },
+                                                                                                                                             },
+                                                                                                                                             opt
+                                                                                                                                             );
+                                                                                                                                             justify.x = 330;
+                                                                                                                                             justify.y = 330;
+                                                                                                                                             
+                                                                                                                                             const alignApp = createDemo("align", leftRich, leftMulti);
+                                                                                                                                             alignApp.stage.addChild(right);
+                                                                                                                                             alignApp.stage.addChild(center);
+                                                                                                                                             alignApp.stage.addChild(justify);
+                  </script>
+          </div>
+      </div>
       <div class="example">
         <div class="code">
           <h2>Vertical Alignment</h2>
@@ -324,94 +446,6 @@ fill: &quot;#ff8888&quot;
         </div>
       </div>
 
-      <div class="example">
-        <div class="code">
-          <h2>Basics</h2>
-          <pre><code class="js">let text = new MultiStyleText(&quot;Let's make some &lt;ml&gt;multiline&lt;/ml&gt;\nand &lt;ms&gt;multistyle&lt;/ms&gt; text for\n&lt;pixi&gt;Pixi.js!&lt;/pixi&gt;&quot;,
-          {
-            &quot;default&quot;: {
-              fontFamily: &quot;Arial&quot;,
-              fontSize: &quot;24px&quot;,
-              fill: &quot;#cccccc&quot;,
-              align: &quot;center&quot;
-            },
-            &quot;ml&quot;: {
-              fontStyle: &quot;italic&quot;,
-              fill: &quot;#ff8888&quot;
-            },
-            &quot;ms&quot;: {
-              fontStyle: &quot;italic&quot;,
-              fill: &quot;#4488ff&quot;
-            },
-            &quot;pixi&quot;: {
-              fontSize: &quot;64px&quot;,
-              fill: &quot;#efefef&quot;
-            }
-          });</code></pre>
-        </div>
-
-        <div class="pixi" id="basic">
-          <script>
-            // Basics
-            let basic = createComparisonText(
-              "Let's make some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
-              {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                  align: "center",
-                },
-                ml: {
-                  fontStyle: "italic",
-                  fill: "#ff8888",
-                },
-                ms: {
-                  fontWeight: "bold",
-                  fill: "#4488ff",
-                },
-                pixi: {
-                  fontSize: "64px",
-                  fill: "#efefef",
-                },
-              }
-            );
-
-            createDemo("basic", ...basic, { debug: true });
-          </script>
-        </div>
-      </div>
-
-      <div class="example">
-        <div class="code">
-          <h2>Tag Styles</h2>
-          <pre><code class="js">let text = new MultiStyleText(&quot;Let's make some [b]bold[/b]\n [color=yellow][i]multistyle[/i][/color] [size=40]bbcode[/size] [outline=purple]tags[/outline] text for \n[spacing=10]Pixi.js![/spacing]&quot;,
-{
-	&quot;default&quot;: {
-		tagStyle: &quot;bbcode&quot;, //bbcode and xml (default) supported..
-		fill: &quot;#cccccc&quot;,
-		align: &quot;center&quot;
-	},
-});</code></pre>
-        </div>
-        <div class="pixi" id="bbcode">
-          <script>
-            // Tag Styles
-            let [bbcodeRich, bbcodeMulti] = createComparisonText(
-              "Let's make some [b]bold[/b]\n [color=yellow][i]multistyle[/i][/color] [size=40]bbcode[/size] [outline=purple]tags[/outline] text for \n[spacing=10]Pixi.js![/spacing]",
-              {
-                default: {
-                  tagStyle: "bbcode",
-                  fill: "#cccccc",
-                  align: "center",
-                },
-              }
-            );
-            bbcodeRich.text = "bbcode not supported!";
-            createDemo("bbcode", bbcodeRich, bbcodeMulti);
-          </script>
-        </div>
-      </div>
       <div class="example">
         <div class="code">
           <h2>Nesting Tags</h2>
@@ -748,10 +782,10 @@ requestAnimationFrame(animate);</code></pre>
                 strokeThickness: 1,
                 stroke: "#aaaaaa",
                 dropShadow: true,
-                dropShadowBlur: 20,
-                dropShadowDistance: 32,
+                dropShadowBlur: 15,
+                dropShadowDistance: 15,
                 dropShadowAngle: 0,
-                wordWrapWidth: 380,
+                wordWrapWidth: 500,
                 lineSpacing: 40,
                 align: "center",
               },
@@ -775,20 +809,12 @@ requestAnimationFrame(animate);</code></pre>
 
             // Animate
             const animate = (delta) => {
-              // funStyles.default.dropShadowAngle += 0.02;
-              // funStyles.default.dropShadowBlur =
-              //   Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
-              //   5;
-
-              // // animatedMulti.setStyles(funStyles);
-              // animatedRich.setStyleForTag("default", funStyles.default);
-
               time += delta;
               animatedRich.textFields.map((t, i) => {
                 t.y = originalY[i] + Math.sin(time / 10 + i) * 10;
               });
             };
-            // app.ticker.add(animate);
+            app.ticker.add(animate);
           </script>
         </div>
       </div>

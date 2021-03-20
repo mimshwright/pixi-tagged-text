@@ -1,8 +1,4 @@
 import * as PIXI from "pixi.js";
-import { TextStyleExtended } from "./types";
-
-export const getFontString = (style: TextStyleExtended): string =>
-  new PIXI.TextStyle(style).toFontString();
 
 export const measureFont = (
   context: CanvasRenderingContext2D
@@ -37,21 +33,6 @@ export const getFontPropertiesOfText = (
     return measureFont(textField.context);
   }
 };
-/**
- * Shortcut function for getting text metrix data from a text string in the current context.
- */
-export const measureText = (
-  context: CanvasRenderingContext2D,
-  text: string
-): TextMetrics => context.measureText(text);
-
-/**
- * Shortcut function for getting text width from a text string in the current context.
- */
-export const measureTextWidth = (
-  context: CanvasRenderingContext2D,
-  text: string
-): number => measureText(context, text).width;
 
 export const checkPixiVersion = (
   version: string,
