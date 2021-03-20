@@ -320,7 +320,7 @@ export const calculateMeasurements = (
     let sprite;
     for (const tag of token.tags) {
       if (isImage) {
-        const src = token.style?.src;
+        const src = token.style?.src as string;
         if (src === undefined) {
           throw new Error(
             `An image tag (<${tag.tagName}>) was used but there was no ${IMG_STYLE_NAME} defined for it. Either create a style or use a ${IMG_STYLE_NAME} attribute on the tag.`

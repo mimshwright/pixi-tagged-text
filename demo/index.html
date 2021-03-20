@@ -131,6 +131,74 @@
       </div>
       <div class="example">
         <div class="code">
+          <h2>Inline images</h2>
+          <pre><code class="js">
+const thinking = PIXI.Sprite.from("./icon.png");
+const doot = PIXI.Sprite.from("./doot.png");
+
+const text = `&lt;h2&gt;Inline Images!&lt;/h2&gt;
+Add an image.
+&lt;img src="doot" imageDisplay="inline"&gt;&lt;/img&gt;
+Or, put an icon &lt;icon src="thinking" imageDisplay="icon"&gt;&lt;/icon&gt; in there, bro!`;
+
+const style = {
+  default: {
+    fontFamily: "Arial",
+    fontSize: "24px",
+    fill: "#FFFFCC",
+  },
+  h2: {
+    fontSize: 36,
+    fill: "#44CC99",
+  },
+  img: {},
+  icon: {},
+}
+const options = {spriteMap: { thinking, doot }};
+
+const imgText = new RichText(text, style, options);
+      </code></pre>
+        </div>
+        <div class="pixi" id="img">
+          <script>
+            const thinking = PIXI.Sprite.from("./icon.png");
+            const doot = PIXI.Sprite.from("./doot.png");
+
+            const imgStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#FFFFCC",
+                align: "center",
+              },
+              h2: {
+                fontSize: 36,
+                fill: "#44CC99",
+              },
+              img: {},
+              icon: {},
+            };
+
+            const [imgRichText, imgMultiText] = createComparisonText(
+              `<h2>Inline Images!</h2>
+Add an image.
+<img src="doot" imageDisplay="inline" />
+Or, put an icon <thinking imageDisplay="icon" /> in there, bro!
+`,
+              imgStyle,
+              {
+                debug: true,
+                spriteMap: { thinking, doot },
+              }
+            );
+            imgMultiText.text = "Images not supported in multiText";
+
+            const imgApp = createDemo("img", imgRichText, imgMultiText);
+          </script>
+        </div>
+      </div>
+      <div class="example">
+        <div class="code">
           <h2>Alignment</h2>
           <pre><code class="js">
       </code></pre>
@@ -208,154 +276,6 @@
             alignApp.stage.addChild(justify);
           </script>
         </div>
-      </div>
-      <div class="example">
-          <div class="code">
-              <h2>Inline images</h2>
-              <pre><code class="js">
-                  const thinking = PIXI.Sprite.from("./icon.png");
-                  const doot = PIXI.Sprite.from("./doot.png");
-                  
-                  const text = `&lt;h2&gt;Inline Images!&lt;/h2&gt;
-                  Add an image.
-                  &lt;img src="doot" imageDisplay="inline"&gt;&lt;/img&gt;
-                  Or, put an icon &lt;icon src="thinking" imageDisplay="icon"&gt;&lt;/icon&gt; in there, bro!`;
-                  
-                  const style = {
-                  default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#FFFFCC",
-                  },
-                  h2: {
-                  fontSize: 36,
-                  fill: "#44CC99",
-                  },
-                  img: {},
-                  icon: {},
-                  }
-                  const options = {spriteMap: { thinking, doot }};
-                  
-                  const imgText = new RichText(text, style, options);
-              </code></pre>
-          </div>
-          <div class="pixi" id="img">
-              <script>
-                  const thinking = PIXI.Sprite.from("./icon.png");
-                  const doot = PIXI.Sprite.from("./doot.png");
-                  
-                  const imgStyle = {
-                      default: {
-                          fontFamily: "Arial",
-                          fontSize: "24px",
-                          fill: "#FFFFCC",
-                          align: "center",
-                      },
-                      h2: {
-                          fontSize: 36,
-                          fill: "#44CC99",
-                      },
-                      img: {},
-                      icon: {},
-                  };
-              
-              const [imgRichText, imgMultiText] = createComparisonText(
-                                                                       `<h2>Inline Images!</h2>
-                                                                       Add an image.
-                                                                       <img src="doot" imageDisplay="inline" />
-                                                                       Or, put an icon <icon src="thinking" imageDisplay="icon" /> in there, bro!
-                                                                       `,
-                                                                       imgStyle,
-                                                                       {
-                                                                       debug: true,
-                                                                       spriteMap: { thinking, doot },
-                                                                       }
-                                                                       );
-                                                                       imgMultiText.text = "Images not supported in multiText";
-                                                                       
-                                                                       const imgApp = createDemo("img", imgRichText, imgMultiText);
-                  </script>
-          </div>
-      </div>
-      <div class="example">
-          <div class="code">
-              <h2>Alignment</h2>
-              <pre><code class="js">
-              </code></pre>
-          </div>
-          <div class="pixi" id="align">
-              <script>
-                  // Alignment.
-                  const str = `You can align left, right, center or justify.\nEt veniam nemo sunt ab facilis voluptatem voluptas est debitis.`;
-                  const style = {
-                      default: {
-                          align: "left",
-                          fill: "teal",
-                          wordWrapWidth: 250,
-                      },
-                      b: {
-                          fontWeight: "700",
-                          fill: "white",
-                      },
-                  };
-              
-              let [leftRich, leftMulti] = createComparisonText(
-                                                               str.replace("left", "<b>left</b>"),
-                                                               style,
-                                                               {}
-                                                               );
-                                                               
-                                                               let right = new RichText(
-                                                                                        str.replace("right", "<b>right</b>"),
-                                                                                        {
-                                                                                        ...style,
-                                                                                        default: {
-                                                                                        align: "right",
-                                                                                        fill: "orange",
-                                                                                        wordWrapWidth: 250,
-                                                                                        },
-                                                                                        },
-                                                                                        opt
-                                                                                        );
-                                                                                        right.x = 330;
-                                                                                        right.y = 30;
-                                                                                        
-                                                                                        let center = new RichText(
-                                                                                                                  str.replace("center", "<b>center</b>"),
-                                                                                                                  {
-                                                                                                                  ...style,
-                                                                                                                  default: {
-                                                                                                                  align: "center",
-                                                                                                                  fill: "yellow",
-                                                                                                                  wordWrapWidth: 250,
-                                                                                                                  },
-                                                                                                                  },
-                                                                                                                  opt
-                                                                                                                  );
-                                                                                                                  center.x = 30;
-                                                                                                                  center.y = 330;
-                                                                                                                  
-                                                                                                                  let justify = new RichText(
-                                                                                                                                             str.replace("justify", "<b>justify</b>"),
-                                                                                                                                             {
-                                                                                                                                             ...style,
-                                                                                                                                             default: {
-                                                                                                                                             align: "justify",
-                                                                                                                                             fill: "pink",
-                                                                                                                                             wordWrapWidth: 250,
-                                                                                                                                             },
-                                                                                                                                             },
-                                                                                                                                             opt
-                                                                                                                                             );
-                                                                                                                                             justify.x = 330;
-                                                                                                                                             justify.y = 330;
-                                                                                                                                             
-                                                                                                                                             const alignApp = createDemo("align", leftRich, leftMulti);
-                                                                                                                                             alignApp.stage.addChild(right);
-                                                                                                                                             alignApp.stage.addChild(center);
-                                                                                                                                             alignApp.stage.addChild(justify);
-                  </script>
-          </div>
       </div>
       <div class="example">
         <div class="code">
