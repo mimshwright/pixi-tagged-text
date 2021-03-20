@@ -77,3 +77,8 @@ export const getStyleForToken = (
   tagStyles: TextStyleSet
 ): TextStyleExtended =>
   combineStyles(tagStyles.default, getStyleForTags(token.tags, tagStyles));
+
+export const isTokenImage = (token: TaggedTextTokenPartial): boolean =>
+  token.style?.src !== undefined ||
+  token.tags.filter(({ attributes }) => attributes.src !== undefined).length >
+    0;

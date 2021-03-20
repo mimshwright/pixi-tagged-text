@@ -14,10 +14,12 @@ import {
   getStyleForTag as getStyleForTagExt,
   getStyleForToken,
 } from "./style";
+import { addChildrenToContainer } from "./pixiUtils";
 
 const DEFAULT_STYLE: TextStyleExtended = {
   align: "left",
   valign: "baseline",
+  imageDisplay: "inline",
   wordWrap: true,
   wordWrapWidth: 500,
 };
@@ -25,6 +27,7 @@ const DEFAULT_STYLE: TextStyleExtended = {
 const DEFAULT_OPTIONS: RichTextOptions = {
   debug: false,
   splitStyle: "words",
+  spriteMap: {},
 };
 
 const DEBUG = {
@@ -43,32 +46,6 @@ const DEBUG = {
 };
 
 export default class RichText extends PIXI.Sprite {
-  constructor(
-    text = "",
-    tagStyles: TextStyleSet = {},
-    options: RichTextOptions = {},
-    texture?: PIXI.Texture
-  ) {
-    super(texture);
-
-    this._debugContainer = new PIXI.Container();
-    if (options.debug) {
-      this.addChild(this._debugContainer);
-    }
-
-    this._textContainer = new PIXI.Container();
-    this.addChild(this.textContainer);
-
-    const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
-    this.options = mergedOptions;
-
-    const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
-    tagStyles.default = mergedDefaultStyles;
-    this.tagStyles = tagStyles;
-
-    this.text = text;
-  }
-
   private options: RichTextOptions;
 
   private animationRequest = NaN;
@@ -102,6 +79,89 @@ export default class RichText extends PIXI.Sprite {
     // }
   }
 
+  public get defaultStyle(): TextStyleExtended {
+    return this.tagStyles?.default;
+  }
+  public set defaultStyle(defaultStyles: TextStyleExtended) {
+    this.setStyleForTag("default", defaultStyles);
+  }
+
+  private _textFields: PIXI.Text[] = [];
+  public get textFields(): PIXI.Text[] {
+    return this._textFields;
+  }
+
+  private _textContainer: PIXI.Container;
+  public get textContainer(): PIXI.Container {
+    return this._textContainer;
+  }
+  private _sprites: PIXI.Sprite[] = [];
+  public get sprites(): PIXI.Sprite[] {
+    return this._sprites;
+  }
+  private _spriteContainer: PIXI.Container;
+  public get spriteContainer(): PIXI.Container {
+    return this._spriteContainer;
+  }
+  private _debugContainer: PIXI.Container;
+  public get debugContainer(): PIXI.Container {
+    return this._debugContainer;
+  }
+
+  private _measuredTokens: TaggedTextToken[][] = [[]];
+
+  private _debugGraphics: PIXI.Graphics | null = null;
+
+  constructor(
+    text = "",
+    tagStyles: TextStyleSet = {},
+    options: RichTextOptions = {},
+    texture?: PIXI.Texture
+  ) {
+    super(texture);
+
+    this._textContainer = new PIXI.Container();
+    this._spriteContainer = new PIXI.Container();
+    this._debugContainer = new PIXI.Container();
+
+    this.addChild(this._textContainer);
+    this.addChild(this._spriteContainer);
+    this.addChild(this._debugContainer);
+
+    this.resetChildren();
+
+    const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+    this.options = mergedOptions;
+
+    const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
+    tagStyles.default = mergedDefaultStyles;
+    this.tagStyles = tagStyles;
+
+    if (this.options.spriteMap) {
+      Object.entries(this.options.spriteMap).forEach(([key, sprite]) => {
+        // Listen for changes to sprites (e.g. when they load.)
+        const texture = sprite.texture;
+        if (texture !== undefined) {
+          texture.baseTexture.addListener("update", () => this.update());
+        }
+
+        // register a style for each of these by default.
+        const style = { src: key };
+        this.setStyleForTag(key, style);
+      });
+    }
+
+    this.text = text;
+  }
+
+  private resetChildren() {
+    this._debugContainer.removeChildren();
+    this._textContainer.removeChildren();
+    this._spriteContainer.removeChildren();
+
+    this._textFields = [];
+    this._sprites = [];
+  }
   public getStyleForTag(
     tag: string,
     attributes: AttributesList = {}
@@ -133,38 +193,6 @@ export default class RichText extends PIXI.Sprite {
     }
     return false;
   }
-  public get defaultStyle(): TextStyleExtended {
-    return this.tagStyles?.default;
-  }
-  public set defaultStyle(defaultStyles: TextStyleExtended) {
-    this.setStyleForTag("default", defaultStyles);
-  }
-
-  private _textFields: PIXI.Text[] = [];
-  public get textFields(): PIXI.Text[] {
-    return this._textFields;
-  }
-
-  private _textContainer: PIXI.Container;
-  public get textContainer(): PIXI.Container {
-    return this._textContainer;
-  }
-  private _debugContainer: PIXI.Container;
-  public get debugContainer(): PIXI.Container {
-    return this._debugContainer;
-  }
-
-  private _debugGraphics: PIXI.Graphics | null = null;
-
-  private addChildrenToTextContainer(children: PIXI.DisplayObject[]) {
-    for (const child of children) {
-      this.textContainer.addChild(child);
-    }
-  }
-  private resetTextFields() {
-    this.textContainer.removeChildren();
-    this._textFields = [];
-  }
 
   private update() {
     // steps:
@@ -191,13 +219,16 @@ export default class RichText extends PIXI.Sprite {
       : Number.POSITIVE_INFINITY;
     const align = this.defaultStyle.align;
     const lineSpacing = this.defaultStyle.lineSpacing;
+    const spriteMap = this.options.spriteMap ?? {};
 
     const measuredTokens = calculateMeasurements(
       tokensWithStyle,
+      spriteMap,
       wordWrapWidth,
       align,
       lineSpacing
     );
+    this._measuredTokens = measuredTokens;
 
     // Wait one frame to draw so that this doesn't happen multiple times in one frame.
     // if (this.animationRequest) {
@@ -208,42 +239,51 @@ export default class RichText extends PIXI.Sprite {
     // );
 
     if (this.options.debug) {
-      console.log(this.untaggedText);
-      console.log(
-        measuredTokens
-          .map((line, lineNumber) =>
-            line
-              .map((token, tokenNumber) => {
-                const nl = "\n    ";
-                let s = `  "${token.text}":`;
-                s += `${nl}line: ${lineNumber}, word: ${tokenNumber}`;
-                s += `${nl}tags: ${
-                  token.tags.length === 0
-                    ? "<none>"
-                    : token.tags.map((tag) => tag.tagName).join("")
-                }`;
-                s += `${nl}style: ${Object.entries(token.style)
-                  .map((e) => e.join(":"))
-                  .join("; ")}`;
-                s += `${nl}size: x:${token.measurement.x} y:${token.measurement.y} width:${token.measurement.width} height:${token.measurement.height} / left:${token.measurement.left} right:${token.measurement.right} top:${token.measurement.top} bottom:${token.measurement.bottom}`;
-                s += `${nl}font: fontSize:${token.fontProperties.fontSize} ascent:${token.fontProperties.ascent} descent:${token.fontProperties.descent}`;
-                return s;
-              })
-              .join("\n")
-          )
-          .join("\n")
-      );
+      console.log(this.toDebugString());
     }
   }
 
+  public toDebugString(): string {
+    let s = this.untaggedText + "\n  ";
+    if (this._measuredTokens !== undefined) {
+      s += this._measuredTokens
+        .map((line, lineNumber) =>
+          line
+            .map((token, tokenNumber) => {
+              const nl = "\n    ";
+              let s = `  "${token.text}":`;
+              s += `${nl}line: ${lineNumber}, word: ${tokenNumber}`;
+              s += `${nl}tags: ${
+                token.tags.length === 0
+                  ? "<none>"
+                  : token.tags.map((tag) => tag.tagName).join("")
+              }`;
+              s += `${nl}style: ${Object.entries(token.style)
+                .map((e) => e.join(":"))
+                .join("; ")}`;
+              s += `${nl}size: x:${token.measurement.x} y:${token.measurement.y} width:${token.measurement.width} height:${token.measurement.height} / left:${token.measurement.left} right:${token.measurement.right} top:${token.measurement.top} bottom:${token.measurement.bottom}`;
+              s += `${nl}font: fontSize:${token.fontProperties.fontSize} ascent:${token.fontProperties.ascent} descent:${token.fontProperties.descent}`;
+              return s;
+            })
+            .join("\n")
+        )
+        .join("\n");
+    }
+    return s;
+  }
+
   private draw(tokens: TaggedTextToken[][]): void {
-    this.resetTextFields();
+    this.resetChildren();
     const tokensFlat = tokens.flat();
     const textFields = this.createTextFieldsForTokens(tokensFlat);
+    const sprites = this.getSpritesFromTokens(tokensFlat);
     this.positionDisplayObjects(textFields, tokensFlat);
 
-    this.addChildrenToTextContainer(textFields);
+    addChildrenToContainer(textFields, this.textContainer);
     this._textFields = textFields;
+
+    addChildrenToContainer(sprites, this.spriteContainer);
+    this._sprites = sprites;
 
     if (this.options.debug) {
       this.drawDebug(tokens);
@@ -256,28 +296,36 @@ export default class RichText extends PIXI.Sprite {
       .map((t) => this.createTextFieldForToken(t));
   }
 
+  private getSpritesFromTokens(tokens: TaggedTextToken[]): PIXI.Sprite[] {
+    const spriteTokens = tokens.filter(({ sprite }) => sprite !== undefined);
+    const sprites = spriteTokens.map(({ sprite }) => sprite) as PIXI.Sprite[];
+    return sprites;
+  }
+
   private createTextFieldForToken(token: TaggedTextToken): PIXI.Text {
     return new PIXI.Text(token.text, token.style);
   }
 
   private positionDisplayObjects(
-    displayObjects: PIXI.DisplayObject[],
+    textFields: PIXI.DisplayObject[],
     tokens: TaggedTextToken[]
   ): void {
-    for (let i = 0; i < displayObjects.length; i++) {
-      const d = displayObjects[i];
-      const { measurement: m } = tokens[i];
+    for (let i = 0; i < textFields.length; i++) {
+      const d = textFields[i];
+      const { measurement: m, sprite } = tokens[i];
       d.x = m.x;
       d.y = m.y;
+
+      if (sprite !== undefined) {
+        sprite.x = m.x;
+        sprite.y = m.y;
+      }
     }
   }
 
   // FIXME: for some reason, this doesn't work on the first time it's used in the demos.
   public drawDebug(tokens: TaggedTextToken[][]): void {
-    if (this._debugGraphics === null) {
-      this._debugGraphics = new PIXI.Graphics();
-    }
-    this.debugContainer.removeChildren();
+    this._debugGraphics = new PIXI.Graphics();
     this.debugContainer.addChild(this._debugGraphics);
 
     const g = this._debugGraphics;
