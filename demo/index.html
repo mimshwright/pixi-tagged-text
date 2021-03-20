@@ -21,6 +21,10 @@
     <h1>Pixi Multistyle Text Demo</h1>
     <main>
       <script>
+        var MultiStyleText = pixiMultistyleText.MultiStyleText;
+        var RichText = pixiMultistyleText.RichText;
+        const opt = { debug: false };
+
         function appendPixiRendererToId(
           id,
           width = 600,
@@ -46,18 +50,220 @@
           return [renderer, stage, render];
         }
 
-        function createDemo(child, id) {
+        function createDemo(children, id) {
           const [renderer, stage] = createPixiRendererAndStage(id);
 
-          child.x = 300 - child.width / 2;
-          child.y = 30;
-          stage.addChild(child);
+          children.forEach((child) => {
+            // child.x = 300 - child.width / 2;
+            child.x = 30;
+            child.y = 30;
+            stage.addChild(child);
+          });
+          const [multistyle, richtext] = children;
+          multistyle.alpha = 0.5;
+          // multistyle.visible = false;
+
+          const tf = new PIXI.Text(
+            "synthesize Senior Directives extranet Refined Delectus quisquam rerum doloremque quo veniam ut optio nesciunt dicta. Est dolorum asperiores. Aperiam rem et aut rerum dolorem. Numquam reprehenderit sunt. Cum illum corrupti.",
+            {
+              align: "left",
+              wordWrap: false,
+              wordWrapWidth: 500,
+              fill: "#FF00FF",
+            }
+          );
+          tf.x = children[1].x;
+          tf.y = children[1].y;
+          tf.visible = false;
+          stage.addChild(tf);
 
           renderer.render(stage);
 
           return [renderer, stage];
         }
+
+        // For testing purposes, temporarily replace the code that creates
+        // text fields to create two of them to compare against each other.
+        function createComparisonText(text, styles, overrideOptions) {
+          return [
+            new MultiStyleText(text, styles),
+            new RichText(text, styles, overrideOptions || opt),
+          ];
+        }
       </script>
+      <div class="example">
+        <div class="code">
+          <h2>Vertical Alignment</h2>
+          <pre><code class="js">let valign = new MultiStyleText(&quot;You can use &lt;code&gt;valign&lt;/code&gt; &lt;top&gt;to&lt;/top&gt; &lt;middle&gt;control&lt;/middle&gt; &lt;baseline&gt;the&lt;/baseline&gt; &lt;bottom&gt;vertical&lt;/bottom&gt; &lt;custom1&gt;alignment&lt;/custom1&gt; &lt;custom2&gt;of&lt;/custom2&gt; &lt;custom3&gt;text&lt;/custom3&gt;.&quot;,
+{
+&quot;default&quot;: {
+fontFamily: &quot;Arial&quot;,
+fontSize: &quot;24px&quot;,
+fill: &quot;#cccccc&quot;
+},
+&quot;code&quot;: {
+fontFamily: &quot;Inconsolata&quot;,
+fontSize: &quot;36px&quot;,
+fill: &quot;#ff8888&quot;
+},
+&quot;top&quot;: { fontSize: &quot;14px&quot;, valign: &quot;top&quot; },
+&quot;middle&quot;: { fontSize: &quot;14px&quot;, valign: &quot;middle&quot; },
+&quot;bottom&quot;: { fontSize: &quot;14px&quot;, valign: &quot;bottom&quot; },
+&quot;baseline&quot;: { fontSize: &quot;14px&quot;, valign: &quot;baseline&quot; },
+&quot;custom1&quot;: { fontSize: &quot;14px&quot;, valign: 5 },
+&quot;custom2&quot;: { fontSize: &quot;14px&quot;, valign: -70 },
+&quot;custom3&quot;: { fontSize: &quot;14px&quot;, valign: 25 }
+});</code></pre>
+        </div>
+        <div class="pixi" id="valign">
+          <script>
+            // Vertical Alignment
+            const valignStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                align: "left",
+                valign: "baseline",
+              },
+              code: {
+                fontFamily: "Courier",
+                fontSize: "36px",
+                fill: "#ff8888",
+              },
+              small: { fontSize: "14px" },
+              top: { valign: "top" },
+              middle: { valign: "middle" },
+              bottom: { valign: "bottom" },
+              baseline: { valign: "baseline" },
+              custom1: { fontSize: "14px", valign: 5 },
+              custom2: { fontSize: "14px", valign: -70 },
+              custom3: { fontSize: "14px", valign: 25 },
+            };
+            let valign = createComparisonText(
+              `<top><code>Top</code> <small>Vertical</small> Alignment.</top>
+
+<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>
+
+<bottom><code>Bottom</code> <small>Vertical</small> Alignment.</bottom>
+
+<baseline><code>Baseline</code> <small>Vertical</small> Alignment.</baseline>`,
+              // You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.
+              valignStyle
+            );
+            createDemo(valign, "valign");
+          </script>
+        </div>
+      </div>
+      <div class="example">
+        <div class="code">
+          <h2>Alignment</h2>
+          <pre><code class="js">
+          </code></pre>
+        </div>
+        <div class="pixi" id="align">
+          <script>
+            // Alignment.
+            const str = `You can align left, right, center or justify.\nEt veniam nemo sunt ab facilis voluptatem voluptas est debitis.`;
+            const style = {
+              default: {
+                align: "left",
+                fill: "teal",
+                wordWrapWidth: 250,
+              },
+              b: {
+                fontWeight: "700",
+                fill: "white",
+              },
+            };
+
+            let left = createComparisonText(
+              str.replace("left", "<b>left</b>"),
+              style,
+              {}
+            );
+            let right = new RichText(
+              str.replace("right", "<b>right</b>"),
+              {
+                ...style,
+                default: {
+                  align: "right",
+                  fill: "orange",
+                  wordWrapWidth: 250,
+                },
+              },
+              opt
+            );
+            right.x = 330;
+            right.y = 30;
+
+            let center = new RichText(
+              str.replace("center", "<b>center</b>"),
+              {
+                ...style,
+                default: {
+                  align: "center",
+                  fill: "yellow",
+                  wordWrapWidth: 250,
+                },
+              },
+              opt
+            );
+            center.x = 30;
+            center.y = 330;
+
+            let justify = new RichText(
+              str.replace("justify", "<b>justify</b>"),
+              {
+                ...style,
+                default: {
+                  align: "justify",
+                  fill: "pink",
+                  wordWrapWidth: 250,
+                },
+              },
+              opt
+            );
+            justify.x = 330;
+            justify.y = 330;
+
+            const [r, stage] = createDemo(left, "align");
+            stage.addChild(right);
+            stage.addChild(center);
+            stage.addChild(justify);
+            r.render(stage);
+          </script>
+        </div>
+      </div>
+      <div class="example">
+        <div class="code">
+          <h2>Attributes</h2>
+          <pre><code class="js">
+          </code></pre>
+        </div>
+        <div class="pixi" id="attributes">
+          <script>
+            // Basics
+            let attributes = createComparisonText(
+              `You can add <em>attributes</em> to your tags!\nThey will <em fontStyle="italic">overwrite</em> the <em fill="#FF8822">values</em><br></br>for any existing <em fontFamily="Courier" fill="#FFFF00" fontWeight="400">tag styles</em>.`,
+              {
+                default: {
+                  fontFamily: "Arial",
+                  fontSize: "24px",
+                  fill: "#cccccc",
+                  align: "left",
+                },
+                em: {
+                  fill: "#4488FF",
+                  fontWeight: 700,
+                },
+              }
+            );
+
+            createDemo(attributes, "attributes");
+          </script>
+        </div>
+      </div>
 
       <div class="example">
         <div class="code">
@@ -84,10 +290,11 @@
             }
           });</code></pre>
         </div>
+
         <div class="pixi" id="basic">
           <script>
             // Basics
-            let text = new MultiStyleText(
+            let text = createComparisonText(
               "Let's make some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
               {
                 default: {
@@ -101,20 +308,22 @@
                   fill: "#ff8888",
                 },
                 ms: {
-                  fontStyle: "italic",
+                  fontWeight: "bold",
                   fill: "#4488ff",
                 },
                 pixi: {
                   fontSize: "64px",
                   fill: "#efefef",
                 },
-              }
+              },
+              { debug: true }
             );
 
             createDemo(text, "basic");
           </script>
         </div>
       </div>
+
       <div class="example">
         <div class="code">
           <h2>Tag Styles</h2>
@@ -130,7 +339,7 @@
         <div class="pixi" id="bbcode">
           <script>
             // Tag Styles
-            let bbcode = new MultiStyleText(
+            let bbcode = createComparisonText(
               "Let's make some [b]bold[/b]\n [color=yellow][i]multistyle[/i][/color] [size=40]bbcode[/size] [outline=purple]tags[/outline] text for \n[spacing=10]Pixi.js![/spacing]",
               {
                 default: {
@@ -140,6 +349,7 @@
                 },
               }
             );
+            bbcode[1].text = "bbcode not supported!";
             createDemo(bbcode, "bbcode");
           </script>
         </div>
@@ -166,13 +376,17 @@
         <div class="pixi" id="nested">
           <script>
             // Nesting Tags
-            let nested = new MultiStyleText(
-              "You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like</large></shadow></thicker></i></red></b></outline>",
+            let nested = createComparisonText(
+              "You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like, dawg!</large></shadow></thicker></i></red></b></outline>",
               {
                 default: {
                   fontFamily: "Arial",
                   fontSize: "24px",
                   fill: "#cccccc",
+                  wordWrapWidth: 500,
+                  wordWrap: true,
+                  valign: "baseline",
+                  debug: true,
                 },
                 outline: { stroke: "black", strokeThickness: 2 },
                 b: { fontWeight: 700 },
@@ -187,64 +401,12 @@
           </script>
         </div>
       </div>
-      <div class="example">
-        <div class="code">
-          <h2>Vertical Alignment</h2>
-          <pre><code class="js">let valign = new MultiStyleText(&quot;You can use &lt;code&gt;valign&lt;/code&gt; &lt;top&gt;to&lt;/top&gt; &lt;middle&gt;control&lt;/middle&gt; &lt;baseline&gt;the&lt;/baseline&gt; &lt;bottom&gt;vertical&lt;/bottom&gt; &lt;custom1&gt;alignment&lt;/custom1&gt; &lt;custom2&gt;of&lt;/custom2&gt; &lt;custom3&gt;text&lt;/custom3&gt;.&quot;,
-{
-	&quot;default&quot;: {
-		fontFamily: &quot;Arial&quot;,
-		fontSize: &quot;24px&quot;,
-		fill: &quot;#cccccc&quot;
-	},
-	&quot;code&quot;: {
-		fontFamily: &quot;Inconsolata&quot;,
-		fontSize: &quot;36px&quot;,
-		fill: &quot;#ff8888&quot;
-	},
-	&quot;top&quot;: { fontSize: &quot;14px&quot;, valign: &quot;top&quot; },
-	&quot;middle&quot;: { fontSize: &quot;14px&quot;, valign: &quot;middle&quot; },
-	&quot;bottom&quot;: { fontSize: &quot;14px&quot;, valign: &quot;bottom&quot; },
-	&quot;baseline&quot;: { fontSize: &quot;14px&quot;, valign: &quot;baseline&quot; },
-	&quot;custom1&quot;: { fontSize: &quot;14px&quot;, valign: 5 },
-	&quot;custom2&quot;: { fontSize: &quot;14px&quot;, valign: -70 },
-	&quot;custom3&quot;: { fontSize: &quot;14px&quot;, valign: 25 }
-});</code></pre>
-        </div>
-        <div class="pixi" id="valign">
-          <script>
-            // Vertical Alignment
-            let valign = new MultiStyleText(
-              "You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>the</baseline> <bottom>vertical</bottom> <custom1>alignment</custom1> <custom2>of</custom2> <custom3>text</custom3>.",
-              {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                },
-                code: {
-                  fontFamily: "Inconsolata",
-                  fontSize: "36px",
-                  fill: "#ff8888",
-                },
-                top: { fontSize: "14px", valign: "top" },
-                middle: { fontSize: "14px", valign: "middle" },
-                bottom: { fontSize: "14px", valign: "bottom" },
-                baseline: { fontSize: "14px", valign: "baseline" },
-                custom1: { fontSize: "14px", valign: 5 },
-                custom2: { fontSize: "14px", valign: -70 },
-                custom3: { fontSize: "14px", valign: 25 },
-              }
-            );
-            createDemo(valign, "valign");
-          </script>
-        </div>
-      </div>
+
       <div class="example">
         <div class="code">
           <h2>Spacing</h2>
           <pre><code class="js">
-let lineSpacing = new MultiStyleText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
+let lineSpacing = createComparisonText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
 {
 "default": {
 fontFamily: "Arial",
@@ -265,7 +427,7 @@ stage.addChild(lineSpacing);
         <div class="pixi" id="spacing">
           <script>
             // Spacing
-            let spacing = new MultiStyleText(
+            let spacing = createComparisonText(
               "You can set line and letter spacing to give your text some drama. Note that lineSpacing can only be set on the default style.",
               {
                 default: {
@@ -302,7 +464,7 @@ stage.addChild(lineSpacing);
         <div class="pixi" id="wrapping">
           <script>
             // Wrapping and Alignment
-            let wrapping = new MultiStyleText(
+            let wrapping = createComparisonText(
               'Global word wrap and alignment properties are controlled by the "default" style, and can\'t be overridden by other styles.',
               {
                 default: {
@@ -343,7 +505,7 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
         <div class="pixi" id="wrapping2">
           <script>
             // Wrapping and Alignment II
-            let wrapping2 = new MultiStyleText(
+            let wrapping2 = createComparisonText(
               "全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。",
               {
                 default: {
@@ -392,7 +554,7 @@ let debug = new MultiStyleText(&quot;You can use &lt;code&gt;debug mode&lt;/code
         <div class="pixi" id="debug">
           <script>
             // Debug Mode
-            let debug = new MultiStyleText(
+            let debug = createComparisonText(
               "You can use <code>debug mode</code> to help you figure out what your text is doing.  You can use <blue>global, </blue><red>static</red> settings or <no-debug>override those with the <code>debug</code> style option.</no-debug>",
               {
                 default: {
@@ -453,7 +615,7 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
         <div class="pixi" id="interaction">
           <script>
             // Interaction Events
-            let interaction = new MultiStyleText(
+            let interaction = createComparisonText(
               `If you enable <link name="interaction">interaction</link>, you can get <link name="information">information</link> about which <link name="tag">tag</link> corresponded to the <link name="event">event</link>.`,
               {
                 default: {
@@ -470,14 +632,17 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
               }
             );
 
-            interaction.interactive = true;
-            interaction.on("pointerdown", (e) => {
-              if (e.targetTag !== undefined && e.targetTag.name === "link") {
-                alert(
-                  `You clicked on the link for "${e.targetTag.properties.name}"!`
-                );
-              }
-            });
+            for (const text of interaction) {
+              text.interactive = true;
+              text.on("pointerdown", (e) => {
+                if (e.targetTag !== undefined && e.targetTag.name === "link") {
+                  alert(
+                    `You clicked on the link for "${e.targetTag.properties.name}"!`
+                  );
+                }
+              });
+            }
+
             createDemo(interaction, "interaction");
           </script>
         </div>
@@ -533,7 +698,7 @@ requestAnimationFrame(animate);</code></pre>
               red: { fill: 0xff8888, stroke: 0xcc4444 },
             };
 
-            let animated = new MultiStyleText(
+            let animated = createComparisonText(
               "Now have fun making some <blue>beautiful</blue> <red>multistyle</red> text!",
               funStyles
             );
@@ -549,10 +714,11 @@ requestAnimationFrame(animate);</code></pre>
               funStyles.default.dropShadowBlur =
                 Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 +
                 5;
-              animated.setStyles(funStyles);
+              animated[0].setStyles(funStyles);
+              animated[1].setStyleForTag("default", funStyles.default);
             }
 
-            requestAnimationFrame(animate);
+            // requestAnimationFrame(animate);
           </script>
         </div>
       </div>
