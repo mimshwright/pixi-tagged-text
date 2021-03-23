@@ -29,8 +29,6 @@ export interface TextStyleExtended extends TextStyle {
 
 export type TextStyleSet = Record<string, TextStyleExtended>;
 
-export type SpriteMap = Record<string, PIXI.Sprite>;
-
 export type AttributesList = Record<string, unknown>;
 export interface TagWithAttributes {
   tagName: string;
