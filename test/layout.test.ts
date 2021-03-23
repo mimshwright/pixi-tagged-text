@@ -8,6 +8,18 @@ describe("layout module", () => {
   const H = 20;
   const maxLineWidth = 500;
 
+  describe("updateOffsetForNewLine()", () => {
+    const offset = new PIXI.Point(35, 100);
+    const result = layout.updateOffsetForNewLine(offset, 50, 20);
+    it("should update the properties of the offset. x would always be zero in this case.", () => {
+      expect(result).toHaveProperty("x", 0);
+      expect(result).toHaveProperty("y", 170);
+    });
+    it("should return a copy of the input, not the original input.", () => {
+      expect(offset).not.toStrictEqual(result);
+    });
+  });
+
   describe("calculateMeasurements()", () => {
     it("should be a function", () => {
       expect(layout.calculateMeasurements).toBeInstanceOf(Function);
