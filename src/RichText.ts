@@ -7,7 +7,7 @@ import {
   TagWithAttributes,
   AttributesList,
   TaggedTextToken,
-  SpriteMap,
+  ImageMap,
   IMG_SRC_PROPERTY,
   IMG_DISPLAY_PROPERTY,
 } from "./types";
@@ -30,7 +30,7 @@ const DEFAULT_STYLE: TextStyleExtended = {
 const DEFAULT_OPTIONS: RichTextOptions = {
   debug: false,
   splitStyle: "words",
-  spriteMap: {},
+  imgMap: {},
 };
 
 const DEBUG = {
@@ -138,8 +138,8 @@ export default class RichText extends PIXI.Sprite {
     tagStyles.default = mergedDefaultStyles;
     this.tagStyles = tagStyles;
 
-    if (this.options.spriteMap) {
-      this.registerSpriteMap(this.options.spriteMap);
+    if (this.options.imgMap) {
+      this.registerImageMap(this.options.imgMap);
     }
 
     this.text = text;
@@ -154,8 +154,8 @@ export default class RichText extends PIXI.Sprite {
     this._sprites = [];
   }
 
-  private registerSpriteMap(spriteMap: SpriteMap) {
-    Object.entries(spriteMap).forEach(([key, sprite]) => {
+  private registerImageMap(imgMap: ImageMap) {
+    Object.entries(imgMap).forEach(([key, sprite]) => {
       // Listen for changes to sprites (e.g. when they load.)
       const texture = sprite.texture;
       if (texture !== undefined) {
@@ -246,11 +246,11 @@ export default class RichText extends PIXI.Sprite {
       : Number.POSITIVE_INFINITY;
     const align = this.defaultStyle.align;
     const lineSpacing = this.defaultStyle.lineSpacing;
-    const spriteMap = this.options.spriteMap ?? {};
+    const imgMap = this.options.imgMap ?? {};
 
     const measuredTokens = calculateMeasurements(
       tokensWithStyle,
-      spriteMap,
+      imgMap,
       wordWrapWidth,
       align,
       lineSpacing

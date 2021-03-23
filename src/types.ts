@@ -13,11 +13,11 @@ export type Measurement = PIXI.Rectangle;
 // TODO: implement splitStyle: characters
 export type SplitStyle = "words" | "characters";
 export type SpriteReference = PIXI.Sprite;
-export type SpriteMap = Record<string, SpriteReference>;
+export type ImageMap = Record<string, SpriteReference>;
 export interface RichTextOptions {
   debug?: boolean;
   splitStyle?: SplitStyle;
-  spriteMap?: SpriteMap;
+  imgMap?: ImageMap;
 }
 
 ///// STYLE PROPERTIES

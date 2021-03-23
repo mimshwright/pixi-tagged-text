@@ -155,7 +155,7 @@ const style = {
   img: {},
   icon: {},
 }
-const options = {spriteMap: { thinking, doot }};
+const options = {imgMap: { thinking, doot }};
 
 const imgText = new RichText(text, style, options);
       </code></pre>
@@ -189,7 +189,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
               imgStyle,
               {
                 debug: true,
-                spriteMap: { thinking, doot },
+                imgMap: { thinking, doot },
               }
             );
             imgMultiText.text = "Images not supported in multiText";

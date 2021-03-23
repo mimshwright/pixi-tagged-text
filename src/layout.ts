@@ -7,7 +7,7 @@ import {
   MeasurementLine,
   MeasurementLines,
   Point,
-  SpriteMap,
+  ImageMap,
   TaggedTextToken,
   TaggedTextTokenPartial,
   VAlign,
@@ -290,6 +290,7 @@ export const alignTextInLines = (
 /**
  *
  * @param tokens List of TaggedTextTokens to use for separating text based on tags
+ * @param imgMap A mapping of image keys to template Sprite objects
  * @param maxLineWidth The maximum width of one line of text.
  * @param tagStyles List of tagStyles to use for calculating text size.
  * @param align Alignment of text.
@@ -298,7 +299,7 @@ export const alignTextInLines = (
  */
 export const calculateMeasurements = (
   tokens: TaggedTextTokenPartial[],
-  spriteMap: SpriteMap,
+  imgMap: ImageMap,
   maxLineWidth: number = Number.POSITIVE_INFINITY,
   align: Align = "left",
   lineSpacing = 0
@@ -322,10 +323,10 @@ export const calculateMeasurements = (
     for (const tag of token.tags) {
       if (isImage) {
         const src = token.style?.[IMG_SRC_PROPERTY] as string;
-        sprite = cloneSprite(spriteMap[src]);
+        sprite = cloneSprite(imgMap[src]);
         if (sprite === undefined) {
           throw new Error(
-            `An image tag (<${tag.tagName}>) with ${IMG_SRC_PROPERTY}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the spriteMap property in the options in your RichText constructor.`
+            `An image tag (<${tag.tagName}>) with ${IMG_SRC_PROPERTY}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
           );
         }
         if (token.text !== "") {
