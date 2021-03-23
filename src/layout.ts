@@ -23,7 +23,7 @@ const updateOffsetForNewLine = (
 
 const rectFromContainer = (
   container: PIXI.Container,
-  offset: Point
+  offset: Point = { x: 0, y: 0 }
 ): PIXI.Rectangle => {
   const w = container.width;
   const h = container.height;
@@ -307,6 +307,7 @@ export const calculateMeasurements = (
 
   const lines: MeasurementLines = [[]];
   let previousMeasurement = new PIXI.Rectangle(0, 0, 0, 0);
+  let previousSpaceWidth = 0;
   let largestLineHeight = 0;
   let offset = { x: 0, y: 0 };
   let currentLine = 0;
@@ -354,7 +355,6 @@ export const calculateMeasurements = (
       continue;
     }
 
-    sizer.text = token.text;
     sizer.style = {
       ...token.style,
       // Override some styles for the purposes of sizing text.
@@ -364,6 +364,12 @@ export const calculateMeasurements = (
       dropShadowAngle: 0,
       dropShadow: false,
     };
+
+    // Measure a space character in this font style.
+    sizer.text = " ";
+    const spaceWidth = sizer.width;
+
+    sizer.text = token.text;
 
     const fontProperties = getFontPropertiesOfText(sizer, true);
     token.fontProperties = fontProperties;
@@ -396,6 +402,7 @@ export const calculateMeasurements = (
       offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
       size = rectFromContainer(sizer, offset);
       currentLine += 1;
+      previousMeasurement.width -= previousSpaceWidth;
     }
 
     if (lines[currentLine] === undefined) {
@@ -406,6 +413,7 @@ export const calculateMeasurements = (
     offset.x = size.right;
 
     previousMeasurement = size;
+    previousSpaceWidth = spaceWidth;
   }
 
   const measurements = alignTextInLines(align, maxLineWidth, lines);
