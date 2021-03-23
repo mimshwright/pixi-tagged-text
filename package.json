@@ -39,7 +39,7 @@
   "devDependencies": {
     "@types/pixi.js": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
-    "@typescript-eslint/parser": "^4.16.1",
+    "@typescript-eslint/parser": "^4.19.0",
     "argos-cli": "0.3.3",
     "eslint": "^7.21.0",
     "eslint-config-prettier": "^8.1.0",
