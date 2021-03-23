@@ -7,6 +7,9 @@ import {
   TagWithAttributes,
   AttributesList,
   TaggedTextToken,
+  SpriteMap,
+  IMG_SRC_PROPERTY,
+  IMG_DISPLAY_PROPERTY,
 } from "./types";
 import { calculateMeasurements } from "./layout";
 import {
@@ -19,7 +22,7 @@ import { addChildrenToContainer } from "./pixiUtils";
 const DEFAULT_STYLE: TextStyleExtended = {
   align: "left",
   valign: "baseline",
-  imageDisplay: "inline",
+  [IMG_DISPLAY_PROPERTY]: "inline",
   wordWrap: true,
   wordWrapWidth: 500,
 };
@@ -136,17 +139,7 @@ export default class RichText extends PIXI.Sprite {
     this.tagStyles = tagStyles;
 
     if (this.options.spriteMap) {
-      Object.entries(this.options.spriteMap).forEach(([key, sprite]) => {
-        // Listen for changes to sprites (e.g. when they load.)
-        const texture = sprite.texture;
-        if (texture !== undefined) {
-          texture.baseTexture.addListener("update", () => this.update());
-        }
-
-        // register a style for each of these by default.
-        const style = { src: key };
-        this.setStyleForTag(key, style);
-      });
+      this.registerSpriteMap(this.options.spriteMap);
     }
 
     this.text = text;
@@ -160,6 +153,21 @@ export default class RichText extends PIXI.Sprite {
     this._textFields = [];
     this._sprites = [];
   }
+
+  private registerSpriteMap(spriteMap: SpriteMap) {
+    Object.entries(spriteMap).forEach(([key, sprite]) => {
+      // Listen for changes to sprites (e.g. when they load.)
+      const texture = sprite.texture;
+      if (texture !== undefined) {
+        texture.baseTexture.addListener("update", () => this.update());
+      }
+
+      // create a style for each of these by default.
+      const style = { [IMG_SRC_PROPERTY]: key };
+      this.setStyleForTag(key, style);
+    });
+  }
+
   public getStyleForTag(
     tag: string,
     attributes: AttributesList = {}

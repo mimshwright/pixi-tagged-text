@@ -72,6 +72,7 @@
           ];
         }
       </script>
+
       <div class="example">
         <div class="code">
           <h2>Basics</h2>
@@ -138,8 +139,8 @@ const doot = PIXI.Sprite.from("./doot.png");
 
 const text = `&lt;h2&gt;Inline Images!&lt;/h2&gt;
 Add an image.
-&lt;img src="doot" imageDisplay="inline"&gt;&lt;/img&gt;
-Or, put an icon &lt;icon src="thinking" imageDisplay="icon"&gt;&lt;/icon&gt; in there, bro!`;
+&lt;img src="doot" imgDisplay="inline"&gt;&lt;/img&gt;
+Or, put an icon &lt;icon src="thinking" imgDisplay="icon"&gt;&lt;/icon&gt; in there, bro!`;
 
 const style = {
   default: {
@@ -182,8 +183,8 @@ const imgText = new RichText(text, style, options);
             const [imgRichText, imgMultiText] = createComparisonText(
               `<h2>Inline Images!</h2>
 Add an image.
-<img src="doot" imageDisplay="inline" />
-Or, put an icon <thinking imageDisplay="icon" /> in there, bro!
+<img src="doot" imgDisplay="inline" />
+Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
 `,
               imgStyle,
               {

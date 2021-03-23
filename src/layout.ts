@@ -1,8 +1,6 @@
 import { isTokenImage } from "./style";
-import { IMG_STYLE_NAME } from "./Tags";
 import { cloneSprite, getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
-import { LINE_BREAK_TAG_NAME } from "./tags";
 import {
   Align,
   Measurement,
@@ -13,6 +11,9 @@ import {
   TaggedTextToken,
   TaggedTextTokenPartial,
   VAlign,
+  LINE_BREAK_TAG_NAME,
+  IMG_SRC_PROPERTY,
+  IMG_DISPLAY_PROPERTY,
 } from "./types";
 
 const updateOffsetForNewLine = (
@@ -320,16 +321,11 @@ export const calculateMeasurements = (
     let sprite;
     for (const tag of token.tags) {
       if (isImage) {
-        const src = token.style?.src as string;
-        if (src === undefined) {
-          throw new Error(
-            `An image tag (<${tag.tagName}>) was used but there was no ${IMG_STYLE_NAME} defined for it. Either create a style or use a ${IMG_STYLE_NAME} attribute on the tag.`
-          );
-        }
+        const src = token.style?.[IMG_SRC_PROPERTY] as string;
         sprite = cloneSprite(spriteMap[src]);
         if (sprite === undefined) {
           throw new Error(
-            `An image tag (<${tag.tagName}>) with ${IMG_STYLE_NAME}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the spriteMap property in the options in your RichText constructor.`
+            `An image tag (<${tag.tagName}>) with ${IMG_SRC_PROPERTY}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the spriteMap property in the options in your RichText constructor.`
           );
         }
         if (token.text !== "") {
@@ -340,8 +336,8 @@ export const calculateMeasurements = (
         token.text = " ";
         token.sprite = sprite;
 
-        isBlockImage = token.style?.imageDisplay === "block";
-        isIcon = token.style?.imageDisplay === "icon";
+        isBlockImage = token.style?.[IMG_DISPLAY_PROPERTY] === "block";
+        isIcon = token.style?.[IMG_DISPLAY_PROPERTY] === "icon";
       }
 
       if (tag.tagName === LINE_BREAK_TAG_NAME || isBlockImage) {
