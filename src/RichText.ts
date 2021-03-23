@@ -74,10 +74,10 @@ export default class RichText extends PIXI.Sprite {
   }
   public set tagStyles(styles: TextStyleSet) {
     // const changed = this._tagStyles !== styles;
-    this._tagStyles = styles;
-    // if (changed) {
+    Object.entries(styles).forEach(([tag, style]) =>
+      this.setStyleForTag(tag, style, true)
+    );
     this.update();
-    // }
   }
 
   public get defaultStyle(): TextStyleExtended {
@@ -181,14 +181,35 @@ export default class RichText extends PIXI.Sprite {
     );
     return combineAllStyles(styles);
   }
-  public setStyleForTag(tag: string, styles: TextStyleExtended): boolean {
+  /**
+   * @param tag Name of the tag to set style for
+   * @param styles Style object to assign to the tag.
+   * @param forceNoUpdate if True, the update() method will not be called after setting this style.
+   */
+  public setStyleForTag(
+    tag: string,
+    styles: TextStyleExtended,
+    forceNoUpdate = false
+  ): boolean {
     // todo: check for deep equality
     // if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
     //   return false;
     // }
 
     this.tagStyles[tag] = styles;
-    this.update();
+
+    // Override some settings on default styles.
+    if (tag === "default" && this.defaultStyle[IMG_SRC_PROPERTY]) {
+      // prevents accidentally setting all text to images.
+      console.error(
+        `Style "${IMG_SRC_PROPERTY}" can not be set on the "default" style because it will add images to EVERY tag!`
+      );
+      this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
+    }
+
+    if (forceNoUpdate !== false) {
+      this.update();
+    }
     return true;
   }
   public removeStylesForTag(tag: string): boolean {
