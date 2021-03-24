@@ -1,4 +1,5 @@
 import * as tags from "../src/tags";
+import { LINE_BREAK_TAG_NAME } from "../src/types";
 
 describe("tags module", () => {
   describe("replaceSelfClosingTags()", () => {
@@ -54,7 +55,7 @@ describe("tags module", () => {
 
   describe("replaceLineBreaks()", () => {
     it("should replace line breaks in multi-line text with tags.", () => {
-      const BR = tags.LINE_BREAK_TAG_NAME;
+      const BR = LINE_BREAK_TAG_NAME;
       const s = tags.replaceLineBreaks(`Multi-\nline\nTEXT!`);
       expect(s).toEqual(`Multi-<${BR}></${BR}>line<${BR}></${BR}>TEXT!`);
     });

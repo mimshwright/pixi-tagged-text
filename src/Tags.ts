@@ -5,11 +5,8 @@ import {
   TagWithAttributes,
   TaggedTextTokenPartial,
   TagStack,
+  LINE_BREAK_TAG_NAME,
 } from "./types";
-
-export const LINE_BREAK_TAG_NAME = "br";
-export const IMG_TAG_NAME = "img";
-export const IMG_STYLE_NAME = "src";
 
 // TODO: this can probably be just a static value without all the options and parameters.
 // Seems doing one pass will be enough to gather all relevant info.
