@@ -39,7 +39,7 @@ h2 {
 }
 
 .code {
-  display: flex;
+  display: none;
   flex-flow: column nowrap;
   flex-grow: 1;
   margin: 0 1rem 1rem 0;
@@ -58,7 +58,7 @@ h2 {
 }
 
 code {
-  font-family: "Inconsolata", sans-serif;
+  font-family: "Input Mono", Inconsolata, "Courier New", Courier, monospace;
   font-size: 0.8em;
 }
 

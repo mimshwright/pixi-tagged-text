@@ -232,7 +232,6 @@ export default class RichText extends PIXI.Sprite {
     // Create the text segments, position and add them. (draw)
 
     const tokens = parseTags(this.text, this.tagStyles);
-    // console.log(this.untaggedText);
 
     const tagStyles = this.tagStyles;
     const imgMap = this.options.imgMap ?? {};
