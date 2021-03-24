@@ -7,6 +7,9 @@ import {
   TagWithAttributes,
   AttributesList,
   TaggedTextToken,
+  ImageMap,
+  IMG_SRC_PROPERTY,
+  IMG_DISPLAY_PROPERTY,
 } from "./types";
 import { calculateMeasurements } from "./layout";
 import {
@@ -19,7 +22,7 @@ import { addChildrenToContainer } from "./pixiUtils";
 const DEFAULT_STYLE: TextStyleExtended = {
   align: "left",
   valign: "baseline",
-  imageDisplay: "inline",
+  [IMG_DISPLAY_PROPERTY]: "inline",
   wordWrap: true,
   wordWrapWidth: 500,
 };
@@ -27,7 +30,7 @@ const DEFAULT_STYLE: TextStyleExtended = {
 const DEFAULT_OPTIONS: RichTextOptions = {
   debug: false,
   splitStyle: "words",
-  spriteMap: {},
+  imgMap: {},
 };
 
 const DEBUG = {
@@ -71,10 +74,10 @@ export default class RichText extends PIXI.Sprite {
   }
   public set tagStyles(styles: TextStyleSet) {
     // const changed = this._tagStyles !== styles;
-    this._tagStyles = styles;
-    // if (changed) {
+    Object.entries(styles).forEach(([tag, style]) =>
+      this.setStyleForTag(tag, style, true)
+    );
     this.update();
-    // }
   }
 
   public get defaultStyle(): TextStyleExtended {
@@ -135,18 +138,8 @@ export default class RichText extends PIXI.Sprite {
     tagStyles.default = mergedDefaultStyles;
     this.tagStyles = tagStyles;
 
-    if (this.options.spriteMap) {
-      Object.entries(this.options.spriteMap).forEach(([key, sprite]) => {
-        // Listen for changes to sprites (e.g. when they load.)
-        const texture = sprite.texture;
-        if (texture !== undefined) {
-          texture.baseTexture.addListener("update", () => this.update());
-        }
-
-        // register a style for each of these by default.
-        const style = { src: key };
-        this.setStyleForTag(key, style);
-      });
+    if (this.options.imgMap) {
+      this.registerImageMap(this.options.imgMap);
     }
 
     this.text = text;
@@ -160,6 +153,21 @@ export default class RichText extends PIXI.Sprite {
     this._textFields = [];
     this._sprites = [];
   }
+
+  private registerImageMap(imgMap: ImageMap) {
+    Object.entries(imgMap).forEach(([key, sprite]) => {
+      // Listen for changes to sprites (e.g. when they load.)
+      const texture = sprite.texture;
+      if (texture !== undefined) {
+        texture.baseTexture.addListener("update", () => this.update());
+      }
+
+      // create a style for each of these by default.
+      const style = { [IMG_SRC_PROPERTY]: key };
+      this.setStyleForTag(key, style);
+    });
+  }
+
   public getStyleForTag(
     tag: string,
     attributes: AttributesList = {}
@@ -173,14 +181,35 @@ export default class RichText extends PIXI.Sprite {
     );
     return combineAllStyles(styles);
   }
-  public setStyleForTag(tag: string, styles: TextStyleExtended): boolean {
+  /**
+   * @param tag Name of the tag to set style for
+   * @param styles Style object to assign to the tag.
+   * @param forceNoUpdate if True, the update() method will not be called after setting this style.
+   */
+  public setStyleForTag(
+    tag: string,
+    styles: TextStyleExtended,
+    forceNoUpdate = false
+  ): boolean {
     // todo: check for deep equality
     // if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
     //   return false;
     // }
 
     this.tagStyles[tag] = styles;
-    this.update();
+
+    // Override some settings on default styles.
+    if (tag === "default" && this.defaultStyle[IMG_SRC_PROPERTY]) {
+      // prevents accidentally setting all text to images.
+      console.error(
+        `Style "${IMG_SRC_PROPERTY}" can not be set on the "default" style because it will add images to EVERY tag!`
+      );
+      this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
+    }
+
+    if (forceNoUpdate !== false) {
+      this.update();
+    }
     return true;
   }
   public removeStylesForTag(tag: string): boolean {
@@ -217,11 +246,11 @@ export default class RichText extends PIXI.Sprite {
       : Number.POSITIVE_INFINITY;
     const align = this.defaultStyle.align;
     const lineSpacing = this.defaultStyle.lineSpacing;
-    const spriteMap = this.options.spriteMap ?? {};
+    const imgMap = this.options.imgMap ?? {};
 
     const measuredTokens = calculateMeasurements(
       tokensWithStyle,
-      spriteMap,
+      imgMap,
       wordWrapWidth,
       align,
       lineSpacing

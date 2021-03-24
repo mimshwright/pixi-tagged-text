@@ -1,18 +1,19 @@
 import { isTokenImage } from "./style";
-import { IMG_STYLE_NAME } from "./Tags";
 import { cloneSprite, getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
-import { LINE_BREAK_TAG_NAME } from "./tags";
 import {
   Align,
   Measurement,
   MeasurementLine,
   MeasurementLines,
   Point,
-  SpriteMap,
+  ImageMap,
   TaggedTextToken,
   TaggedTextTokenPartial,
   VAlign,
+  LINE_BREAK_TAG_NAME,
+  IMG_SRC_PROPERTY,
+  IMG_DISPLAY_PROPERTY,
 } from "./types";
 
 const updateOffsetForNewLine = (
@@ -289,6 +290,7 @@ export const alignTextInLines = (
 /**
  *
  * @param tokens List of TaggedTextTokens to use for separating text based on tags
+ * @param imgMap A mapping of image keys to template Sprite objects
  * @param maxLineWidth The maximum width of one line of text.
  * @param tagStyles List of tagStyles to use for calculating text size.
  * @param align Alignment of text.
@@ -297,7 +299,7 @@ export const alignTextInLines = (
  */
 export const calculateMeasurements = (
   tokens: TaggedTextTokenPartial[],
-  spriteMap: SpriteMap,
+  imgMap: ImageMap,
   maxLineWidth: number = Number.POSITIVE_INFINITY,
   align: Align = "left",
   lineSpacing = 0
@@ -320,16 +322,11 @@ export const calculateMeasurements = (
     let sprite;
     for (const tag of token.tags) {
       if (isImage) {
-        const src = token.style?.src as string;
-        if (src === undefined) {
-          throw new Error(
-            `An image tag (<${tag.tagName}>) was used but there was no ${IMG_STYLE_NAME} defined for it. Either create a style or use a ${IMG_STYLE_NAME} attribute on the tag.`
-          );
-        }
-        sprite = cloneSprite(spriteMap[src]);
+        const src = token.style?.[IMG_SRC_PROPERTY] as string;
+        sprite = cloneSprite(imgMap[src]);
         if (sprite === undefined) {
           throw new Error(
-            `An image tag (<${tag.tagName}>) with ${IMG_STYLE_NAME}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the spriteMap property in the options in your RichText constructor.`
+            `An image tag (<${tag.tagName}>) with ${IMG_SRC_PROPERTY}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
           );
         }
         if (token.text !== "") {
@@ -340,8 +337,8 @@ export const calculateMeasurements = (
         token.text = " ";
         token.sprite = sprite;
 
-        isBlockImage = token.style?.imageDisplay === "block";
-        isIcon = token.style?.imageDisplay === "icon";
+        isBlockImage = token.style?.[IMG_DISPLAY_PROPERTY] === "block";
+        isIcon = token.style?.[IMG_DISPLAY_PROPERTY] === "icon";
       }
 
       if (tag.tagName === LINE_BREAK_TAG_NAME || isBlockImage) {

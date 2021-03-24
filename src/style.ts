@@ -5,6 +5,7 @@ import {
   TagWithAttributes,
   TextStyleExtended,
   TextStyleSet,
+  IMG_SRC_PROPERTY,
 } from "./types";
 
 /**
@@ -79,6 +80,7 @@ export const getStyleForToken = (
   combineStyles(tagStyles.default, getStyleForTags(token.tags, tagStyles));
 
 export const isTokenImage = (token: TaggedTextTokenPartial): boolean =>
-  token.style?.src !== undefined ||
-  token.tags.filter(({ attributes }) => attributes.src !== undefined).length >
-    0;
+  token.style?.[IMG_SRC_PROPERTY] !== undefined ||
+  token.tags.filter(
+    ({ attributes }) => attributes[IMG_SRC_PROPERTY] !== undefined
+  ).length > 0;

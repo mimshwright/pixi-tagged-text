@@ -1,4 +1,4 @@
-import { TaggedTextTokenPartial } from "./../src/types";
+import { IMG_SRC_PROPERTY, TaggedTextTokenPartial } from "./../src/types";
 import * as style from "../src/style";
 
 describe("style module", () => {
@@ -116,16 +116,16 @@ describe("style module", () => {
       };
       const imgToken: TaggedTextTokenPartial = {
         text: "",
-        tags: [{ tagName: "img", attributes: { src: "icon" } }],
+        tags: [{ tagName: "img", attributes: { [IMG_SRC_PROPERTY]: "icon" } }],
       };
       const imgTokenWithoutAttributes: TaggedTextTokenPartial = {
         text: "",
         tags: [{ tagName: "img", attributes: {} }],
-        style: { src: "icon" },
+        style: { [IMG_SRC_PROPERTY]: "icon" },
       };
       const srcOnlyToken: TaggedTextTokenPartial = {
         text: "",
-        tags: [{ tagName: "span", attributes: { src: "icon" } }],
+        tags: [{ tagName: "span", attributes: { [IMG_SRC_PROPERTY]: "icon" } }],
       };
       const trickyToken: TaggedTextTokenPartial = {
         text: "",
