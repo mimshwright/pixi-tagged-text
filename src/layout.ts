@@ -330,7 +330,7 @@ export const calculateMeasurements = (
             `An image tag (<${tag.tagName}>) with ${IMG_SRC_PROPERTY}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
           );
         }
-        if (token.text !== "") {
+        if (token.text !== "" && token.text !== " ") {
           console.error(
             `Encountered tag <${tag.tagName}> which is recognized as an image tag ("${src}") but also contains the text "${token.text}". Text inside of image tags is not currently supported and has been removed.`
           );
