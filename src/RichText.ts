@@ -283,7 +283,7 @@ export default class RichText extends PIXI.Sprite {
               s += `${nl}tags: ${
                 token.tags.length === 0
                   ? "<none>"
-                  : token.tags.map((tag) => tag.tagName).join("")
+                  : token.tags.map((tag) => `<${tag.tagName}>`).join(", ")
               }`;
               s += `${nl}style: ${Object.entries(token.style)
                 .map((e) => e.join(":"))

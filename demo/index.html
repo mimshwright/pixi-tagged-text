@@ -223,7 +223,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
             let [leftRich, leftMulti] = createComparisonText(
               str.replace("left", "<b>left</b>"),
               style,
-              {}
+              opt
             );
 
             let right = new RichText(
@@ -278,29 +278,11 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
           </script>
         </div>
       </div>
+
       <div class="example">
         <div class="code">
           <h2>Vertical Alignment</h2>
-          <pre><code class="js">let valign = new MultiStyleText(&quot;You can use &lt;code&gt;valign&lt;/code&gt; &lt;top&gt;to&lt;/top&gt; &lt;middle&gt;control&lt;/middle&gt; &lt;baseline&gt;the&lt;/baseline&gt; &lt;bottom&gt;vertical&lt;/bottom&gt; &lt;custom1&gt;alignment&lt;/custom1&gt; &lt;custom2&gt;of&lt;/custom2&gt; &lt;custom3&gt;text&lt;/custom3&gt;.&quot;,
-{
-&quot;default&quot;: {
-fontFamily: &quot;Arial&quot;,
-fontSize: &quot;24px&quot;,
-fill: &quot;#cccccc&quot;
-},
-&quot;code&quot;: {
-fontFamily: &quot;Inconsolata&quot;,
-fontSize: &quot;36px&quot;,
-fill: &quot;#ff8888&quot;
-},
-&quot;top&quot;: { fontSize: &quot;14px&quot;, valign: &quot;top&quot; },
-&quot;middle&quot;: { fontSize: &quot;14px&quot;, valign: &quot;middle&quot; },
-&quot;bottom&quot;: { fontSize: &quot;14px&quot;, valign: &quot;bottom&quot; },
-&quot;baseline&quot;: { fontSize: &quot;14px&quot;, valign: &quot;baseline&quot; },
-&quot;custom1&quot;: { fontSize: &quot;14px&quot;, valign: 5 },
-&quot;custom2&quot;: { fontSize: &quot;14px&quot;, valign: -70 },
-&quot;custom3&quot;: { fontSize: &quot;14px&quot;, valign: 25 }
-});</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="valign">
           <script>
@@ -323,14 +305,18 @@ fill: &quot;#ff8888&quot;
               middle: { valign: "middle" },
               bottom: { valign: "bottom" },
               baseline: { valign: "baseline" },
-              custom1: { fontSize: "14px", valign: 5 },
-              custom2: { fontSize: "14px", valign: -70 },
-              custom3: { fontSize: "14px", valign: 25 },
             };
+            const valignImg = PIXI.Sprite.from("./icon.png");
             let valign = createComparisonText(
-              `<top><code>Top</code> <small>Vertical</small> Alignment.</top>\n \n\n<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>\n\n<bottom><code>Bottom</code> <small>Vertical</small> Alignment.</bottom>\n\n<baseline><code>Baseline</code> <small>Vertical</small> Alignment.</baseline>`,
-              // You can use <code>valign</code> <top>to</top> <middle>control</middle> <baseline>vertical</baseline> <bottom>alignment</bottom> <custom1>with</custom1> <custom2>arbitrary</custom2> <custom3>values</custom3>.
-              valignStyle
+              `<top><code>Top</code> <small>Vertical</small> <valignImg/> Alignment.</top>
+
+<middle><code>Middle</code> <small>Vertical</small> <valignImg/> Alignment.</middle>
+
+<bottom><code>Bottom</code> <small>Vertical</small> <valignImg/> Alignment.</bottom>
+
+<baseline><code>Baseline</code> <small>Vertical</small> <valignImg/> Alignment.</baseline>`,
+              valignStyle,
+              { spriteMap: { valignImg } }
             );
             createDemo("valign", ...valign);
           </script>

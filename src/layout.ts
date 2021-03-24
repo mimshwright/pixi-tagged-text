@@ -16,7 +16,14 @@ import {
   IMG_DISPLAY_PROPERTY,
 } from "./types";
 
-const updateOffsetForNewLine = (
+/**
+ * Translates the current location point to the beginning of the next line.
+ *
+ * @param offset An offset coordinate. The function will make a clone of this with new coordinates.
+ * @param largestLineHeight The largest height in the line of text.
+ * @param lineSpacing The amount of extra space to insert between each line.
+ */
+export const updateOffsetForNewLine = (
   offset: Point,
   largestLineHeight: number,
   lineSpacing: number
@@ -68,9 +75,6 @@ export const lineWidth = (line: MeasurementLine): number => {
 
 export const center = (x: number, context: number): number => (context - x) / 2;
 
-const getTallestHeight = (line: MeasurementLine): number =>
-  line.reduce((tallest, position) => Math.max(position.height, tallest), 0);
-
 const getTallestToken = (line: TaggedTextToken[]): TaggedTextToken =>
   line.reduce(
     (tallest, current) => {
@@ -82,38 +86,13 @@ const getTallestToken = (line: TaggedTextToken[]): TaggedTextToken =>
       return tallest;
     },
     {
-      text: "Tallest",
+      text: "No Tokens on this line with height > 0.",
       tags: [],
       measurement: new PIXI.Rectangle(0, 0, 0, 0),
       style: {},
       fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
     }
   );
-
-export const valignTop = (line: MeasurementLine): MeasurementLine =>
-  line.map((position: Measurement) => {
-    const newPosition = position.clone();
-    newPosition.y = 0;
-    return newPosition;
-  });
-
-export const valignBottom = (line: MeasurementLine): MeasurementLine => {
-  const tallestHeight = getTallestHeight(line);
-  return line.map((position: Measurement) => {
-    const newPosition = position.clone();
-    newPosition.y = tallestHeight - newPosition.height;
-    return newPosition;
-  });
-};
-
-export const valignMiddle = (line: MeasurementLine): MeasurementLine => {
-  const tallestHeight = getTallestHeight(line);
-  return line.map((position: Measurement) => {
-    const newPosition = position.clone();
-    newPosition.y = (tallestHeight - newPosition.height) / 2;
-    return newPosition;
-  });
-};
 
 export const verticalAlignInLines = (
   lines: TaggedTextToken[][],
@@ -154,7 +133,9 @@ export const verticalAlignInLines = (
         measurement: { x, y, width, height },
         fontProperties,
         style,
+        sprite,
       } = word;
+
       const newMeasurement: Measurement = new PIXI.Rectangle(
         x,
         y,
@@ -162,23 +143,26 @@ export const verticalAlignInLines = (
         height
       );
       const valign = overrideValign ?? style.valign;
-      const currentFontHeight = fontProperties?.ascent ?? 0;
+
+      const elementAscent =
+        sprite !== undefined ? height : fontProperties?.ascent ?? 0;
+      const elementHeight =
+        sprite !== undefined ? height : fontProperties.fontSize;
 
       let newY = 0;
       switch (valign) {
-        case "baseline":
-          newY =
-            previousY + tallestToken.fontProperties.ascent - currentFontHeight;
-          break;
         case "bottom":
-          newY = previousY + tallestHeight - fontProperties.fontSize;
+          newY = previousY + tallestHeight - elementHeight;
           break;
         case "middle":
-          newY = previousY + (tallestHeight - fontProperties.fontSize) / 2;
+          newY = previousY + (tallestHeight - elementHeight) / 2;
           break;
         case "top":
-        default:
           newY = previousY;
+          break;
+        case "baseline":
+        default:
+          newY = previousY + tallestHeight - elementAscent;
       }
 
       newMeasurement.y = newY;
