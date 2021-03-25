@@ -1,2 +1,4 @@
 dist
+*.umd.js
 .rts*
+coverage

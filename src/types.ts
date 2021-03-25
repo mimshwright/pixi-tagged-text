@@ -1,169 +1,92 @@
 import * as PIXI from "pixi.js";
 
-export type TagProperties = Record<string, string>;
-export interface TagData {
-  name: string;
-  properties: TagProperties;
+///// GENERAL PURPOSE
+export interface Point {
+  x: number;
+  y: number;
 }
 
-export interface HitboxData {
-  tag: TagData;
-  hitbox: PIXI.Rectangle;
-}
+export type Measurement = PIXI.Rectangle;
 
-export type TagStyle = "bbcode" | "xml";
-export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
+///// OPTIONS
 
-export interface TextStyle {
-  align?: string;
-  breakWords?: boolean;
-  dropShadow?: boolean;
-  dropShadowAlpha?: number;
-  dropShadowAngle?: number;
-  dropShadowBlur?: number;
-  dropShadowColor?: string | number;
-  dropShadowDistance?: number;
-  fill?: string | string[] | number | number[] | CanvasGradient | CanvasPattern;
-  fillGradientType?: number;
-  fillGradientStops?: number[];
-  fontFamily?: string | string[];
-  fontSize?: number | string;
-  fontStyle?: string;
-  fontVariant?: string;
-  fontWeight?: string;
-  leading?: number;
-  letterSpacing?: number;
-  lineHeight?: number;
-  lineSpacing?: number;
-  lineJoin?: string;
-  miterLimit?: number;
-  padding?: number;
-  stroke?: string | number;
-  strokeThickness?: number;
-  trim?: boolean;
-  textBaseline?: string;
-  whiteSpace?: string;
-  wordWrap?: boolean;
-  wordWrapWidth?: number;
-}
-
-export interface TextStyleExtended extends TextStyle {
-  valign?: VAlign;
+// TODO: implement splitStyle: characters
+export type SplitStyle = "words" | "characters";
+export type SpriteReference = PIXI.Sprite;
+export type ImageMap = Record<string, SpriteReference>;
+export interface RichTextOptions {
   debug?: boolean;
-  tagStyle?: TagStyle;
+  splitStyle?: SplitStyle;
+  imgMap?: ImageMap;
 }
 
-export interface TextStyleExtendedWithDefault extends TextStyleExtended {
-  dropShadowAlpha?: number;
-  fillGradientStops?: number[];
-  leading?: number;
-  trim?: boolean;
-  whiteSpace?: string;
+///// STYLE PROPERTIES
 
-  align: string;
-  breakWords: boolean;
-  dropShadow: boolean;
-  dropShadowAngle: number;
-  dropShadowBlur: number;
-  dropShadowColor: string | number;
-  dropShadowDistance: number;
-  fill: string | string[] | number | number[] | CanvasGradient | CanvasPattern;
-  fillGradientType: number;
-  fontFamily: string | string[];
-  fontSize: number | string;
-  fontStyle: string;
-  fontVariant: string;
-  fontWeight: string;
-  letterSpacing: number;
-  lineHeight: number;
-  lineSpacing: number;
-  lineJoin: string;
-  miterLimit: number;
-  padding: number;
-  stroke: string | number;
-  strokeThickness: number;
-  textBaseline: string;
-  wordWrap: boolean;
-  wordWrapWidth: number;
+// PROPERTY NAMES
+export const LINE_BREAK_TAG_NAME = "br";
+export const IMG_SRC_PROPERTY = "imgSrc";
+export const IMG_DISPLAY_PROPERTY = "imgDisplay";
 
-  valign: VAlign;
-  debug: boolean;
-  tagStyle: TagStyle;
+// todo: add text-transform: uppercase
+export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
+export type Align = "left" | "right" | "center" | "justify";
+export type Color = string | number;
+export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
+export type ImageDisplayMode = "icon" | "block" | "inline";
+export type ImageSource = string;
+export type ImageDimensionPercentage = string;
+export type ImageDimension = number | string | ImageDimensionPercentage;
+
+export interface TextStyle
+  extends Record<string, unknown>,
+    Partial<PIXI.TextStyle> {
+  align?: Align;
+}
+export interface TextStyleExtended extends TextStyle {
+  lineSpacing?: number;
+  valign?: VAlign;
+
+  [IMG_SRC_PROPERTY]?: ImageSource;
+  [IMG_DISPLAY_PROPERTY]?: ImageDisplayMode;
+  imgScale?: ImageDimensionPercentage;
+  imgScaleX?: ImageDimensionPercentage;
+  imgScaleY?: ImageDimensionPercentage;
+  imgWidth?: ImageDimension;
+  imgHeight?: ImageDimension;
 }
 
 export type TextStyleSet = Record<string, TextStyleExtended>;
 
-export type TextStyleSetWithDefault = {
-  default: TextStyleExtendedWithDefault;
-} & TextStyleSet;
+///// TAG PARSING
 
-export type ImageMap = Record<string, PIXI.Container>;
-
-export interface FontProperties {
-  ascent: number;
-  descent: number;
-  fontSize: number;
+export type AttributesList = Record<string, unknown>;
+export interface TagWithAttributes {
+  tagName: string;
+  attributes: AttributesList;
 }
+export interface TagMatchData extends TagWithAttributes {
+  tag: string;
+  isOpening: boolean;
+  index: number;
+}
+export type TagStack = TagMatchData[];
 
-export interface TextData {
+///// PARSED TOKENS
+
+export type MeasurementLine = Measurement[];
+export type MeasurementLines = MeasurementLine[];
+export interface TaggedTextTokenPartial {
   text: string;
+  tags: TagWithAttributes[];
+  sprite?: PIXI.Sprite;
+  style?: TextStyleExtended;
+  fontProperties?: PIXI.IFontMetrics;
+  measurement?: Measurement;
+}
+
+// Same as TaggedTextToken but without any optional properties.
+export interface TaggedTextToken extends TaggedTextTokenPartial {
   style: TextStyleExtended;
-  width: number;
-  height: number;
-  fontProperties: FontProperties;
-  tag: TagData;
-}
-
-export interface TextDrawingData {
-  text: string;
-  style: TextStyleExtended;
-  x: number;
-  y: number;
-  width: number;
-  ascent: number;
-  descent: number;
-  tag: TagData;
-}
-
-export interface MstDebugOptions {
-  spans: {
-    enabled?: boolean;
-    baseline?: string;
-    top?: string;
-    bottom?: string;
-    bounding?: string;
-    text?: boolean;
-  };
-  objects: {
-    enabled?: boolean;
-    bounding?: string;
-    text?: boolean;
-  };
-}
-
-export interface MstInteractionEvent extends PIXI.InteractionEvent {
-  targetTag: TagData | undefined;
-}
-export interface TextWithPrivateMembers {
-  dirty: boolean;
-  _texture: PIXI.Texture;
-  _style: PIXI.TextStyle;
-  _onTextureUpdate(): void;
-  _generateFillStyle(
-    style: PIXI.TextStyle,
-    lines: string[]
-  ): string | number | CanvasGradient;
-}
-
-export interface TextLineMeasurements {
-  width: number;
-  height: number;
-  maxLineWidth: number;
-  lineWidths: number[];
-  lineYMins: number[];
-  lineYMaxs: number[];
-  totalHeight: number;
-  maxStrokeThickness: number;
-  dropShadowPadding: number;
-  basePositionY: number;
+  fontProperties: PIXI.IFontMetrics;
+  measurement: Measurement;
 }
