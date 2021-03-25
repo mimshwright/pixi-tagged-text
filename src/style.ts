@@ -6,7 +6,9 @@ import {
   TextStyleExtended,
   TextStyleSet,
   IMG_SRC_PROPERTY,
+  ImageMap,
 } from "./types";
+import { cloneSprite } from "./pixiUtils";
 
 /**
  * Combine 2 styles into one.
@@ -79,8 +81,37 @@ export const getStyleForToken = (
 ): TextStyleExtended =>
   combineStyles(tagStyles.default, getStyleForTags(token.tags, tagStyles));
 
+/**
+ * Returns true if the tag has an imgSrc property in one of its styles.
+ */
 export const isTokenImage = (token: TaggedTextTokenPartial): boolean =>
   token.style?.[IMG_SRC_PROPERTY] !== undefined ||
   token.tags.filter(
     ({ attributes }) => attributes[IMG_SRC_PROPERTY] !== undefined
   ).length > 0;
+
+export const attachSpritesToToken = (
+  token: TaggedTextTokenPartial,
+  imgMap: ImageMap
+): TaggedTextTokenPartial => {
+  if (isTokenImage(token) === false) return token;
+
+  const imgSrc = token.style?.[IMG_SRC_PROPERTY] as string;
+  const sprite = cloneSprite(imgMap[imgSrc]);
+
+  if (sprite === undefined) {
+    throw new Error(
+      `An image tag with ${IMG_SRC_PROPERTY}="${imgSrc}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
+    );
+  }
+
+  if (token.text !== "" && token.text !== " ") {
+    console.error(
+      `Encountered an image tag with ${IMG_SRC_PROPERTY}="${imgSrc}" but also contains the text "${token.text}". Text inside of image tags is not currently supported and has been removed.`
+    );
+  }
+  token.text = " ";
+  token.sprite = sprite;
+
+  return token;
+};

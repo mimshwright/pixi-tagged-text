@@ -1,5 +1,4 @@
-import { isTokenImage } from "./style";
-import { cloneSprite, getFontPropertiesOfText } from "./pixiUtils";
+import { getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import {
   Align,
@@ -7,12 +6,10 @@ import {
   MeasurementLine,
   MeasurementLines,
   Point,
-  ImageMap,
   TaggedTextToken,
   TaggedTextTokenPartial,
   VAlign,
   LINE_BREAK_TAG_NAME,
-  IMG_SRC_PROPERTY,
   IMG_DISPLAY_PROPERTY,
 } from "./types";
 
@@ -274,7 +271,6 @@ export const alignTextInLines = (
 /**
  *
  * @param tokens List of TaggedTextTokens to use for separating text based on tags
- * @param imgMap A mapping of image keys to template Sprite objects
  * @param maxLineWidth The maximum width of one line of text.
  * @param tagStyles List of tagStyles to use for calculating text size.
  * @param align Alignment of text.
@@ -283,7 +279,6 @@ export const alignTextInLines = (
  */
 export const calculateMeasurements = (
   tokens: TaggedTextTokenPartial[],
-  imgMap: ImageMap,
   maxLineWidth: number = Number.POSITIVE_INFINITY,
   align: Align = "left",
   lineSpacing = 0
@@ -301,38 +296,20 @@ export const calculateMeasurements = (
 
   // TODO: group measurements by line
   for (const token of tokens) {
-    const isImage = isTokenImage(token);
-    let isBlockImage = false;
-    let isIcon = false;
-    let sprite;
-    for (const tag of token.tags) {
-      if (isImage) {
-        const src = token.style?.[IMG_SRC_PROPERTY] as string;
-        sprite = cloneSprite(imgMap[src]);
-        if (sprite === undefined) {
-          throw new Error(
-            `An image tag (<${tag.tagName}>) with ${IMG_SRC_PROPERTY}="${src}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
-          );
-        }
-        if (token.text !== "" && token.text !== " ") {
-          console.error(
-            `Encountered tag <${tag.tagName}> which is recognized as an image tag ("${src}") but also contains the text "${token.text}". Text inside of image tags is not currently supported and has been removed.`
-          );
-        }
-        token.text = " ";
-        token.sprite = sprite;
+    const sprite = token.sprite;
+    const isImage = sprite !== undefined;
+    const imgDisplay = token.style?.[IMG_DISPLAY_PROPERTY];
+    const isBlockImage = imgDisplay === "block";
+    const isIcon = imgDisplay === "icon";
+    const tagNames = token.tags.map((tag) => tag.tagName);
 
-        isBlockImage = token.style?.[IMG_DISPLAY_PROPERTY] === "block";
-        isIcon = token.style?.[IMG_DISPLAY_PROPERTY] === "icon";
-      }
-
-      if (tag.tagName === LINE_BREAK_TAG_NAME || isBlockImage) {
-        offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
-        currentLine += 1;
-        break;
-      }
+    if (tagNames.includes(LINE_BREAK_TAG_NAME) || isBlockImage) {
+      offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
+      currentLine += 1;
+      break;
     }
-    if (token.sprite === undefined && token.text === "") {
+
+    if (isImage === false && token.text === "") {
       continue;
     }
 

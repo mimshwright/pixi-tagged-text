@@ -2,3 +2,4 @@ dist
 *.umd.js
 .rts*
 coverage
+demo/**/*.js

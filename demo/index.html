@@ -4,13 +4,12 @@
     <title>Pixi MultiStyle Text Demo</title>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
-    <link
-      href="https://fonts.googleapis.com/css?family=Inconsolata"
-      rel="stylesheet"
-    />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.2.0/pixi.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+    <script src="./pixi.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.8/pixi.js"></script> -->
+    <script src="./highlight.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script> -->
+
     <!-- RichText -->
     <script src="../dist/pixi-rich-text.umd.js"></script>
     <!-- Old MultiStyleText -->
@@ -76,34 +75,17 @@
       <div class="example">
         <div class="code">
           <h2>Basics</h2>
-          <pre><code class="js">let text = new MultiStyleText(&quot;Let's make some &lt;ml&gt;multiline&lt;/ml&gt;\nand &lt;ms&gt;multistyle&lt;/ms&gt; text for\n&lt;pixi&gt;Pixi.js!&lt;/pixi&gt;&quot;,
-          {
-            &quot;default&quot;: {
-              fontFamily: &quot;Arial&quot;,
-              fontSize: &quot;24px&quot;,
-              fill: &quot;#cccccc&quot;,
-              align: &quot;center&quot;
-            },
-            &quot;ml&quot;: {
-              fontStyle: &quot;italic&quot;,
-              fill: &quot;#ff8888&quot;
-            },
-            &quot;ms&quot;: {
-              fontStyle: &quot;italic&quot;,
-              fill: &quot;#4488ff&quot;
-            },
-            &quot;pixi&quot;: {
-              fontSize: &quot;64px&quot;,
-              fill: &quot;#efefef&quot;
-            }
-          });</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
 
         <div class="pixi" id="basic">
           <script>
             // Basics
-            let basic = createComparisonText(
-              "Let's make some <ml>multiline</ml>\nand <ms>multistyle</ms> text for\n<pixi>Pixi.js!</pixi>",
+            const basic = createComparisonText(
+              `Let's make some
+<ml>multiline</ml>
+and <ms>multistyle</ms> text for
+<pixi>Pixi.js!</pixi>`,
               {
                 default: {
                   fontFamily: "Arial",
@@ -316,7 +298,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
 
 <baseline><code>Baseline</code> <small>Vertical</small> <valignImg/> Alignment.</baseline>`,
               valignStyle,
-              { spriteMap: { valignImg } }
+              { imgMap: { valignImg } }
             );
             createDemo("valign", ...valign);
           </script>
@@ -503,7 +485,7 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
         <div class="pixi" id="wrapping2">
           <script>
             // Wrapping and Alignment II
-            let wrapping2 = createComparisonText(
+            let [richTextWrapping2, multiStyleWrapping2] = createComparisonText(
               "全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。",
               {
                 default: {
@@ -519,41 +501,21 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
                 big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
               }
             );
-            createDemo("wrapping2", ...wrapping2);
+            richTextWrapping2.text = "breakWords is not currently supported.";
+            createDemo("wrapping2", richTextWrapping2, multiStyleWrapping2);
           </script>
         </div>
       </div>
       <div class="example">
         <div class="code">
           <h2>Debug Mode</h2>
-          <pre><code class="js">MultiStyleText.debugOptions.spans.enabled = true;
-MultiStyleText.debugOptions.objects.enabled = true;
-
-let debug = new MultiStyleText(&quot;You can use &lt;code&gt;debug mode&lt;/code&gt; to help you figure out what your text is doing.  You can use &lt;blue&gt;global, &lt;/blue&gt;&lt;red&gt;static&lt;/red&gt; settings or &lt;no-debug&gt;override those with the &lt;code&gt;debug&lt;/code&gt; style option.&lt;/no-debug&gt;&quot;,
-{
-	&quot;default&quot;: {
-		fontFamily: &quot;Arial&quot;,
-		fontSize: &quot;24px&quot;,
-		fill: &quot;#cccccc&quot;,
-		wordWrap: true,
-		wordWrapWidth: 500,
-		debug: true,
-	},
-	&quot;code&quot;: {
-		fontFamily: &quot;Inconsolata&quot;,
-		fontSize: &quot;36px&quot;,
-		fill: &quot;#ff8888&quot;
-	},
-	&quot;blue&quot;: { fill: 0x4488ff, stroke: 0x2244cc },
-	&quot;red&quot;: { fill: 0xff8888, stroke: 0xcc4444 },
-	&quot;no-debug&quot;: { debug: false }
-});</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="debug">
           <script>
             // Debug Mode
             let debug = createComparisonText(
-              "You can use <code>debug mode</code> to help you figure out what your text is doing.  You can use <blue>global, </blue><red>static</red> settings or <no-debug>override those with the <code>debug</code> style option.</no-debug>",
+              "You can use <blue>debug mode</blue> to help you figure out what your text is doing. Include <code>{debug: true} </code> in the options when you create your text.",
               {
                 default: {
                   fontFamily: "Arial",
@@ -561,17 +523,21 @@ let debug = new MultiStyleText(&quot;You can use &lt;code&gt;debug mode&lt;/code
                   fill: "#cccccc",
                   wordWrap: true,
                   wordWrapWidth: 500,
-                  debug: true,
+                },
+                blue: {
+                  fill: "#4488ff",
+                  stroke: "#2244cc",
+                  strokeThickness: 4,
                 },
                 code: {
-                  fontFamily: "Inconsolata",
+                  fontFamily: "Courier",
                   fontSize: "36px",
                   fill: "#ff8888",
+                  stroke: "#660000",
+                  strokeThickness: 8,
                 },
-                blue: { fill: 0x4488ff, stroke: 0x2244cc },
-                red: { fill: 0xff8888, stroke: 0xcc4444 },
-                "no-debug": { debug: false },
-              }
+              },
+              { debug: false }
             );
 
             MultiStyleText.debugOptions.spans.enabled = true;

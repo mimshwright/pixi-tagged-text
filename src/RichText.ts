@@ -13,6 +13,7 @@ import {
 } from "./types";
 import { calculateMeasurements } from "./layout";
 import {
+  attachSpritesToToken,
   combineAllStyles,
   getStyleForTag as getStyleForTagExt,
   getStyleForToken,
@@ -231,14 +232,18 @@ export default class RichText extends PIXI.Sprite {
     // Create the text segments, position and add them. (draw)
 
     const tokens = parseTags(this.text, this.tagStyles);
-    // console.log(this.untaggedText);
 
     const tagStyles = this.tagStyles;
+    const imgMap = this.options.imgMap ?? {};
 
     const tokensWithStyle = tokens.map((t) => {
       t.style = getStyleForToken(t, tagStyles);
       return t;
     });
+
+    const tokensWithSprites = tokensWithStyle.map((t) =>
+      attachSpritesToToken(t, imgMap)
+    );
 
     // Determine default style properties
     const wordWrapWidth = this.defaultStyle.wordWrap
@@ -246,11 +251,9 @@ export default class RichText extends PIXI.Sprite {
       : Number.POSITIVE_INFINITY;
     const align = this.defaultStyle.align;
     const lineSpacing = this.defaultStyle.lineSpacing;
-    const imgMap = this.options.imgMap ?? {};
 
     const measuredTokens = calculateMeasurements(
-      tokensWithStyle,
-      imgMap,
+      tokensWithSprites,
       wordWrapWidth,
       align,
       lineSpacing
