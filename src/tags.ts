@@ -245,29 +245,3 @@ export const parseTags = (
 
 export const removeTags = (input: string): string =>
   input.replace(getTagRegex(), "");
-
-// LOGGING
-
-const attributesToString = (attributes: AttributesList) =>
-  Object.entries(attributes)
-    .map(([key, value]) => ` ${key}="${value}"`)
-    .join(" ");
-
-const tagsToString = (tags: TagWithAttributes[]) =>
-  tags
-    .map(
-      ({ tagName, attributes }) =>
-        ` <${tagName}${attributesToString(attributes)}>`
-    )
-    .join(",");
-
-const tokenToString = ({ tags, text }: TaggedTextTokenPartial): string =>
-  tags ? `"${text.replace(/\n/, "\\n")}"  -> ${tagsToString(tags)}` : "";
-/**
- * Converts the tagged text tokens into a string format where each string
- * segment is listed with its stack of tags.
- */
-export const tokensToString = (tokens: TaggedTextTokenPartial[]): string =>
-  tokens
-    .filter((t) => t.tags[0]?.tagName === LINE_BREAK_TAG_NAME || t.text !== "")
-    .reduce((acc, token) => `${acc}${tokenToString(token)}\n`, "");

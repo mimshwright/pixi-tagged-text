@@ -23,7 +23,7 @@ export interface RichTextOptions {
 ///// STYLE PROPERTIES
 
 // PROPERTY NAMES
-export const LINE_BREAK_TAG_NAME = "br";
+export const LINE_BREAK_TAG_NAME = "__br__";
 export const IMG_SRC_PROPERTY = "imgSrc";
 export const IMG_DISPLAY_PROPERTY = "imgDisplay";
 
