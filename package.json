@@ -1,17 +1,17 @@
 {
   "name": "pixi-rich-text",
-  "version": "1.0.0",
-  "description": "Multi-Style Text for pixi.js",
-  "author": "Mims Wright, JT Smith",
+  "version": "0.1.0",
+  "description": "RichText for pixi.js",
+  "author": "Mims Wright, JT Smith, tleunen",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/plainblack/pixi-multistyle-text.git"
+    "url": "git://github.com/mimshwright/pixi-richt-text.git"
   },
   "bugs": {
-    "url": "https://github.com/plainblack/pixi-multistyle-text/issues"
+    "url": "https://github.com/mimshwright/pixi-rich-text/issues"
   },
-  "homepage": "https://github.com/plainblack/pixi-multistyle-text",
+  "homepage": "https://github.com/mimshwright/pixi-rich-text",
   "source": "src/index.ts",
   "main": "dist/pixi-rich-text.js",
   "umd:main": "dist/pixi-rich-text.umd.js",
