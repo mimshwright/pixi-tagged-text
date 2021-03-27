@@ -115,32 +115,7 @@ and <ms>multistyle</ms> text for
       <div class="example">
         <div class="code">
           <h2>Inline images</h2>
-          <pre><code class="js">
-const thinking = PIXI.Sprite.from("./icon.png");
-const doot = PIXI.Sprite.from("./doot.png");
-
-const text = `&lt;h2&gt;Inline Images!&lt;/h2&gt;
-Add an image.
-&lt;img src="doot" imgDisplay="inline"&gt;&lt;/img&gt;
-Or, put an icon &lt;icon src="thinking" imgDisplay="icon"&gt;&lt;/icon&gt; in there, bro!`;
-
-const style = {
-  default: {
-    fontFamily: "Arial",
-    fontSize: "24px",
-    fill: "#FFFFCC",
-  },
-  h2: {
-    fontSize: 36,
-    fill: "#44CC99",
-  },
-  img: {},
-  icon: {},
-}
-const options = {imgMap: { thinking, doot }};
-
-const imgText = new RichText(text, style, options);
-      </code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="img">
           <script>
@@ -338,21 +313,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
       <div class="example">
         <div class="code">
           <h2>Nesting Tags</h2>
-          <pre><code class="js">let nested = new MultiStyleText(&quot;You can &lt;outline&gt;nest &lt;b&gt;tags &lt;red&gt;as &lt;i&gt;deeply &lt;thicker&gt;as &lt;shadow&gt;you'd &lt;large&gt;like&lt;/large&gt;&lt;/shadow&gt;&lt;/thicker&gt;&lt;/i&gt;&lt;/red&gt;&lt;/b&gt;&lt;/outline&gt;&quot;,
-{
-	&quot;default&quot;: {
-		fontFamily: &quot;Arial&quot;,
-		fontSize: &quot;24px&quot;,
-		fill: &quot;#cccccc&quot;
-	},
-	&quot;outline&quot;: { stroke: &quot;black&quot;, strokeThickness: 2 },
-	&quot;b&quot;: { fontWeight: 700 },
-	&quot;red&quot;: { fill: &quot;#ff8888&quot; },
-	&quot;i&quot;: { fontStyle: &quot;italic&quot; },
-	&quot;thicker&quot;: { strokeThickness: 6 },
-	&quot;shadow&quot;: { dropShadow: true, dropShadowColor: &quot;#888888&quot; },
-	&quot;large&quot;: { fontSize: &quot;36px&quot; }
-});</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="nested">
           <script>
@@ -385,24 +346,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
       <div class="example">
         <div class="code">
           <h2>Spacing</h2>
-          <pre><code class="js">
-let lineSpacing = createComparisonText("It is entirely possible to adjust the line height on your text so that the spaces between your lines of text can be so wide that you could run all the traffic in Los Angeles through them. Note that it can only be set on the default style.",
-{
-"default": {
-fontFamily: "Arial",
-fontSize: "24px",
-fill: "#cccccc",
-lineSpacing: 20,
-letterSpacing: 10,
-wordWrap: true,
-wordWrapWidth: 500,
-},
-});
-
-lineSpacing.x = 300 - lineSpacing.width / 2;
-lineSpacing.y = 3530;
-stage.addChild(lineSpacing);
-</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="spacing">
           <script>
@@ -429,17 +373,7 @@ stage.addChild(lineSpacing);
       <div class="example">
         <div class="code">
           <h2>Wrapping and Alignment</h2>
-          <pre><code class="js">let wrapping = new MultiStyleText(&quot;Global word wrap and alignment properties are controlled by the \&quot;default\&quot; style, and can't be overridden by other styles.&quot;,
-{
-	&quot;default&quot;: {
-		fontFamily: &quot;Arial&quot;,
-		fontSize: &quot;24px&quot;,
-		fill: &quot;#cccccc&quot;,
-		wordWrap: true,
-		wordWrapWidth: 150,
-		align: &quot;right&quot;
-	}
-});</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="wrapping">
           <script>
@@ -464,23 +398,7 @@ stage.addChild(lineSpacing);
       <div class="example">
         <div class="code">
           <h2>Wrapping and Alignment II</h2>
-          <pre><code class="js">// breakWords allows newlines to be inserted anywhere - not just at whitespaces.
-// This is useful for some languages like Chinese.
-
-let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/blue&gt;属性由「默认」来&lt;big&gt;控制&lt;/big&gt;。而且不能被&lt;blue&gt;别的样式&lt;/blue&gt;所&lt;red&gt;覆盖&lt;/red&gt;。&quot;,
-{
-	&quot;default&quot;: {
-		fontFamily: &quot;Arial&quot;,
-		fontSize: &quot;16px&quot;,
-		fill: &quot;#cccccc&quot;,
-		wordWrap: true,
-		wordWrapWidth: 250,
-		breakWords: true,
-	},
-	&quot;blue&quot;: { fill: 0x4488ff, stroke: 0x2244cc, fontSize: &quot;24px&quot; },
-	&quot;red&quot;: { fill: 0xff8888, stroke: 0xcc4444 },
-	&quot;big&quot;: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: &quot;36px&quot; }
-});</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="wrapping2">
           <script>
@@ -553,28 +471,7 @@ let wrapping2 = new MultiStyleText(&quot;全局设置的&lt;blue&gt;对齐&lt;/b
       <div class="example">
         <div class="code">
           <h2>Interaction Events</h2>
-          <pre><code class="js">let interaction = new MultiStyleText(`If you enable &lt;link name=&quot;interaction&quot;&gt;interaction&lt;/link&gt;, you can get &lt;link name=&quot;information&quot;&gt;information&lt;/link&gt; about which &lt;link name=&quot;tag&quot;&gt;tag&lt;/link&gt; corresponded to the &lt;link name=&quot;event&quot;&gt;event&lt;/link&gt;.`,
-{
-	&quot;default&quot;: {
-		fontFamily: &quot;Arial&quot;,
-		fontSize: &quot;24px&quot;,
-		fill: &quot;#cccccc&quot;,
-		wordWrap: true,
-		wordWrapWidth: 500,
-	},
-	&quot;link&quot;: {
-		fill: 0x4488ff,
-		fontStyle: &quot;italic&quot;
-	}
-});
-
-interaction.interactive = true;
-
-interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
-	if (e.targetTag.name === &quot;link&quot;) {
-		alert(`You clicked on the link for &quot;${e.targetTag.properties.name}&quot;!`);
-	}
-});</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="interaction">
           <script>
@@ -614,34 +511,7 @@ interaction.on(&quot;pointerdown&quot;, (e) =&gt; {
       <div class="example">
         <div class="code">
           <h2>Have Fun</h2>
-          <pre><code class="js">let funStyles = {
-	&quot;default&quot;: {
-		fontFamily: &quot;Arial&quot;,
-		fontSize: &quot;24px&quot;,
-		fill: &quot;#cccccc&quot;,
-		strokeThickness: 1,
-		stroke: &quot;#aaaaaa&quot;,
-		dropShadow: true,
-		dropShadowBlur: 10,
-		dropShadowDistance: 8,
-		dropShadowAngle: 0
-	},
-	&quot;blue&quot;: { fill: 0x4488ff, stroke: 0x2244cc },
-	&quot;red&quot;: { fill: 0xff8888, stroke: 0xcc4444 }
-};
-
-let fun = new MultiStyleText(&quot;Now have fun making some &lt;blue&gt;beautiful&lt;/blue&gt; &lt;red&gt;multistyle&lt;/red&gt; text!&quot;, funStyles);
-
-function animate() {
-	requestAnimationFrame(animate);
-	// ...
-
-	funStyles.default.dropShadowAngle += 0.02;
-	funStyles.default.dropShadowBlur = Math.sin(funStyles.default.dropShadowAngle + Math.PI / 4) * 5 + 5;
-	fun.styles = funStyles;
-}
-
-requestAnimationFrame(animate);</code></pre>
+          <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="animated">
           <script>
