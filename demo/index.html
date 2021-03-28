@@ -262,18 +262,19 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
               middle: { valign: "middle" },
               bottom: { valign: "bottom" },
               baseline: { valign: "baseline" },
+              img: { imgSrc: "valignImg", imgDisplay: "inline" },
             };
             const valignImg = PIXI.Sprite.from("./icon.png");
             let valign = createComparisonText(
-              `<top><code>Top</code> <small>Vertical</small> <valignImg/> Alignment.</top>
+              `<top><code>Top</code> <small>Vertical</small> <img/> Alignment.</top>
 
-<middle><code>Middle</code> <small>Vertical</small> <valignImg/> Alignment.</middle>
+<middle><code>Middle</code> <small>Vertical</small> <img/> Alignment.</middle>
 
-<bottom><code>Bottom</code> <small>Vertical</small> <valignImg/> Alignment.</bottom>
+<bottom><code>Bottom</code> <small>Vertical</small> <img/> Alignment.</bottom>
 
-<baseline><code>Baseline</code> <small>Vertical</small> <valignImg/> Alignment.</baseline>`,
+<baseline><code>Baseline</code> <small>Vertical</small> <img/> Alignment.</baseline>`,
               valignStyle,
-              { imgMap: { valignImg } }
+              { imgMap: { valignImg }, debug: true }
             );
             createDemo("valign", ...valign);
           </script>

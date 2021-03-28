@@ -1,3 +1,4 @@
+import { isEmptyObject } from "./../src/functionalUtils";
 import { combineRecords } from "../src/functionalUtils";
 
 describe("functional util", () => {
@@ -32,6 +33,22 @@ describe("functional util", () => {
       expect(a).not.toStrictEqual(c);
       expect(b).not.toHaveProperty("x");
       expect(b).not.toStrictEqual(c);
+    });
+  });
+
+  describe("isEmptyObject()", () => {
+    it("Should return true if the input is an empty object, i.e. {}", () => {
+      expect(isEmptyObject({})).toBeTruthy();
+      expect(isEmptyObject([])).toBeTruthy();
+    });
+    it("Should return false if the input is not empty or not an object", () => {
+      expect(isEmptyObject({ foo: "bar" })).toBeFalsy();
+      expect(isEmptyObject("Bar")).toBeFalsy();
+      expect(isEmptyObject(5)).toBeFalsy();
+      expect(isEmptyObject([1, 2, 3])).toBeFalsy();
+      expect(isEmptyObject(null)).toBeFalsy();
+      expect(isEmptyObject(undefined)).toBeFalsy();
+      expect(isEmptyObject(NaN)).toBeFalsy();
     });
   });
 });

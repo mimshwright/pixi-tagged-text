@@ -25,6 +25,18 @@ describe("tags module", () => {
       expect(actual).toEqual(expected);
     });
 
+    it("should work when there are self-closing tags inside a non-self-closing tag.", () => {
+      input = `<foo>123 <bar attribute="value"/> 456</foo>`;
+      expected = `<foo>123 <bar attribute="value"></bar> 456</foo>`;
+      actual = tags.replaceSelfClosingTags(input);
+      expect(actual).toEqual(expected);
+
+      input = `<a>123 <c/> <b attribute="value">456 <c/> 789</b>abc</a> def`;
+      expected = `<a>123 <c></c> <b attribute="value">456 <c></c> 789</b>abc</a> def`;
+      actual = tags.replaceSelfClosingTags(input);
+      expect(actual).toEqual(expected);
+    });
+
     it("should work when there are multple self-closing tags in the string.", () => {
       input = `<a/> <b attribute="value"/> <c
 />`;
@@ -38,6 +50,11 @@ describe("tags module", () => {
       expected = input;
       actual = tags.replaceSelfClosingTags(input);
       expect(actual).toEqual(expected);
+
+      input = `<foo bar="baz">lorem ipsum</foo> <bar>baz</bar>`;
+      expected = input;
+      actual = tags.replaceSelfClosingTags(input);
+      expect(actual).toEqual(expected);
     });
 
     it("should ignore unclosed tags and partial pieces of self closing tags.", () => {
@@ -47,6 +64,17 @@ describe("tags module", () => {
       expect(actual).toEqual(expected);
 
       input = `a /> <b`;
+      expected = input;
+      actual = tags.replaceSelfClosingTags(input);
+      expect(actual).toEqual(expected);
+    });
+    it("Allows numbers in tags but not for the first character.", () => {
+      input = `<a1/>`;
+      expected = `<a1></a1>`;
+      actual = tags.replaceSelfClosingTags(input);
+      expect(actual).toEqual(expected);
+
+      input = `<1a/>`;
       expected = input;
       actual = tags.replaceSelfClosingTags(input);
       expect(actual).toEqual(expected);

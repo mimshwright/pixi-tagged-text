@@ -8,3 +8,6 @@ export const combineRecords = <
   ...a,
   ...b,
 });
+
+export const isEmptyObject = <T extends unknown>(a: T): boolean =>
+  a instanceof Object && Object.keys(a).length === 0;
