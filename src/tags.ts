@@ -195,7 +195,27 @@ export const extractSegments = (
   return segments;
 };
 
-const selfClosingTagSearch = /<\s*(\w[^\s/]*)([^/]*)\/>/gs;
+const selfClosingTagSearch = (() => {
+  const group = (s: string) => `(${s})`;
+  const any = (s: string) => s + `*`;
+  const not = (...s: string[]) => `[^${s.join("")}]`;
+  const WORD_START = `[A-Za-z]`;
+  const WORD = `[A-Za-z0-9]`;
+  const TAG_OPEN = `<`;
+  const TAG_SLASH = `/`;
+  const TAG_CLOSE = `>`;
+  const TAG_SELF_CLOSE = TAG_SLASH + TAG_CLOSE;
+
+  return new RegExp(
+    TAG_OPEN +
+      // tag group
+      group(WORD_START + any(WORD)) +
+      // attribute group
+      group(any(not(TAG_SLASH, TAG_CLOSE))) +
+      TAG_SELF_CLOSE,
+    `gs`
+  );
+})();
 export const replaceSelfClosingTags = (input: string): string =>
   input.replace(selfClosingTagSearch, (_, tag, attributes = "") => {
     let output = `<${tag}${attributes}></${tag}>`;

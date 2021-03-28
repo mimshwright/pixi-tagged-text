@@ -1,4 +1,4 @@
-import { combineRecords } from "./functionalUtils";
+import { combineRecords, isEmptyObject } from "./functionalUtils";
 import {
   AttributesList,
   TaggedTextTokenPartial,
@@ -23,8 +23,12 @@ export const combineStyles = (
  * @param styles List of styles to combine.
  */
 export const combineAllStyles = (
-  styles: TextStyleExtended[]
-): TextStyleExtended => styles.reduce(combineStyles, {});
+  styles: (TextStyleExtended | undefined)[]
+): TextStyleExtended =>
+  (styles.filter((s) => s !== undefined) as TextStyleExtended[]).reduce(
+    combineStyles,
+    {}
+  );
 
 /**
  * Replaces properties of a TextStyle object with new values.
@@ -33,9 +37,12 @@ export const combineAllStyles = (
  * @param style The style to modify.
  */
 export const injectAttributes = (
-  attributes: AttributesList,
-  style: TextStyleExtended
-): TextStyleExtended => combineRecords(style, attributes);
+  attributes: AttributesList = {},
+  style: TextStyleExtended = {}
+): TextStyleExtended | undefined => {
+  if (isEmptyObject(style) && isEmptyObject(attributes)) return undefined;
+  return combineRecords(style, attributes);
+};
 
 /**
  * Looks up a tag in a list of tag styles (with optional attributes) and returns it.
@@ -47,7 +54,11 @@ export const getStyleForTag = (
   tagName: string,
   tagStyles: TextStyleSet,
   attributes: AttributesList = {}
-): TextStyleExtended => injectAttributes(attributes, tagStyles[tagName]);
+): TextStyleExtended | undefined => {
+  const style = injectAttributes(attributes, tagStyles[tagName]);
+  if (style == {}) return undefined;
+  return style;
+};
 
 /**
  * Converts TagWithAttributes into a style object.
@@ -57,7 +68,8 @@ export const getStyleForTag = (
 export const tagWithAttributesToStyle = (
   { tagName, attributes }: TagWithAttributes,
   tagStyles: TextStyleSet
-): TextStyleExtended => getStyleForTag(tagName, tagStyles, attributes);
+): TextStyleExtended =>
+  getStyleForTag(tagName, tagStyles, attributes) as TextStyleExtended;
 
 /**
  * Gets styles for several tags and returns a single combined style object.

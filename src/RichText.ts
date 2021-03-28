@@ -135,6 +135,7 @@ export default class RichText extends PIXI.Sprite {
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
     this.options = mergedOptions;
 
+    tagStyles = { default: {}, ...tagStyles };
     const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
     tagStyles.default = mergedDefaultStyles;
     this.tagStyles = tagStyles;
@@ -172,7 +173,7 @@ export default class RichText extends PIXI.Sprite {
   public getStyleForTag(
     tag: string,
     attributes: AttributesList = {}
-  ): TextStyleExtended {
+  ): TextStyleExtended | undefined {
     return getStyleForTagExt(tag, this.tagStyles, attributes);
   }
 
