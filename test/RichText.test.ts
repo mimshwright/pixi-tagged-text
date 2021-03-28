@@ -1,6 +1,13 @@
 import RichText from "../src/RichText";
 
 describe("RichText", () => {
+  const style = {
+    default: {
+      fontSize: 10,
+      fontFamily: "arial",
+    },
+  };
+
   describe("constructor", () => {
     it("Takes a string for the text content. Strings can be multi-line. Strings don't need to contain any tags to work.", () => {
       const t = new RichText("Hello,\nworld!");
@@ -11,17 +18,43 @@ describe("RichText", () => {
       expect(t.tagStyles).toHaveProperty("b");
     });
   });
+  describe("text", () => {
+    describe("multiple lines", () => {
+      it.skip("Should support text with multiple lines.", () => {
+        const singleLine = new RichText("Line 1", style);
+        const doubleLine = new RichText(
+          `Line 1
+Line 2`,
+          style
+        );
+        const doubleSpacedDoubleLine = new RichText(
+          `Line 1
 
-  describe("untaggedText", () => {
-    it("Returns the text with tags stripped out.", () => {
-      const t = new RichText(
-        "<b>Hello</b>. Is it <i>me</i> you're looking for?",
-        { b: {}, i: {} }
-      );
-      expect(t).toHaveProperty(
-        "untaggedText",
-        "Hello. Is it me you're looking for?"
-      );
+Line 2`,
+          style
+        );
+
+        const H = singleLine.textContainer.height;
+        const H2 = doubleLine.textContainer.height / H;
+        const H22 = doubleSpacedDoubleLine.textContainer.height / H;
+
+        expect(H).toBe(12);
+        expect(H2).toBeCloseTo(2, 0);
+        expect(H22).toBeCloseTo(3, 0);
+      });
+    });
+
+    describe("untaggedText", () => {
+      it("Returns the text with tags stripped out.", () => {
+        const t = new RichText(
+          "<b>Hello</b>. Is it <i>me</i> you're looking for?",
+          { b: {}, i: {} }
+        );
+        expect(t).toHaveProperty(
+          "untaggedText",
+          "Hello. Is it me you're looking for?"
+        );
+      });
     });
   });
 
