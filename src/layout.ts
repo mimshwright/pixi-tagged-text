@@ -306,7 +306,7 @@ export const calculateMeasurements = (
     if (tagNames.includes(LINE_BREAK_TAG_NAME) || isBlockImage) {
       offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
       currentLine += 1;
-      break;
+      // break;
     }
 
     if (isImage === false && token.text === "") {
