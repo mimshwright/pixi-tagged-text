@@ -1,6 +1,15 @@
 import RichText from "../src/RichText";
 
 describe("RichText", () => {
+  const style = {
+    default: {
+      fontSize: 10,
+      fontFamily: "arial",
+    },
+    b: { fontWeight: "bold" },
+    i: { fontStyle: "italic" },
+  };
+
   describe("constructor", () => {
     it("Takes a string for the text content. Strings can be multi-line. Strings don't need to contain any tags to work.", () => {
       const t = new RichText("Hello,\nworld!");
@@ -11,17 +20,50 @@ describe("RichText", () => {
       expect(t.tagStyles).toHaveProperty("b");
     });
   });
+  describe("text", () => {
+    const singleLine = new RichText("Line 1", style);
+    const doubleLine = new RichText(
+      `Line 1
+Line 2`,
+      style
+    );
+    const tripleSpacedLines = new RichText(
+      `<b>Line 1</b>
 
-  describe("untaggedText", () => {
-    it("Returns the text with tags stripped out.", () => {
-      const t = new RichText(
-        "<b>Hello</b>. Is it <i>me</i> you're looking for?",
-        { b: {}, i: {} }
-      );
-      expect(t).toHaveProperty(
-        "untaggedText",
-        "Hello. Is it me you're looking for?"
-      );
+
+<b>Line 4</b>`,
+      style
+    );
+
+    describe("multiple lines", () => {
+      it("Should support text with multiple lines.", () => {
+        const H = singleLine.getBounds().height;
+        const H2 = doubleLine.getBounds().height / H;
+        const H3 = tripleSpacedLines.getBounds().height / H;
+
+        expect(H).toBe(15);
+        expect(H2).toBeCloseTo(2, 0);
+        expect(H3).toBeCloseTo(3.5, 0);
+      });
+    });
+
+    describe("untaggedText", () => {
+      it("Returns the text with tags stripped out.", () => {
+        const t = new RichText(
+          "<b>Hello</b>... Is it <i>me</i> you're looking for?",
+          { b: {}, i: {} }
+        );
+        expect(t).toHaveProperty(
+          "untaggedText",
+          "Hello... Is it me you're looking for?"
+        );
+      });
+      it("Should present multiline text correctly.", () => {
+        expect(tripleSpacedLines.untaggedText).toBe(`Line 1
+
+
+Line 4`);
+      });
     });
   });
 
