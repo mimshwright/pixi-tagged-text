@@ -6,6 +6,8 @@ describe("RichText", () => {
       fontSize: 10,
       fontFamily: "arial",
     },
+    b: { fontWeight: "bold" },
+    i: { fontStyle: "italic" },
   };
 
   describe("constructor", () => {
@@ -19,41 +21,48 @@ describe("RichText", () => {
     });
   });
   describe("text", () => {
+    const singleLine = new RichText("Line 1", style);
+    const doubleLine = new RichText(
+      `Line 1
+Line 2`,
+      style
+    );
+    const tripleSpacedLines = new RichText(
+      `<b>Line 1</b>
+
+
+<b>Line 4</b>`,
+      style
+    );
+
     describe("multiple lines", () => {
-      it.skip("Should support text with multiple lines.", () => {
-        const singleLine = new RichText("Line 1", style);
-        const doubleLine = new RichText(
-          `Line 1
-Line 2`,
-          style
-        );
-        const doubleSpacedDoubleLine = new RichText(
-          `Line 1
+      it("Should support text with multiple lines.", () => {
+        const H = singleLine.getBounds().height;
+        const H2 = doubleLine.getBounds().height / H;
+        const H3 = tripleSpacedLines.getBounds().height / H;
 
-Line 2`,
-          style
-        );
-
-        const H = singleLine.textContainer.height;
-        const H2 = doubleLine.textContainer.height / H;
-        const H22 = doubleSpacedDoubleLine.textContainer.height / H;
-
-        expect(H).toBe(12);
+        expect(H).toBe(15);
         expect(H2).toBeCloseTo(2, 0);
-        expect(H22).toBeCloseTo(3, 0);
+        expect(H3).toBeCloseTo(3.5, 0);
       });
     });
 
     describe("untaggedText", () => {
       it("Returns the text with tags stripped out.", () => {
         const t = new RichText(
-          "<b>Hello</b>. Is it <i>me</i> you're looking for?",
+          "<b>Hello</b>... Is it <i>me</i> you're looking for?",
           { b: {}, i: {} }
         );
         expect(t).toHaveProperty(
           "untaggedText",
-          "Hello. Is it me you're looking for?"
+          "Hello... Is it me you're looking for?"
         );
+      });
+      it("Should present multiline text correctly.", () => {
+        expect(tripleSpacedLines.untaggedText).toBe(`Line 1
+
+
+Line 4`);
       });
     });
   });

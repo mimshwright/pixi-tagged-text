@@ -288,11 +288,24 @@ export const calculateMeasurements = (
 
   const lines: MeasurementLines = [[]];
   let previousMeasurement = new PIXI.Rectangle(0, 0, 0, 0);
+  let previousToken = undefined;
   let previousSpaceWidth = 0;
   let largestLineHeight = 0;
   let offset = { x: 0, y: 0 };
   let currentLine = 0;
   let size;
+
+  function goToNextLine() {
+    offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
+    currentLine += 1;
+    if (lines[currentLine] === undefined) {
+      lines[currentLine] = [];
+    }
+  }
+
+  function isNewline(token: TaggedTextTokenPartial): boolean {
+    return token.tags[0]?.tagName === LINE_BREAK_TAG_NAME;
+  }
 
   // TODO: group measurements by line
   for (const token of tokens) {
@@ -301,14 +314,14 @@ export const calculateMeasurements = (
     const imgDisplay = token.style?.[IMG_DISPLAY_PROPERTY];
     const isBlockImage = imgDisplay === "block";
     const isIcon = imgDisplay === "icon";
-    const tagNames = token.tags.map((tag) => tag.tagName);
 
-    if (tagNames.includes(LINE_BREAK_TAG_NAME) || isBlockImage) {
-      offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
-      currentLine += 1;
-      // break;
+    if (isNewline(token) || isBlockImage) {
+      goToNextLine();
+      token.text = " ";
+    } else if (previousToken && isNewline(previousToken)) {
+      // only create a tag out of this if it's the only thing on the line.
+      previousMeasurement.width = 0;
     }
-
     if (isImage === false && token.text === "") {
       continue;
     }
@@ -357,21 +370,19 @@ export const calculateMeasurements = (
 
     // if new size would exceed the max line width...
     if (size.right > maxLineWidth) {
-      offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
+      goToNextLine();
+
       size = rectFromContainer(sizer, offset);
-      currentLine += 1;
       previousMeasurement.width -= previousSpaceWidth;
     }
 
-    if (lines[currentLine] === undefined) {
-      lines[currentLine] = [];
-    }
     lines[currentLine].push(size);
 
     offset.x = size.right;
 
     previousMeasurement = size;
     previousSpaceWidth = spaceWidth;
+    previousToken = token;
   }
 
   const measurements = alignTextInLines(align, maxLineWidth, lines);
