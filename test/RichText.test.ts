@@ -68,11 +68,7 @@ Line 4`);
   });
 
   describe("styles", () => {
-    const t = new RichText(`<b>Test</b>`, {
-      default: { fontSize: 333 },
-      b: { fontWeight: "bold" },
-      i: { fontStyle: "italic" },
-    });
+    const t = new RichText(`<b>Test</b>`, style);
     describe("getStyleForTag()", () => {
       it("Should return a style object for the tag.", () => {
         expect(t.getStyleForTag("b")).toHaveProperty("fontWeight", "bold");
@@ -89,14 +85,24 @@ Line 4`);
       });
     });
   });
+
   describe("parsing", () => {
     it("Should allow nested self-closing tags.", () => {
       expect(() => {
-        new RichText(`<b>Nested <i /> self-closing tag</b>`, {
-          b: { fontWeight: "bold" },
-          i: { fontStyle: "italic" },
-        });
+        new RichText(`<b>Nested <i /> self-closing tag</b>`, style);
       }).not.toThrow();
+    });
+  });
+
+  describe("update()", () => {
+    const t = new RichText(`<b>Test</b>`, style);
+    it("Should render the text as pixi text elements.", () => {
+      const tokens = t.update();
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0]).toHaveLength(1);
+      expect(tokens[0][0].text).toBe("Test");
+      expect(tokens[0][0].tags).toHaveLength(1);
+      expect(tokens[0][0].tags[0]).toHaveProperty("tagName", "b");
     });
   });
 });

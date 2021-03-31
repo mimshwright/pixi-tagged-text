@@ -57,14 +57,17 @@ export default class RichText extends PIXI.Sprite {
     return this._text;
   }
   public set text(text: string) {
-    // Todo: check for deep equality.
-    // const changed = this._text !== text;
+    this.setText(text, false);
+  }
+
+  public setText(text: string, forceNoUpdate = false): void {
     this._text = text;
 
-    // if (changed) {
-    this.update();
-    // }
+    if (forceNoUpdate !== true) {
+      this.update();
+    }
   }
+
   public get untaggedText(): string {
     return removeTags(this.text);
   }
@@ -74,11 +77,15 @@ export default class RichText extends PIXI.Sprite {
     return this._tagStyles;
   }
   public set tagStyles(styles: TextStyleSet) {
-    // const changed = this._tagStyles !== styles;
+    this.setTagStyles(styles, false);
+  }
+  public setTagStyles(styles: TextStyleSet, forceNoUpdate = false): void {
     Object.entries(styles).forEach(([tag, style]) =>
       this.setStyleForTag(tag, style, true)
     );
-    this.update();
+    if (forceNoUpdate !== true) {
+      this.update();
+    }
   }
 
   public get defaultStyle(): TextStyleExtended {
@@ -209,21 +216,23 @@ export default class RichText extends PIXI.Sprite {
       this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
     }
 
-    if (forceNoUpdate !== false) {
+    if (forceNoUpdate !== true) {
       this.update();
     }
     return true;
   }
-  public removeStylesForTag(tag: string): boolean {
+  public removeStylesForTag(tag: string, forceNoUpdate = false): boolean {
     if (tag in this.tagStyles) {
       delete this.tagStyles[tag];
-      this.update();
+      if (forceNoUpdate !== true) {
+        this.update();
+      }
       return true;
     }
     return false;
   }
 
-  private update() {
+  public update(forceNoDraw = false): TaggedTextToken[][] {
     // steps:
     // Pre-process text.
     // Parse tags in the text.
@@ -266,12 +275,16 @@ export default class RichText extends PIXI.Sprite {
     //   window.cancelAnimationFrame(this.animationRequest);
     // }
     // this.animationRequest = window.requestAnimationFrame(
-    this.draw(measuredTokens);
+    if (forceNoDraw !== true) {
+      this.draw(measuredTokens);
+    }
     // );
 
     if (this.options.debug) {
       console.log(this.toDebugString());
     }
+
+    return measuredTokens;
   }
 
   public toDebugString(): string {
