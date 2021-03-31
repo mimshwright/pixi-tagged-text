@@ -37,7 +37,7 @@ describe("style module", () => {
           { fontWeight: "400", fontSize: 12 }
         )
       ).toMatchObject({
-        fontWeight: "700",
+        fontWeight: 700,
         fontSize: 12,
         fill: "#333333",
       });
@@ -60,7 +60,7 @@ describe("style module", () => {
 
       expect(emStyle).toMatchObject({
         fontStyle: "italic",
-        fontWeight: "700",
+        fontWeight: 700,
       });
     });
   });

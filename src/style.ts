@@ -30,6 +30,21 @@ export const combineAllStyles = (
     {}
   );
 
+export const convertAttributeValues = (
+  attributes: AttributesList
+): AttributesList => {
+  const convertedAttributes: AttributesList = {};
+  for (const key in attributes) {
+    const value = attributes[key] as string;
+    if (isNaN(parseFloat(value)) === false) {
+      convertedAttributes[key] = parseFloat(value);
+    } else {
+      convertedAttributes[key] = value;
+    }
+  }
+  return convertedAttributes;
+};
+
 /**
  * Replaces properties of a TextStyle object with new values.
  * (Since AttributeLists are basically partially defined styles, this is the same as combineStyles)
@@ -41,7 +56,7 @@ export const injectAttributes = (
   style: TextStyleExtended = {}
 ): TextStyleExtended | undefined => {
   if (isEmptyObject(style) && isEmptyObject(attributes)) return undefined;
-  return combineRecords(style, attributes);
+  return combineRecords(style, convertAttributeValues(attributes));
 };
 
 /**
