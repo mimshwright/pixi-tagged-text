@@ -373,7 +373,9 @@ export const calculateMeasurements = (
       goToNextLine();
 
       size = rectFromContainer(sizer, offset);
-      previousMeasurement.width -= previousSpaceWidth;
+      if (previousToken?.text.endsWith(" ")) {
+        previousMeasurement.width -= previousSpaceWidth;
+      }
     }
 
     lines[currentLine].push(size);
