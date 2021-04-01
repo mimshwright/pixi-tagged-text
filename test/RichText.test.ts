@@ -1,3 +1,4 @@
+import * as PIXI from "pixi.js";
 import RichText from "../src/RichText";
 
 describe("RichText", () => {
@@ -10,6 +11,9 @@ describe("RichText", () => {
     i: { fontStyle: "italic" },
   };
 
+  const emptySpriteBounds = new PIXI.Rectangle(0, 0, 0, 0);
+  const containerSpriteBounds = new PIXI.Rectangle(0, 0, 1, 1);
+
   describe("constructor", () => {
     it("Takes a string for the text content. Strings can be multi-line. Strings don't need to contain any tags to work.", () => {
       const t = new RichText("Hello,\nworld!");
@@ -18,6 +22,68 @@ describe("RichText", () => {
     it("Takes an optional list of styles.", () => {
       const t = new RichText("Hello!", { b: { fontWeight: "700" } });
       expect(t.tagStyles).toHaveProperty("b");
+    });
+
+    describe("constructor takes a list of options.", () => {
+      describe("debug", () => {
+        const control = new RichText("Test <b>test</b>", style);
+        const debug = new RichText("Test <b>test</b> test", style, {
+          debug: true,
+        });
+
+        it("Should show debug information if you set debug to true. It should log debug info to console.", () => {
+          expect(debug.debugContainer.children).toHaveLength(5);
+          expect(debug.debugContainer.getBounds().width).toBeGreaterThan(100);
+        });
+
+        it("Should have debug set to false by default.", () => {
+          expect(control.debugContainer.children).toHaveLength(0);
+          expect(control.debugContainer.getBounds()).toMatchObject(
+            emptySpriteBounds
+          );
+        });
+      });
+
+      describe("skipUpdates", () => {
+        const control = new RichText("Test <b>test</b>", style);
+        const skipUpdates = new RichText("Test <b>test</b>", style, {
+          skipUpdates: true,
+        });
+        it("Should have the option to disable automatic calls to update() and draw().", () => {
+          expect(skipUpdates.textContainer.children).toHaveLength(0);
+          expect(skipUpdates.getBounds()).toMatchObject(containerSpriteBounds);
+          const tokens = skipUpdates.update();
+          expect(skipUpdates.getBounds()).toMatchObject(containerSpriteBounds);
+          expect(tokens).toHaveLength(1);
+          expect(tokens[0]).toHaveLength(2);
+          skipUpdates.draw(tokens);
+          expect(skipUpdates.getBounds()).toMatchObject(control.getBounds());
+        });
+        it("Default should be to automatically call update.", () => {
+          expect(control.textContainer.children).toHaveLength(2);
+        });
+
+        it("should allow you to force an update...", () => {
+          skipUpdates.text = "";
+          skipUpdates.update(false);
+          expect(skipUpdates.textFields).toHaveLength(0);
+          skipUpdates.text = "abc def ghi";
+          skipUpdates.update();
+          expect(skipUpdates.textFields).toHaveLength(0);
+          skipUpdates.update(false);
+          expect(skipUpdates.textFields).toHaveLength(3);
+        });
+        it("...or force no update", () => {
+          control.text = "";
+          expect(control.textFields).toHaveLength(0);
+          control.setText("abc def ghi", true);
+          expect(control.textFields).toHaveLength(0);
+          control.update(true);
+          expect(control.textFields).toHaveLength(0);
+          control.update();
+          expect(control.textFields).toHaveLength(3);
+        });
+      });
     });
   });
   describe("text", () => {

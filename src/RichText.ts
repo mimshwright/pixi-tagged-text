@@ -32,6 +32,7 @@ const DEFAULT_OPTIONS: RichTextOptions = {
   debug: false,
   splitStyle: "words",
   imgMap: {},
+  skipUpdates: false,
 };
 
 const DEBUG = {
@@ -52,18 +53,25 @@ const DEBUG = {
 export default class RichText extends PIXI.Sprite {
   private options: RichTextOptions;
 
+  private shouldUpdate(forcedSkipUpdate?: boolean): boolean {
+    if (forcedSkipUpdate !== undefined) {
+      return !forcedSkipUpdate;
+    }
+    return !this.options.skipUpdates;
+  }
+
   private _text = "";
   public get text(): string {
     return this._text;
   }
   public set text(text: string) {
-    this.setText(text, false);
+    this.setText(text);
   }
 
-  public setText(text: string, forceNoUpdate = false): void {
+  public setText(text: string, skipUpdate?: boolean): void {
     this._text = text;
 
-    if (forceNoUpdate !== true) {
+    if (this.shouldUpdate(skipUpdate)) {
       this.update();
     }
   }
@@ -77,13 +85,13 @@ export default class RichText extends PIXI.Sprite {
     return this._tagStyles;
   }
   public set tagStyles(styles: TextStyleSet) {
-    this.setTagStyles(styles, false);
+    this.setTagStyles(styles);
   }
-  public setTagStyles(styles: TextStyleSet, forceNoUpdate = false): void {
+  public setTagStyles(styles: TextStyleSet, skipUpdate?: boolean): void {
     Object.entries(styles).forEach(([tag, style]) =>
       this.setStyleForTag(tag, style, true)
     );
-    if (forceNoUpdate !== true) {
+    if (this.shouldUpdate(skipUpdate)) {
       this.update();
     }
   }
@@ -117,7 +125,7 @@ export default class RichText extends PIXI.Sprite {
     return this._debugContainer;
   }
 
-  private _measuredTokens: TaggedTextToken[][] = [[]];
+  private _tokens: TaggedTextToken[][] = [[]];
 
   private _debugGraphics: PIXI.Graphics | null = null;
 
@@ -167,7 +175,7 @@ export default class RichText extends PIXI.Sprite {
     Object.entries(imgMap).forEach(([key, sprite]) => {
       // Listen for changes to sprites (e.g. when they load.)
       const texture = sprite.texture;
-      if (texture !== undefined) {
+      if (this.shouldUpdate() && texture !== undefined) {
         texture.baseTexture.addListener("update", () => this.update());
       }
 
@@ -193,12 +201,12 @@ export default class RichText extends PIXI.Sprite {
   /**
    * @param tag Name of the tag to set style for
    * @param styles Style object to assign to the tag.
-   * @param forceNoUpdate if True, the update() method will not be called after setting this style.
+   * @param skipUpdate if True, the update() method will not be called after setting this style.
    */
   public setStyleForTag(
     tag: string,
     styles: TextStyleExtended,
-    forceNoUpdate = false
+    skipUpdate?: boolean
   ): boolean {
     // todo: check for deep equality
     // if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
@@ -216,15 +224,15 @@ export default class RichText extends PIXI.Sprite {
       this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
     }
 
-    if (forceNoUpdate !== true) {
+    if (this.shouldUpdate(skipUpdate)) {
       this.update();
     }
     return true;
   }
-  public removeStylesForTag(tag: string, forceNoUpdate = false): boolean {
+  public removeStylesForTag(tag: string, skipUpdate?: boolean): boolean {
     if (tag in this.tagStyles) {
       delete this.tagStyles[tag];
-      if (forceNoUpdate !== true) {
+      if (this.shouldUpdate(skipUpdate)) {
         this.update();
       }
       return true;
@@ -232,7 +240,7 @@ export default class RichText extends PIXI.Sprite {
     return false;
   }
 
-  public update(forceNoDraw = false): TaggedTextToken[][] {
+  public update(skipDraw?: boolean): TaggedTextToken[][] {
     // steps:
     // Pre-process text.
     // Parse tags in the text.
@@ -241,12 +249,12 @@ export default class RichText extends PIXI.Sprite {
     // Measure each segment
     // Create the text segments, position and add them. (draw)
 
-    const tokens = parseTags(this.text, this.tagStyles);
+    const parsedTags = parseTags(this.text, this.tagStyles);
 
     const tagStyles = this.tagStyles;
     const imgMap = this.options.imgMap ?? {};
 
-    const tokensWithStyle = tokens.map((t) => {
+    const tokensWithStyle = parsedTags.map((t) => {
       t.style = getStyleForToken(t, tagStyles);
       return t;
     });
@@ -262,21 +270,21 @@ export default class RichText extends PIXI.Sprite {
     const align = this.defaultStyle.align;
     const lineSpacing = this.defaultStyle.lineSpacing;
 
-    const measuredTokens = calculateMeasurements(
+    const finalTokens = calculateMeasurements(
       tokensWithSprites,
       wordWrapWidth,
       align,
       lineSpacing
     );
-    this._measuredTokens = measuredTokens;
+    this._tokens = finalTokens;
 
     // Wait one frame to draw so that this doesn't happen multiple times in one frame.
     // if (this.animationRequest) {
     //   window.cancelAnimationFrame(this.animationRequest);
     // }
     // this.animationRequest = window.requestAnimationFrame(
-    if (forceNoDraw !== true) {
-      this.draw(measuredTokens);
+    if (this.shouldUpdate(skipDraw)) {
+      this.draw();
     }
     // );
 
@@ -284,13 +292,13 @@ export default class RichText extends PIXI.Sprite {
       console.log(this.toDebugString());
     }
 
-    return measuredTokens;
+    return finalTokens;
   }
 
   public toDebugString(): string {
     let s = this.untaggedText + "\n  ";
-    if (this._measuredTokens !== undefined) {
-      s += this._measuredTokens
+    if (this._tokens !== undefined) {
+      s += this._tokens
         .map((line, lineNumber) =>
           line
             .map((token, tokenNumber) => {
@@ -316,7 +324,7 @@ export default class RichText extends PIXI.Sprite {
     return s;
   }
 
-  private draw(tokens: TaggedTextToken[][]): void {
+  public draw(tokens: TaggedTextToken[][] = this._tokens): void {
     this.resetChildren();
     const tokensFlat = tokens.flat();
     const textFields = this.createTextFieldsForTokens(tokensFlat);

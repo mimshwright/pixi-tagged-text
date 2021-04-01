@@ -18,6 +18,7 @@ export interface RichTextOptions {
   debug?: boolean;
   splitStyle?: SplitStyle;
   imgMap?: ImageMap;
+  skipUpdates?: boolean;
 }
 
 ///// STYLE PROPERTIES
