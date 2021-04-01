@@ -56,7 +56,7 @@ describe("RichText", () => {
           expect(skipUpdates.getBounds()).toMatchObject(containerSpriteBounds);
           expect(tokens).toHaveLength(1);
           expect(tokens[0]).toHaveLength(2);
-          skipUpdates.draw(tokens);
+          skipUpdates.draw();
           expect(skipUpdates.getBounds()).toMatchObject(control.getBounds());
         });
         it("Default should be to automatically call update.", () => {

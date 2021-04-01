@@ -51,8 +51,14 @@ const DEBUG = {
 };
 
 export default class RichText extends PIXI.Sprite {
+  /** Settings for the RichText component. */
   private options: RichTextOptions;
 
+  /**
+   * Determines whether a function should call update().
+   * @param forcedSkipUpdate This is the parameter provided to some functions that allow you to skip the update.
+   * It's factored in along with the defaults to figure out what to do.
+   */
   private shouldUpdate(forcedSkipUpdate?: boolean): boolean {
     if (forcedSkipUpdate !== undefined) {
       return !forcedSkipUpdate;
@@ -64,10 +70,22 @@ export default class RichText extends PIXI.Sprite {
   public get text(): string {
     return this._text;
   }
+
+  /**
+   * Alternative implicit setter for text. Always uses default for skipUpdate.
+   */
   public set text(text: string) {
     this.setText(text);
   }
 
+  /**
+   * Setter for text that allows you to override the default for skipping the update.
+   * @param text Text to add to component with (optional) tags.
+   * @param skipUpdate *For advanced users* overrides default for upating / redrawing after changing the text.
+   * When true, setText() never updates even if default is false, and vice versa.
+   * Options are true, false, or undefined. Undefined is the default and means it uses whatever setting
+   * is provided in this.options.
+   */
   public setText(text: string, skipUpdate?: boolean): void {
     this._text = text;
 
@@ -76,6 +94,9 @@ export default class RichText extends PIXI.Sprite {
     }
   }
 
+  /**
+   * Returns the text content with all tags stripped out.
+   */
   public get untaggedText(): string {
     return removeTags(this.text);
   }
@@ -84,9 +105,22 @@ export default class RichText extends PIXI.Sprite {
   public get tagStyles(): TextStyleSet {
     return this._tagStyles;
   }
+
+  /**
+   * Alternative implicit setter for tagStyles. Always uses default for skipUpdate.
+   */
   public set tagStyles(styles: TextStyleSet) {
     this.setTagStyles(styles);
   }
+
+  /**
+   * Setter for tagStyles.
+   * @param styles Object with strings for keys representing tag names, mapped to style objects.
+   * @param skipUpdate *For advanced users* overrides default for upating / redrawing after changing the styles.
+   * When true, setTagStyles() never updates even if default is false, and vice versa.
+   * Options are true, false, or undefined. Undefined is the default and means it uses whatever setting
+   * is provided in this.options.
+   */
   public setTagStyles(styles: TextStyleSet, skipUpdate?: boolean): void {
     Object.entries(styles).forEach(([tag, style]) =>
       this.setStyleForTag(tag, style, true)
@@ -96,11 +130,96 @@ export default class RichText extends PIXI.Sprite {
     }
   }
 
+  public getStyleForTag(
+    tag: string,
+    attributes: AttributesList = {}
+  ): TextStyleExtended | undefined {
+    return getStyleForTagExt(tag, this.tagStyles, attributes);
+  }
+
+  public getStyleForTags(tags: TagWithAttributes[]): TextStyleExtended {
+    const styles = tags.map(({ tagName, attributes }) =>
+      this.getStyleForTag(tagName, attributes)
+    );
+    return combineAllStyles(styles);
+  }
+
+  /**
+   * Set a style to be used by a single tag.
+   * @param tag Name of the tag to set style for
+   * @param styles Style object to assign to the tag.
+   * @param skipUpdate *For advanced users* overrides default for upating / redrawing after changing the styles.
+   * When true, setStyleForTag() never updates even if default is false, and vice versa.
+   * Options are true, false, or undefined. Undefined is the default and means it uses whatever setting
+   * is provided in this.options.
+   */
+  public setStyleForTag(
+    tag: string,
+    styles: TextStyleExtended,
+    skipUpdate?: boolean
+  ): boolean {
+    // todo: check for deep equality
+    // if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
+    //   return false;
+    // }
+
+    this.tagStyles[tag] = styles;
+
+    // Override some settings on default styles.
+    if (tag === "default" && this.defaultStyle[IMG_SRC_PROPERTY]) {
+      // prevents accidentally setting all text to images.
+      console.error(
+        `Style "${IMG_SRC_PROPERTY}" can not be set on the "default" style because it will add images to EVERY tag!`
+      );
+      this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
+    }
+
+    if (this.shouldUpdate(skipUpdate)) {
+      this.update();
+    }
+    return true;
+  }
+  /**
+   * Removes a style associated with a tag. Note, inline attributes are not affected.
+   * @param tag Name of the tag to delete the style of.
+   * @param skipUpdate *For advanced users* overrides default for upating / redrawing after changing the styles.
+   * When true, removeStylesForTag() never updates even if default is false, and vice versa.
+   * Options are true, false, or undefined. Undefined is the default and means it uses whatever setting
+   * is provided in this.options.
+   */
+  public removeStylesForTag(tag: string, skipUpdate?: boolean): boolean {
+    if (tag in this.tagStyles) {
+      delete this.tagStyles[tag];
+      if (this.shouldUpdate(skipUpdate)) {
+        this.update();
+      }
+      return true;
+    }
+    return false;
+  }
+
   public get defaultStyle(): TextStyleExtended {
     return this.tagStyles?.default;
   }
+  /**
+   * Alternative implicit setter for defaultStyle. Always uses default for skipUpdate.
+   */
   public set defaultStyle(defaultStyles: TextStyleExtended) {
-    this.setStyleForTag("default", defaultStyles);
+    this.setDefaultStyle(defaultStyles);
+  }
+  /**
+   * Setter for default styles. A shortcut to this.setStyleForTag("default",...)
+   * @param styles A style object to use as the default styles for all text in the component.
+   * @param skipUpdate *For advanced users* overrides default for upating / redrawing after changing the styles.
+   * When true, setDefaultStyle() never updates even if default is false, and vice versa.
+   * Options are true, false, or undefined. Undefined is the default and means it uses whatever setting
+   * is provided in this.options.
+   */
+  public setDefaultStyle(
+    defaultStyles: TextStyleExtended,
+    skipUpdate?: boolean
+  ): void {
+    this.setStyleForTag("default", defaultStyles, skipUpdate);
   }
 
   private _textFields: PIXI.Text[] = [];
@@ -126,6 +245,9 @@ export default class RichText extends PIXI.Sprite {
   }
 
   private _tokens: TaggedTextToken[][] = [[]];
+  public get tokens(): TaggedTextToken[][] {
+    return this._tokens;
+  }
 
   private _debugGraphics: PIXI.Graphics | null = null;
 
@@ -162,6 +284,10 @@ export default class RichText extends PIXI.Sprite {
     this.text = text;
   }
 
+  /**
+   * Removes all PIXI children from this component's containers.
+   * Deletes references to sprites and text fields.
+   */
   private resetChildren() {
     this._debugContainer.removeChildren();
     this._textContainer.removeChildren();
@@ -171,6 +297,11 @@ export default class RichText extends PIXI.Sprite {
     this._sprites = [];
   }
 
+  /**
+   * Creates associations between string-based keys like "img" and
+   * image Sprite objects which are included in the text.
+   * @param imgMap
+   */
   private registerImageMap(imgMap: ImageMap) {
     Object.entries(imgMap).forEach(([key, sprite]) => {
       // Listen for changes to sprites (e.g. when they load.)
@@ -185,61 +316,15 @@ export default class RichText extends PIXI.Sprite {
     });
   }
 
-  public getStyleForTag(
-    tag: string,
-    attributes: AttributesList = {}
-  ): TextStyleExtended | undefined {
-    return getStyleForTagExt(tag, this.tagStyles, attributes);
-  }
-
-  public getStyleForTags(tags: TagWithAttributes[]): TextStyleExtended {
-    const styles = tags.map(({ tagName, attributes }) =>
-      this.getStyleForTag(tagName, attributes)
-    );
-    return combineAllStyles(styles);
-  }
   /**
-   * @param tag Name of the tag to set style for
-   * @param styles Style object to assign to the tag.
-   * @param skipUpdate if True, the update() method will not be called after setting this style.
+   * Calculates styles, positioning, etc. of the text and styles and creates a
+   * set of objects that represent where each portion of text and image should
+   * be drawn.
+   * @param skipDraw *For advanced users* overrides default for redrawing the styles.
+   * When true, update() will skip the call to draw() (even if the default is false).
+   * Options are true, false, or undefined. Undefined is the default and means it uses whatever setting
+   * is provided in this.options.
    */
-  public setStyleForTag(
-    tag: string,
-    styles: TextStyleExtended,
-    skipUpdate?: boolean
-  ): boolean {
-    // todo: check for deep equality
-    // if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
-    //   return false;
-    // }
-
-    this.tagStyles[tag] = styles;
-
-    // Override some settings on default styles.
-    if (tag === "default" && this.defaultStyle[IMG_SRC_PROPERTY]) {
-      // prevents accidentally setting all text to images.
-      console.error(
-        `Style "${IMG_SRC_PROPERTY}" can not be set on the "default" style because it will add images to EVERY tag!`
-      );
-      this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
-    }
-
-    if (this.shouldUpdate(skipUpdate)) {
-      this.update();
-    }
-    return true;
-  }
-  public removeStylesForTag(tag: string, skipUpdate?: boolean): boolean {
-    if (tag in this.tagStyles) {
-      delete this.tagStyles[tag];
-      if (this.shouldUpdate(skipUpdate)) {
-        this.update();
-      }
-      return true;
-    }
-    return false;
-  }
-
   public update(skipDraw?: boolean): TaggedTextToken[][] {
     // steps:
     // Pre-process text.
@@ -295,6 +380,29 @@ export default class RichText extends PIXI.Sprite {
     return finalTokens;
   }
 
+  public draw(): void {
+    this.resetChildren();
+    const tokens = this._tokens;
+    const tokensFlat = tokens.flat();
+    const textFields = this.createTextFieldsForTokens(tokensFlat);
+    const sprites = this.getSpritesFromTokens(tokensFlat);
+    this.positionDisplayObjects(textFields, tokensFlat);
+
+    addChildrenToContainer(textFields, this.textContainer);
+    this._textFields = textFields;
+
+    addChildrenToContainer(sprites, this.spriteContainer);
+    this._sprites = sprites;
+
+    if (this.options.debug) {
+      this.drawDebug(tokens);
+    }
+  }
+
+  /**
+   * Converts the text properties from this.tokens into a human readable string.
+   * This is automatically logged to the console on update when debug option is set to true.
+   */
   public toDebugString(): string {
     let s = this.untaggedText + "\n  ";
     if (this._tokens !== undefined) {
@@ -322,24 +430,6 @@ export default class RichText extends PIXI.Sprite {
         .join("\n");
     }
     return s;
-  }
-
-  public draw(tokens: TaggedTextToken[][] = this._tokens): void {
-    this.resetChildren();
-    const tokensFlat = tokens.flat();
-    const textFields = this.createTextFieldsForTokens(tokensFlat);
-    const sprites = this.getSpritesFromTokens(tokensFlat);
-    this.positionDisplayObjects(textFields, tokensFlat);
-
-    addChildrenToContainer(textFields, this.textContainer);
-    this._textFields = textFields;
-
-    addChildrenToContainer(sprites, this.spriteContainer);
-    this._sprites = sprites;
-
-    if (this.options.debug) {
-      this.drawDebug(tokens);
-    }
   }
 
   private createTextFieldsForTokens(tokens: TaggedTextToken[]): PIXI.Text[] {
