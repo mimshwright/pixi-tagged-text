@@ -33,6 +33,7 @@ const DEFAULT_OPTIONS: RichTextOptions = {
   splitStyle: "words",
   imgMap: {},
   skipUpdates: false,
+  skipDraw: false,
 };
 
 const DEBUG = {
@@ -53,18 +54,6 @@ const DEBUG = {
 export default class RichText extends PIXI.Sprite {
   /** Settings for the RichText component. */
   private options: RichTextOptions;
-
-  /**
-   * Determines whether a function should call update().
-   * @param forcedSkipUpdate This is the parameter provided to some functions that allow you to skip the update.
-   * It's factored in along with the defaults to figure out what to do.
-   */
-  private shouldUpdate(forcedSkipUpdate?: boolean): boolean {
-    if (forcedSkipUpdate !== undefined) {
-      return !forcedSkipUpdate;
-    }
-    return !this.options.skipUpdates;
-  }
 
   private _text = "";
   public get text(): string {
@@ -317,6 +306,18 @@ export default class RichText extends PIXI.Sprite {
   }
 
   /**
+   * Determines whether a function should call update().
+   * @param forcedSkipUpdate This is the parameter provided to some functions that allow you to skip the update.
+   * It's factored in along with the defaults to figure out what to do.
+   */
+  private shouldUpdate(forcedSkipUpdate?: boolean): boolean {
+    if (forcedSkipUpdate !== undefined) {
+      return !forcedSkipUpdate;
+    }
+    return !this.options.skipUpdates;
+  }
+
+  /**
    * Calculates styles, positioning, etc. of the text and styles and creates a
    * set of objects that represent where each portion of text and image should
    * be drawn.
@@ -368,10 +369,14 @@ export default class RichText extends PIXI.Sprite {
     //   window.cancelAnimationFrame(this.animationRequest);
     // }
     // this.animationRequest = window.requestAnimationFrame(
-    if (this.shouldUpdate(skipDraw)) {
+
+    if (skipDraw !== undefined) {
+      if (skipDraw === false) {
+        this.draw();
+      }
+    } else if (this.options.skipDraw === false) {
       this.draw();
     }
-    // );
 
     if (this.options.debug) {
       console.log(this.toDebugString());

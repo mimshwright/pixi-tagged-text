@@ -45,42 +45,58 @@ describe("RichText", () => {
       });
 
       describe("skipUpdates", () => {
-        const control = new RichText("Test <b>test</b>", style);
-        const skipUpdates = new RichText("Test <b>test</b>", style, {
+        const text = "Test <b>test</b>";
+        const control = new RichText(text, style);
+        const skipUpdates = new RichText(text, style, {
           skipUpdates: true,
         });
-        it("Should have the option to disable automatic calls to update() and draw().", () => {
+        const skipDraw = new RichText(text, style, {
+          skipDraw: true,
+        });
+
+        it("Should have the option to disable automatic calls to update().", () => {
           expect(skipUpdates.textContainer.children).toHaveLength(0);
           expect(skipUpdates.getBounds()).toMatchObject(containerSpriteBounds);
-          const tokens = skipUpdates.update();
-          expect(skipUpdates.getBounds()).toMatchObject(containerSpriteBounds);
-          expect(tokens).toHaveLength(1);
-          expect(tokens[0]).toHaveLength(2);
-          skipUpdates.draw();
+          skipUpdates.update();
           expect(skipUpdates.getBounds()).toMatchObject(control.getBounds());
+          expect(skipUpdates.textFields).toHaveLength(2);
+        });
+        it("Should have the option to disable automatic calls to draw().", () => {
+          expect(skipDraw.textContainer.children).toHaveLength(0);
+          skipDraw.update();
+          expect(skipDraw.textContainer.children).toHaveLength(0);
+          skipDraw.draw();
+          expect(skipDraw.tokens).toHaveLength(1);
+          expect(skipDraw.tokens[0]).toHaveLength(2);
+          expect(skipDraw.getBounds()).toMatchObject(control.getBounds());
         });
         it("Default should be to automatically call update.", () => {
           expect(control.textContainer.children).toHaveLength(2);
         });
 
         it("should allow you to force an update...", () => {
-          skipUpdates.text = "";
-          skipUpdates.update(false);
+          expect(skipUpdates.textFields).toHaveLength(2);
+          skipUpdates.setText("");
+          expect(skipUpdates.textFields).toHaveLength(2);
+          skipUpdates.setText("", false);
           expect(skipUpdates.textFields).toHaveLength(0);
-          skipUpdates.text = "abc def ghi";
-          skipUpdates.update();
-          expect(skipUpdates.textFields).toHaveLength(0);
-          skipUpdates.update(false);
-          expect(skipUpdates.textFields).toHaveLength(3);
+        });
+        it("...or draw...", () => {
+          skipDraw.setText("");
+          expect(skipDraw.textFields).toHaveLength(2);
+          skipDraw.update(false);
+          expect(skipDraw.textFields).toHaveLength(0);
         });
         it("...or force no update", () => {
           control.text = "";
           expect(control.textFields).toHaveLength(0);
           control.setText("abc def ghi", true);
           expect(control.textFields).toHaveLength(0);
+          expect(control.tokens[0]).toHaveLength(0);
           control.update(true);
           expect(control.textFields).toHaveLength(0);
-          control.update();
+          expect(control.tokens[0]).toHaveLength(3);
+          control.update(false);
           expect(control.textFields).toHaveLength(3);
         });
       });
@@ -100,6 +116,9 @@ Line 2`,
 <b>Line 4</b>`,
       style
     );
+
+    // setText() is the same as text but allows you to skipUpdate.
+    // text always uses default value for skipUpdate.
 
     describe("multiple lines", () => {
       it("Should support text with multiple lines.", () => {
