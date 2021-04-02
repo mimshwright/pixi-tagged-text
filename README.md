@@ -102,8 +102,8 @@ TBD
 ## Build instructions
 
 ```bash
-$ yarn install
-$ yarn build
+yarn install
+yarn build
 ```
 
 ## Usage
@@ -115,7 +115,7 @@ TBD
 You can view some examples using the command:
 
 ```bash
-$ yarn demo
+yarn demo
 ```
 
 This will start a simple HTTP server running locally on port 8080.
