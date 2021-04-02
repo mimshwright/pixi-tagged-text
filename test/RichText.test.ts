@@ -109,6 +109,12 @@ describe("RichText", () => {
             t.update();
             expect(t.needsUpdate).toBeFalsy();
           });
+          it("Setting text to the same value won't require an update.", () => {
+            const t = new RichText("test", style);
+            expect(t.needsUpdate).toBeFalsy();
+            t.setText("test", true);
+            expect(t.needsUpdate).toBeFalsy();
+          });
           it("When your code skips a draw, the needsUpdate flag will be set to true.", () => {
             const t = new RichText("test", style);
             expect(t.needsDraw).toBeFalsy();

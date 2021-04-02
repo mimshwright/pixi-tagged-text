@@ -85,8 +85,11 @@ export default class RichText extends PIXI.Sprite {
    * is provided in this.options.
    */
   public setText(text: string, skipUpdate?: boolean): void {
+    if (text === this._text && this._needsUpdate === false) {
+      return;
+    }
     this._text = text;
-
+    this._needsUpdate = true;
     this.updateIfShould(skipUpdate);
   }
 
@@ -121,6 +124,8 @@ export default class RichText extends PIXI.Sprite {
     Object.entries(styles).forEach(([tag, style]) =>
       this.setStyleForTag(tag, style, true)
     );
+    // TODO: add a way to test for identical styles to prevent unnecessary updates.
+    this._needsUpdate = true;
     this.updateIfShould(skipUpdate);
   }
 
@@ -152,12 +157,10 @@ export default class RichText extends PIXI.Sprite {
     styles: TextStyleExtended,
     skipUpdate?: boolean
   ): boolean {
-    // todo: check for deep equality
-    // if (this.tagStyles[tag] && this.tagStyles[tag] === styles) {
-    //   return false;
-    // }
-
     this.tagStyles[tag] = styles;
+
+    // TODO: warn user when trying to set styles on a tag that doesn't support it...
+    // e.g. wordWrapWidth on a styel other than default.
 
     // Override some settings on default styles.
     if (tag === "default" && this.defaultStyle[IMG_SRC_PROPERTY]) {
@@ -167,6 +170,8 @@ export default class RichText extends PIXI.Sprite {
       );
       this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
     }
+    // TODO: add a way to test for identical styles to prevent unnecessary updates.
+    this._needsUpdate = true;
     this.updateIfShould(skipUpdate);
 
     return true;
@@ -183,6 +188,7 @@ export default class RichText extends PIXI.Sprite {
     if (tag in this.tagStyles) {
       delete this.tagStyles[tag];
 
+      this._needsUpdate = true;
       this.updateIfShould(skipUpdate);
 
       return true;
@@ -321,8 +327,6 @@ export default class RichText extends PIXI.Sprite {
       this.options.skipUpdates === false
     ) {
       this.update();
-    } else {
-      this._needsUpdate = true;
     }
   }
 
@@ -372,6 +376,7 @@ export default class RichText extends PIXI.Sprite {
       lineSpacing
     );
     this._tokens = finalTokens;
+    this._needsDraw = true;
 
     // Wait one frame to draw so that this doesn't happen multiple times in one frame.
     // if (this.animationRequest) {
@@ -403,8 +408,6 @@ export default class RichText extends PIXI.Sprite {
       this.options.skipDraw === false
     ) {
       this.draw();
-    } else {
-      this._needsDraw = true;
     }
   }
 
