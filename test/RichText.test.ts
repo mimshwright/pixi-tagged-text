@@ -182,13 +182,35 @@ describe("RichText", () => {
 Line 2`,
       style
     );
-    const tripleSpacedLines = new RichText(
-      `<b>Line 1</b>
+    const tripleSpacedLines = new RichText("", style);
+
+    describe("setText(), get text, & set text", () => {
+      it("Implicit setter should set the text. Does not allow you to override the skipUpdate", () => {
+        tripleSpacedLines.text = "temp";
+        expect(tripleSpacedLines.text).toBe("temp");
+      });
+      it(`setText() sets the text and allows you to override the update.`, () => {
+        tripleSpacedLines.setText(
+          `<b>Line 1</b>
 
 
 <b>Line 4</b>`,
-      style
-    );
+          true
+        );
+        const heightBeforeUpdate = tripleSpacedLines.getBounds().height;
+        tripleSpacedLines.update();
+        const heightAfterUpdate = tripleSpacedLines.getBounds().height;
+        expect(heightAfterUpdate).toBeGreaterThan(heightBeforeUpdate);
+      });
+
+      it("Implicit getter should return the text of the component with tags intact.", () => {
+        expect(singleLine.text).toBe("Line 1");
+        expect(tripleSpacedLines.text).toBe(`<b>Line 1</b>
+
+
+<b>Line 4</b>`);
+      });
+    });
 
     // setText() is the same as text but allows you to skipUpdate.
     // text always uses default value for skipUpdate.
