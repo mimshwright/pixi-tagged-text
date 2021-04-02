@@ -1,7 +1,13 @@
 import * as PIXI from "pixi.js";
 import RichText from "../src/RichText";
+import iconSrc from "./icon.base64";
 
 describe("RichText", () => {
+  const iconImage = new Image();
+  iconImage.src = `data:image/png;base64,${iconSrc}`;
+  const texture = PIXI.Texture.from(iconImage);
+  const icon = PIXI.Sprite.from(texture);
+
   const style = {
     default: {
       fontSize: 10,
@@ -283,6 +289,48 @@ Line 4`);
       expect(tokens[0][0].text).toBe("Test");
       expect(tokens[0][0].tags).toHaveLength(1);
       expect(tokens[0][0].tags[0]).toHaveProperty("tagName", "b");
+    });
+  });
+
+  describe("Children", () => {
+    const t = new RichText(
+      "a b c <icon/>",
+      {},
+      { imgMap: { icon }, debug: true }
+    );
+    it("Should have a child called textContainer that displays the text fields", () => {
+      expect(t.textContainer).toBeDefined();
+      expect(t.textContainer.children).toHaveLength(3);
+      expect(t.textContainer.getChildAt(0)).toBeInstanceOf(PIXI.Text);
+    });
+    it("Should have a child called spriteContainer that displays the sprites", () => {
+      expect(t.spriteContainer).toBeDefined();
+      // expect(t.spriteContainer.children).toHaveLength(3);
+      // expect(t.spriteContainer.getChildAt(0)).toBeInstanceOf(PIXI.Sprite);
+    });
+    it("Should have a child called debugContainer that displays the debug info", () => {
+      expect(t.debugContainer).toBeDefined();
+      expect(t.debugContainer.children.length).toBeGreaterThan(0);
+      expect(t.debugContainer.getChildAt(0)).toBeInstanceOf(PIXI.DisplayObject);
+    });
+    it("Should have a property textFields that is a list of text fields", () => {
+      expect(t.textFields).toBeDefined();
+      expect(t.textFields).toHaveLength(3);
+      expect(t.textFields[0]).toBeInstanceOf(PIXI.Text);
+    });
+    it("Should have a property sprites that is a list of sprites", () => {
+      expect(t.sprites).toBeDefined();
+      expect(t.sprites).toHaveLength(1);
+      expect(t.sprites[0]).toBeInstanceOf(PIXI.Sprite);
+    });
+    it("Should have a property spriteTemplates that is a list of the original sprites from imgMap", () => {
+      expect(t.spriteTemplates).toBeDefined();
+      expect(t.spriteTemplates).toHaveLength(1);
+      expect(t.spriteTemplates[0]).toBeInstanceOf(PIXI.Sprite);
+    });
+    it("spriteTemplates are not the same as the objects in sprites or spriteContainer, the latter are clones of the spriteTemplates.", () => {
+      expect(t.spriteTemplates[0]).not.toBe(t.sprites[0]);
+      expect(t.spriteTemplates[0]).not.toBe(t.spriteContainer.getChildAt(0));
     });
   });
 });

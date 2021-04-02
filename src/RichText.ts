@@ -52,6 +52,7 @@ const DEBUG = {
 };
 
 export default class RichText extends PIXI.Sprite {
+  // todo: allow setting options after the constructor is called. Make sure to call update()
   /** Settings for the RichText component. */
   private options: RichTextOptions;
 
@@ -234,10 +235,12 @@ export default class RichText extends PIXI.Sprite {
   public get textFields(): PIXI.Text[] {
     return this._textFields;
   }
-
-  private _spriteTemplates: PIXI.Sprite[] = [];
+  private _sprites: PIXI.Sprite[] = [];
+  public get sprites(): PIXI.Sprite[] {
+    return this._sprites;
+  }
   public get spriteTemplates(): PIXI.Sprite[] {
-    return this._spriteTemplates;
+    return Object.values(this.options?.imgMap ?? {});
   }
   private _debugGraphics: PIXI.Graphics | null = null;
 
@@ -298,7 +301,7 @@ export default class RichText extends PIXI.Sprite {
     this._spriteContainer.removeChildren();
 
     this._textFields = [];
-    this._spriteTemplates = [];
+    this._sprites = [];
   }
 
   /**
@@ -429,7 +432,7 @@ export default class RichText extends PIXI.Sprite {
     this._textFields = textFields;
 
     addChildrenToContainer(sprites, this.spriteContainer);
-    this._spriteTemplates = sprites;
+    this._sprites = sprites;
 
     if (this.options.debug) {
       this.drawDebug(tokens);
@@ -472,7 +475,7 @@ export default class RichText extends PIXI.Sprite {
 
   private createTextFieldsForTokens(tokens: TaggedTextToken[]): PIXI.Text[] {
     return tokens
-      .filter(({ text }) => text !== "") // discard blank text.
+      .filter(({ text, sprite }) => text !== "" && sprite === undefined) // discard blank text and images
       .map((t) => this.createTextFieldForToken(t));
   }
 
