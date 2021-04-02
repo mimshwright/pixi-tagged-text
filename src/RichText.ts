@@ -55,6 +55,15 @@ export default class RichText extends PIXI.Sprite {
   /** Settings for the RichText component. */
   private options: RichTextOptions;
 
+  private _needsUpdate = true;
+  public get needsUpdate(): boolean {
+    return this._needsUpdate;
+  }
+  private _needsDraw = true;
+  public get needsDraw(): boolean {
+    return this._needsDraw;
+  }
+
   private _text = "";
   public get text(): string {
     return this._text;
@@ -78,9 +87,7 @@ export default class RichText extends PIXI.Sprite {
   public setText(text: string, skipUpdate?: boolean): void {
     this._text = text;
 
-    if (this.shouldUpdate(skipUpdate)) {
-      this.update();
-    }
+    this.updateIfShould(skipUpdate);
   }
 
   /**
@@ -114,9 +121,7 @@ export default class RichText extends PIXI.Sprite {
     Object.entries(styles).forEach(([tag, style]) =>
       this.setStyleForTag(tag, style, true)
     );
-    if (this.shouldUpdate(skipUpdate)) {
-      this.update();
-    }
+    this.updateIfShould(skipUpdate);
   }
 
   public getStyleForTag(
@@ -162,10 +167,8 @@ export default class RichText extends PIXI.Sprite {
       );
       this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
     }
+    this.updateIfShould(skipUpdate);
 
-    if (this.shouldUpdate(skipUpdate)) {
-      this.update();
-    }
     return true;
   }
   /**
@@ -179,9 +182,9 @@ export default class RichText extends PIXI.Sprite {
   public removeStylesForTag(tag: string, skipUpdate?: boolean): boolean {
     if (tag in this.tagStyles) {
       delete this.tagStyles[tag];
-      if (this.shouldUpdate(skipUpdate)) {
-        this.update();
-      }
+
+      this.updateIfShould(skipUpdate);
+
       return true;
     }
     return false;
@@ -295,8 +298,8 @@ export default class RichText extends PIXI.Sprite {
     Object.entries(imgMap).forEach(([key, sprite]) => {
       // Listen for changes to sprites (e.g. when they load.)
       const texture = sprite.texture;
-      if (this.shouldUpdate() && texture !== undefined) {
-        texture.baseTexture.addListener("update", () => this.update());
+      if (texture !== undefined) {
+        texture.baseTexture.addListener("update", () => this.updateIfShould());
       }
 
       // create a style for each of these by default.
@@ -306,15 +309,21 @@ export default class RichText extends PIXI.Sprite {
   }
 
   /**
-   * Determines whether a function should call update().
+   * Determines whether to call update based on the parameter and the options set then calls it or sets needsUpdate to true.
    * @param forcedSkipUpdate This is the parameter provided to some functions that allow you to skip the update.
    * It's factored in along with the defaults to figure out what to do.
    */
-  private shouldUpdate(forcedSkipUpdate?: boolean): boolean {
-    if (forcedSkipUpdate !== undefined) {
-      return !forcedSkipUpdate;
+  private updateIfShould(forcedSkipUpdate?: boolean): void {
+    if (forcedSkipUpdate === false) {
+      this.update();
+    } else if (
+      forcedSkipUpdate === undefined &&
+      this.options.skipUpdates === false
+    ) {
+      this.update();
+    } else {
+      this._needsUpdate = true;
     }
-    return !this.options.skipUpdates;
   }
 
   /**
@@ -370,19 +379,33 @@ export default class RichText extends PIXI.Sprite {
     // }
     // this.animationRequest = window.requestAnimationFrame(
 
-    if (skipDraw !== undefined) {
-      if (skipDraw === false) {
-        this.draw();
-      }
-    } else if (this.options.skipDraw === false) {
-      this.draw();
-    }
+    this.drawIfShould(skipDraw);
 
     if (this.options.debug) {
       console.log(this.toDebugString());
     }
 
+    this._needsUpdate = false;
+
     return finalTokens;
+  }
+
+  /**
+   * Determines whether to call draw() based on the parameter and the options set then calls it or sets needsDraw to true.
+   * @param forcedSkipDraw This is the parameter provided to some functions that allow you to skip the update.
+   * It's factored in along with the defaults to figure out what to do.
+   */
+  private drawIfShould(forcedSkipDraw?: boolean) {
+    if (forcedSkipDraw === false) {
+      this.draw();
+    } else if (
+      forcedSkipDraw === undefined &&
+      this.options.skipDraw === false
+    ) {
+      this.draw();
+    } else {
+      this._needsDraw = true;
+    }
   }
 
   public draw(): void {
@@ -402,6 +425,7 @@ export default class RichText extends PIXI.Sprite {
     if (this.options.debug) {
       this.drawDebug(tokens);
     }
+    this._needsDraw = false;
   }
 
   /**

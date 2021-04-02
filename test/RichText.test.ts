@@ -100,6 +100,25 @@ describe("RichText", () => {
           expect(control.textFields).toHaveLength(3);
         });
 
+        describe("needsUpdate and needsDraw", () => {
+          it("When your code skips an update, the needsUpdate flag will be set to true.", () => {
+            const t = new RichText("test", style);
+            expect(t.needsUpdate).toBeFalsy();
+            t.setText("new!", true);
+            expect(t.needsUpdate).toBeTruthy();
+            t.update();
+            expect(t.needsUpdate).toBeFalsy();
+          });
+          it("When your code skips a draw, the needsUpdate flag will be set to true.", () => {
+            const t = new RichText("test", style);
+            expect(t.needsDraw).toBeFalsy();
+            t.update(true);
+            expect(t.needsDraw).toBeTruthy();
+            t.draw();
+            expect(t.needsDraw).toBeFalsy();
+          });
+        });
+
         const REPS = 50;
         describe(`performace of skipping draw and updates. Updating string ${REPS} times.`, () => {
           // Performance
