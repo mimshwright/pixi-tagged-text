@@ -50,6 +50,27 @@ describe("RichText", () => {
         });
       });
 
+      describe("imageMap", () => {
+        const t = new RichText(
+          "a b c <icon/>",
+          { icon: { imgDisplay: "icon", fontSize: 48 } },
+          { imgMap: { icon }, debug: true }
+        );
+
+        const iconStyle = t.getStyleForTag("icon");
+
+        it("Should allow you to provide a mapping of strings to images to your text field.", () => {
+          expect(t.sprites).toHaveLength(1);
+        });
+        it("Should automatically create a style for a tag with the same name as the image keys.", () => {
+          expect(iconStyle?.imgSrc).toBe("icon");
+        });
+        it("Should not clobber the existing styles if any were already defined.", () => {
+          expect(iconStyle?.imgDisplay).toBe("icon");
+          expect(iconStyle?.fontSize).toBe(48);
+        });
+      });
+
       describe("skipUpdates & skipDraw", () => {
         const text = "Test <b>test</b>";
         const control = new RichText(text, style);
@@ -105,79 +126,78 @@ describe("RichText", () => {
           control.update(false);
           expect(control.textFields).toHaveLength(3);
         });
+      });
+      describe("needsUpdate and needsDraw", () => {
+        it("When your code skips an update, the needsUpdate flag will be set to true.", () => {
+          const t = new RichText("test", style);
+          expect(t.needsUpdate).toBeFalsy();
+          t.setText("new!", true);
+          expect(t.needsUpdate).toBeTruthy();
+          t.update();
+          expect(t.needsUpdate).toBeFalsy();
+        });
+        it("Setting text to the same value won't require an update.", () => {
+          const t = new RichText("test", style);
+          expect(t.needsUpdate).toBeFalsy();
+          t.setText("test", true);
+          expect(t.needsUpdate).toBeFalsy();
+        });
+        it("When your code skips a draw, the needsUpdate flag will be set to true.", () => {
+          const t = new RichText("test", style);
+          expect(t.needsDraw).toBeFalsy();
+          t.update(true);
+          expect(t.needsDraw).toBeTruthy();
+          t.draw();
+          expect(t.needsDraw).toBeFalsy();
+        });
+      });
 
-        describe("needsUpdate and needsDraw", () => {
-          it("When your code skips an update, the needsUpdate flag will be set to true.", () => {
-            const t = new RichText("test", style);
-            expect(t.needsUpdate).toBeFalsy();
-            t.setText("new!", true);
-            expect(t.needsUpdate).toBeTruthy();
-            t.update();
-            expect(t.needsUpdate).toBeFalsy();
-          });
-          it("Setting text to the same value won't require an update.", () => {
-            const t = new RichText("test", style);
-            expect(t.needsUpdate).toBeFalsy();
-            t.setText("test", true);
-            expect(t.needsUpdate).toBeFalsy();
-          });
-          it("When your code skips a draw, the needsUpdate flag will be set to true.", () => {
-            const t = new RichText("test", style);
-            expect(t.needsDraw).toBeFalsy();
-            t.update(true);
-            expect(t.needsDraw).toBeTruthy();
-            t.draw();
-            expect(t.needsDraw).toBeFalsy();
-          });
+      const REPS = 50;
+      describe(`performace of skipping draw and updates. Updating string ${REPS} times.`, () => {
+        // Performance
+        const editText = (textField: RichText) => {
+          textField.text = "";
+          for (let i = 0; i < REPS; i++) {
+            textField.text += `${i} `;
+          }
+        };
+
+        const control = new RichText();
+        const skipDraw = new RichText("", {}, { skipDraw: true });
+        const skipUpdates = new RichText("", {}, { skipUpdates: true });
+
+        let startTime = new Date().getTime();
+        editText(control);
+        let endTime = new Date().getTime();
+        const timeControl = endTime - startTime;
+
+        startTime = new Date().getTime();
+        editText(skipDraw);
+        skipDraw.draw();
+        endTime = new Date().getTime();
+        const timeSkipDraw = endTime - startTime;
+
+        startTime = new Date().getTime();
+        editText(skipUpdates);
+        skipUpdates.update();
+        endTime = new Date().getTime();
+        const timeSkipUpdates = endTime - startTime;
+
+        it(`Default is slow AF! ${timeControl}ms`, () => {
+          expect(timeControl).toBeGreaterThanOrEqual(500);
+        });
+        it(`skipDraw should be faster than default. ${timeSkipDraw}ms`, () => {
+          expect(timeSkipDraw).toBeLessThan(timeControl);
+        });
+        it(`skipUpdates should be faster than control and skipDraw. ${timeSkipUpdates}ms < ${timeSkipDraw}ms < ${timeControl}ms`, () => {
+          expect(timeSkipUpdates).toBeLessThan(timeControl);
+          expect(timeSkipUpdates).toBeLessThan(timeSkipDraw);
+        });
+        it(`In fact, skipUpdates it's pretty fast! ${timeSkipUpdates}ms`, () => {
+          expect(timeSkipUpdates).toBeLessThan(50);
         });
 
-        const REPS = 50;
-        describe(`performace of skipping draw and updates. Updating string ${REPS} times.`, () => {
-          // Performance
-          const editText = (textField: RichText) => {
-            textField.text = "";
-            for (let i = 0; i < REPS; i++) {
-              textField.text += `${i} `;
-            }
-          };
-
-          const control = new RichText();
-          const skipDraw = new RichText("", {}, { skipDraw: true });
-          const skipUpdates = new RichText("", {}, { skipUpdates: true });
-
-          let startTime = new Date().getTime();
-          editText(control);
-          let endTime = new Date().getTime();
-          const timeControl = endTime - startTime;
-
-          startTime = new Date().getTime();
-          editText(skipDraw);
-          skipDraw.draw();
-          endTime = new Date().getTime();
-          const timeSkipDraw = endTime - startTime;
-
-          startTime = new Date().getTime();
-          editText(skipUpdates);
-          skipUpdates.update();
-          endTime = new Date().getTime();
-          const timeSkipUpdates = endTime - startTime;
-
-          it(`Default is slow AF! ${timeControl}ms`, () => {
-            expect(timeControl).toBeGreaterThanOrEqual(500);
-          });
-          it(`skipDraw should be faster than default. ${timeSkipDraw}ms`, () => {
-            expect(timeSkipDraw).toBeLessThan(timeControl);
-          });
-          it(`skipUpdates should be faster than control and skipDraw. ${timeSkipUpdates}ms < ${timeSkipDraw}ms < ${timeControl}ms`, () => {
-            expect(timeSkipUpdates).toBeLessThan(timeControl);
-            expect(timeSkipUpdates).toBeLessThan(timeSkipDraw);
-          });
-          it(`In fact, skipUpdates it's pretty fast! ${timeSkipUpdates}ms`, () => {
-            expect(timeSkipUpdates).toBeLessThan(50);
-          });
-
-          console.log({ timeControl, timeSkipDraw, timeSkipUpdates });
-        });
+        console.log({ timeControl, timeSkipDraw, timeSkipUpdates });
       });
     });
   });

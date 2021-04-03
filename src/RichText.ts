@@ -318,7 +318,8 @@ export default class RichText extends PIXI.Sprite {
       }
 
       // create a style for each of these by default.
-      const style = { [IMG_SRC_PROPERTY]: key };
+      const existingStyle = this.getStyleForTag(key) ?? {};
+      const style = { [IMG_SRC_PROPERTY]: key, ...existingStyle };
       this.setStyleForTag(key, style);
     });
   }
