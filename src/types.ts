@@ -61,7 +61,9 @@ export type TextStyleSet = Record<string, TextStyleExtended>;
 
 ///// TAG PARSING
 
-export type AttributesList = Record<string, unknown>;
+type AttributeName = string;
+type AttributeValue = string | number;
+export type AttributesList = Record<AttributeName, AttributeValue>;
 export interface TagWithAttributes {
   tagName: string;
   attributes: AttributesList;

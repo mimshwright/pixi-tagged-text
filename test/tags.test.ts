@@ -89,6 +89,56 @@ describe("tags module", () => {
     });
   });
 
+  describe("parse", () => {
+    // const testText =
+    // '<b>Hello</b>, <b fontSize="32"><i>world</i>!<b>\nHow are you     ?\nI\'m\tgood.\n\n👍';
+    it("Should parse simple text.", () => {
+      expect(tags.parseTags("Hello")).toMatchObject([
+        {
+          text: "Hello",
+          tags: [],
+        },
+      ]);
+      expect(tags.parseTags("Hello, World!")).toMatchObject([
+        {
+          text: "Hello, ",
+          tags: [],
+        },
+        {
+          text: "World!",
+          tags: [],
+        },
+      ]);
+    });
+    // it("Should parse single tags.", () => {
+    //   expect(tags.parseTags("<b>Hello</b>")).toMatchObject([
+    //     {
+    //       text: "Hello",
+    //       tags: [{ tagName: "b", attributes: {} }],
+    //     },
+    //   ]);
+    // });
+    // it("Should parse nested tags.", () => {
+    //   expect(tags.parseTags("<b><i>Hello</i></b>")).toMatchObject([
+    //     {
+    //       text: "Hello",
+    //       tags: [
+    //         { tagName: "b", attributes: {} },
+    //         { tagName: "i", attributes: {} },
+    //       ],
+    //     },
+    //   ]);
+    // });
+    // it("Should parse tags with attributes.", () => {
+    //   expect(tags.parseTags(`<b fontSize="32">Hello</b>`)).toMatchObject([
+    //     {
+    //       text: "Hello",
+    //       tags: [{ tagName: "b", attributes: { fontSize: 32 } }],
+    //     },
+    //   ]);
+    // });
+  });
+
   describe("Token()", () => {
     it("should create a new Token (partial)", () => {
       expect(
