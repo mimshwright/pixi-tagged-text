@@ -89,72 +89,237 @@ describe("tags module", () => {
     });
   });
 
-  describe("parse", () => {
-    // const testText =
-    // '<b>Hello</b>, <b fontSize="32"><i>world</i>!<b>\nHow are you     ?\nI\'m\tgood.\n\n👍';
-    it("Should parse simple text.", () => {
-      expect(tags.parseTags("Hello")).toMatchObject([
-        {
-          text: "Hello",
-          tags: [],
-        },
-      ]);
-      expect(tags.parseTags("Hello, World!")).toMatchObject([
-        {
-          text: "Hello, ",
-          tags: [],
-        },
-        {
-          text: "World!",
-          tags: [],
-        },
-      ]);
+  describe("Token identifier functions", () => {
+    describe("isTextToken()", () => {
+      it("Should return true if the token is text.", () => {
+        expect(tags.isTextToken("Foo")).toBeTruthy();
+        expect(tags.isTextToken(" ")).toBeTruthy();
+        expect(tags.isTextToken("\n")).toBeTruthy();
+        expect(tags.isTextToken("👍")).toBeTruthy();
+        expect(tags.isTextToken("Hello, world!")).toBeTruthy();
+        expect(tags.isTextToken("")).toBeTruthy();
+      });
+      it("Should return false if the token is not.", () => {
+        expect(
+          tags.isTextToken({ tag: "b", children: ["a", "b", "c"] })
+        ).toBeFalsy();
+      });
     });
-    // it("Should parse single tags.", () => {
-    //   expect(tags.parseTags("<b>Hello</b>")).toMatchObject([
-    //     {
-    //       text: "Hello",
-    //       tags: [{ tagName: "b", attributes: {} }],
-    //     },
-    //   ]);
-    // });
-    // it("Should parse nested tags.", () => {
-    //   expect(tags.parseTags("<b><i>Hello</i></b>")).toMatchObject([
-    //     {
-    //       text: "Hello",
-    //       tags: [
-    //         { tagName: "b", attributes: {} },
-    //         { tagName: "i", attributes: {} },
-    //       ],
-    //     },
-    //   ]);
-    // });
-    // it("Should parse tags with attributes.", () => {
-    //   expect(tags.parseTags(`<b fontSize="32">Hello</b>`)).toMatchObject([
-    //     {
-    //       text: "Hello",
-    //       tags: [{ tagName: "b", attributes: { fontSize: 32 } }],
-    //     },
-    //   ]);
-    // });
+    describe("isWhitespaceToken()", () => {
+      it("Should return true if the token is whitespace.", () => {
+        expect(tags.isWhitespaceToken(" ")).toBeTruthy();
+        expect(tags.isWhitespaceToken("\t")).toBeTruthy();
+        expect(tags.isWhitespaceToken("   ")).toBeTruthy();
+        expect(tags.isWhitespaceToken("\t  \t")).toBeTruthy();
+        expect(tags.isWhitespaceToken("\n")).toBeTruthy();
+        expect(tags.isWhitespaceToken("\n  ")).toBeTruthy();
+      });
+      it("Should return false if the token is not.", () => {
+        expect(tags.isWhitespaceToken("F")).toBeFalsy();
+        expect(tags.isWhitespaceToken("Hello")).toBeFalsy();
+        expect(tags.isWhitespaceToken("   F")).toBeFalsy();
+        expect(tags.isWhitespaceToken("\tF\t")).toBeFalsy();
+        expect(
+          tags.isWhitespaceToken({ tag: "b", children: ["a", "b", "c"] })
+        ).toBeFalsy();
+      });
+    });
+    describe("isNewlineToken()", () => {
+      it("Should return true if the token is a newline.", () => {
+        expect(tags.isNewlineToken("\n")).toBeTruthy();
+      });
+      it("Should return false if the token is not.", () => {
+        expect(tags.isNewlineToken("")).toBeFalsy();
+        expect(tags.isNewlineToken("F")).toBeFalsy();
+        expect(tags.isNewlineToken("   \n")).toBeFalsy();
+        expect(tags.isNewlineToken("\n\n")).toBeFalsy();
+        expect(tags.isNewlineToken({ tag: "b", children: ["\n"] })).toBeFalsy();
+      });
+    });
+    describe("isCompositeToken()", () => {
+      it("Should return true if the token is a group of child tokens.", () => {
+        expect(
+          tags.isCompositeToken({ children: ["a", "b", "c"] })
+        ).toBeTruthy();
+        expect(tags.isCompositeToken({ children: [""] })).toBeTruthy();
+        expect(
+          tags.isCompositeToken({ tag: "b", children: ["a"] })
+        ).toBeTruthy();
+        expect(
+          tags.isCompositeToken({
+            tag: "b",
+            children: [{ children: ["a", "b", { tag: "i", children: ["c"] }] }],
+          })
+        ).toBeTruthy();
+      });
+      it("Should return false if the token is not.", () => {
+        expect(tags.isCompositeToken("")).toBeFalsy();
+        expect(tags.isCompositeToken("F")).toBeFalsy();
+        expect(tags.isCompositeToken("\n")).toBeFalsy();
+      });
+    });
   });
 
-  describe("Token()", () => {
-    it("should create a new Token (partial)", () => {
-      expect(
-        tags.Token("Hello", [
-          { tagName: "b", attributes: { fontWeight: "700" } },
-        ])
-      ).toMatchObject({
-        text: "Hello",
-        tags: [{ tagName: "b", attributes: { fontWeight: "700" } }],
+  describe("parseAttributes()", () => {
+    it("Extracts keys and values from an HTML-ish attribute string.", () => {
+      expect(tags.parseAttributes("foo='bar'")).toMatchObject({ foo: "bar" });
+    });
+    it("Doesn't care about whitespace between well formed attributes.", () => {
+      expect(tags.parseAttributes("foo='bar'     bar='baz'")).toMatchObject({
+        foo: "bar",
+        bar: "baz",
       });
     });
-    it("should provide empty string and empty array as default values", () => {
-      expect(tags.Token()).toMatchObject({
-        text: "",
-        tags: [],
+    it("Can't handle whitespace near the =.", () => {
+      expect(() => tags.parseAttributes("foo   = 'bar  '")).toThrow();
+    });
+    it("Matches single and double quotes but not ticks.", () => {
+      expect(tags.parseAttributes(`foo="bar" bar='baz'`)).toMatchObject({
+        foo: "bar",
+        bar: "baz",
       });
+      expect(tags.parseAttributes("foo=`bar`")).toMatchObject({});
+    });
+    it.skip("Shouldn't handle mixed up quotes.", () => {
+      expect(tags.parseAttributes(`foo='bar" bar="baz'`)).toMatchObject({
+        foo: `bar" bar="baz`,
+      });
+    });
+    it("Should return empty object for an empty string.", () => {
+      expect(tags.parseAttributes("")).toMatchObject({});
+    });
+  });
+});
+
+describe("parseTags", () => {
+  // const testText =
+  // '<b>Hello</b>, <b fontSize="32"><i>world</i>!<b>\nHow are you     ?\nI\'m\tgood.\n\n👍';
+  it("Should parse simple text.", () => {
+    expect(tags.parseTagsNew("Hello")).toMatchObject({ children: ["Hello"] });
+
+    expect(tags.parseTagsNew("Hello, World!")).toMatchObject({
+      children: ["Hello, World!"],
+    });
+  });
+  it("Should keep newlines.", () => {
+    expect(tags.parseTagsNew("Hello\nWorld\n\n!")).toMatchObject({
+      children: ["Hello\nWorld\n\n!"],
+    });
+  });
+
+  it("Should handle a single tag.", () => {
+    expect(tags.parseTagsNew("<a>b</a>", ["a"])).toMatchObject({
+      children: [{ tag: "a", children: ["b"] }],
+    });
+
+    expect(tags.parseTagsNew("a <b>c</b>", ["b"])).toMatchObject({
+      children: [
+        "a ",
+        {
+          tag: "b",
+          children: ["c"],
+        },
+      ],
+    });
+  });
+  it("Should handle nested tags.", () => {
+    expect(
+      tags.parseTagsNew("<a><b><c><d>e</d></c></b></a>", ["a", "b", "c", "d"])
+    ).toMatchObject({
+      children: [
+        {
+          tag: "a",
+          children: [
+            {
+              tag: "b",
+              children: [
+                { tag: "c", children: [{ tag: "d", children: ["e"] }] },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(
+      tags.parseTagsNew("a <b>c <d>e</d> c</b> a", ["b", "d"])
+    ).toMatchObject({
+      children: [
+        "a ",
+        {
+          tag: "b",
+          children: ["c ", { tag: "d", children: ["e"] }, " c"],
+        },
+        " a",
+      ],
+    });
+  });
+  it("Should handle self-closing tags.", () => {
+    expect(tags.parseTagsNew("a <b /> c", ["b"])).toMatchObject({
+      children: [
+        "a ",
+        {
+          tag: "b",
+          children: [],
+        },
+        " c",
+      ],
+    });
+    expect(tags.parseTagsNew("a<b>c<d/></b>", ["b", "d"])).toMatchObject({
+      children: [
+        "a",
+        {
+          tag: "b",
+          children: ["c", { tag: "d", children: [] }],
+        },
+      ],
+    });
+  });
+
+  // it("Should parse single tags.", () => {
+  //   expect(tags.parseTags("<b>Hello</b>")).toMatchObject([
+  //     {
+  //       text: "Hello",
+  //       tags: [{ tagName: "b", attributes: {} }],
+  //     },
+  //   ]);
+  // });
+  // it("Should parse nested tags.", () => {
+  //   expect(tags.parseTags("<b><i>Hello</i></b>")).toMatchObject([
+  //     {
+  //       text: "Hello",
+  //       tags: [
+  //         { tagName: "b", attributes: {} },
+  //         { tagName: "i", attributes: {} },
+  //       ],
+  //     },
+  //   ]);
+  // });
+  // it("Should parse tags with attributes.", () => {
+  //   expect(tags.parseTags(`<b fontSize="32">Hello</b>`)).toMatchObject([
+  //     {
+  //       text: "Hello",
+  //       tags: [{ tagName: "b", attributes: { fontSize: 32 } }],
+  //     },
+  //   ]);
+  // });
+});
+
+describe("createToken()", () => {
+  it("should create a new Token (partial)", () => {
+    expect(
+      tags.createToken("Hello", [
+        { tagName: "b", attributes: { fontWeight: "700" } },
+      ])
+    ).toMatchObject({
+      text: "Hello",
+      tags: [{ tagName: "b", attributes: { fontWeight: "700" } }],
+    });
+  });
+  it("should provide empty string and empty array as default values", () => {
+    expect(tags.createToken()).toMatchObject({
+      text: "",
+      tags: [],
     });
   });
 });

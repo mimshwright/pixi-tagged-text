@@ -61,6 +61,7 @@ export type TextStyleSet = Record<string, TextStyleExtended>;
 
 ///// TAG PARSING
 
+type TagName = string;
 type AttributeName = string;
 type AttributeValue = string | number;
 export type AttributesList = Record<AttributeName, AttributeValue>;
@@ -94,3 +95,47 @@ export interface TaggedTextToken extends TaggedTextTokenPartial {
   fontProperties: PIXI.IFontMetrics;
   measurement: Measurement;
 }
+
+export type TextToken = string;
+export type WhitespaceToken = TextToken;
+
+export interface CompositeToken<T extends Token = Token> {
+  children: T[];
+  tag?: TagName;
+  attributes?: AttributesList;
+}
+
+export type Token = TextToken | CompositeToken<Token>;
+export type TagToken = CompositeToken<Token>;
+export type Letter = TextToken;
+export type Word = CompositeToken<TextToken | WhitespaceToken>;
+export type Line = CompositeToken<TagToken | Word>;
+export type Paragraph = CompositeToken<Line>;
+
+export type Tokens = CompositeToken<Token>;
+
+// const text =
+//   '<b>Hello</b>, <b fontSize="32"><i>world</i>!</b>\nHow <b>are you     ?\nI\'m\t</b>good.\n\n👍';
+
+// const tokens: Tokens = {
+//   children: [
+//     { children: [{ tag: "b", children: ["Hello"] }, ","] },
+//     " ",
+//     {
+//       tag: "b",
+//       attributes: { fontSize: 32 },
+//       children: [{ tag: "i", children: ["world"] }, "!"],
+//     },
+//     "\n",
+//     "How",
+//     " ",
+//     {
+//       tag: "b",
+//       children: ["are", " ", "you", "     ", "?", "\n", "I'm", "\t"],
+//     },
+//     "good.",
+//     "\n",
+//     "\n",
+//     "👍",
+//   ],
+// };
