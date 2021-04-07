@@ -37,7 +37,7 @@ describe("RichText", () => {
           debug: true,
         });
 
-        it("Should show debug information if you set debug to true. It should log debug info to console.", () => {
+        it("Should show debug information if you set debug to true.", () => {
           expect(debug.debugContainer.children).toHaveLength(5);
           expect(debug.debugContainer.getBounds().width).toBeGreaterThan(100);
         });
@@ -47,6 +47,25 @@ describe("RichText", () => {
           expect(control.debugContainer.getBounds()).toMatchObject(
             emptySpriteBounds
           );
+        });
+      });
+
+      describe("debugConsole", () => {
+        const control = new RichText("Test <b>test</b>", style);
+        const debug = new RichText(
+          "This <b>should appear</b> in console!",
+          style,
+          {
+            debugConsole: true,
+          }
+        );
+
+        it("It should log debug info to console. Can't automate this test so just look in the console.", () => {
+          expect(debug).toBeDefined();
+        });
+
+        it("Should have debug set to false by default.", () => {
+          expect(control.options.debugConsole).toBeFalsy();
         });
       });
 

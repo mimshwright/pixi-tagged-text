@@ -30,6 +30,7 @@ const DEFAULT_STYLE: TextStyleExtended = {
 
 const DEFAULT_OPTIONS: RichTextOptions = {
   debug: false,
+  debugConsole: false,
   splitStyle: "words",
   imgMap: {},
   skipUpdates: false,
@@ -54,7 +55,10 @@ const DEBUG = {
 export default class RichText extends PIXI.Sprite {
   // todo: allow setting options after the constructor is called. Make sure to call update()
   /** Settings for the RichText component. */
-  private options: RichTextOptions;
+  private _options: RichTextOptions;
+  public get options(): RichTextOptions {
+    return this._options;
+  }
 
   private _needsUpdate = true;
   public get needsUpdate(): boolean {
@@ -277,7 +281,7 @@ export default class RichText extends PIXI.Sprite {
     this.resetChildren();
 
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
-    this.options = mergedOptions;
+    this._options = mergedOptions;
 
     tagStyles = { default: {}, ...tagStyles };
     const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
@@ -359,9 +363,10 @@ export default class RichText extends PIXI.Sprite {
     // Create the text segments, position and add them. (draw)
 
     const parsedTags = parseTags(this.text, this.tagStyles);
-
     const tagStyles = this.tagStyles;
     const imgMap = this.options.imgMap ?? {};
+
+    // const styledTokens = mapTagsToStyles(parsedTags, tagStyles);
 
     const tokensWithStyle = parsedTags.map((t) => {
       t.style = getStyleForToken(t, tagStyles);
@@ -396,7 +401,7 @@ export default class RichText extends PIXI.Sprite {
 
     this.drawIfShould(skipDraw);
 
-    if (this.options.debug) {
+    if (this.options.debugConsole) {
       console.log(this.toDebugString());
     }
 
