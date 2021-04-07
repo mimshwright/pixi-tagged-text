@@ -272,6 +272,20 @@ describe("tags module", () => {
         });
 
         expect(
+          tags.parseTagsNew("<a><b>c</b><d>e</d></a>", ["a", "b", "d"])
+        ).toMatchObject({
+          children: [
+            {
+              tag: "a",
+              children: [
+                { tag: "b", children: ["c"] },
+                { tag: "d", children: ["e"] },
+              ],
+            },
+          ],
+        });
+
+        expect(
           tags.parseTagsNew("a <b>c <d>e</d> c</b> a", ["b", "d"])
         ).toMatchObject({
           children: [
@@ -329,6 +343,35 @@ describe("tags module", () => {
       });
     });
 
+    describe("Attributes", () => {
+      it("Should parse attributes correctly.", () => {
+        expect(tags.parseTagsNew("<a c='d'>b</a>", ["a"])).toMatchObject({
+          children: [
+            {
+              tag: "a",
+              children: ["b"],
+              attributes: {
+                c: "d",
+              },
+            },
+          ],
+        });
+        expect(tags.parseTagsNew("<a c='d' e='f'>b</a>", ["a"])).toMatchObject({
+          children: [
+            {
+              tag: "a",
+              children: ["b"],
+              attributes: {
+                c: "d",
+                e: "f",
+              },
+            },
+          ],
+        });
+        expect(() => tags.parseTagsNew("<a c=>b</a>", ["a"])).toThrow();
+      });
+    });
+
     describe("Edge Cases", () => {
       it("Should allow multiple nested tags of the same type.", () => {
         expect(
@@ -363,6 +406,19 @@ describe("tags module", () => {
             " <B>B</B>",
           ],
         });
+      });
+      it("Should allow tags that start with numbers or non alphabet glyphs as long as they're passed in a tagNames.", () => {
+        expect(tags.parseTagsNew("<1>2</1>", ["1"])).toMatchObject({
+          children: [{ tag: "1", children: ["2"] }],
+        });
+        expect(tags.parseTagsNew("<🔥>😎</🔥>", ["🔥"])).toMatchObject({
+          children: [{ tag: "🔥", children: ["😎"] }],
+        });
+      });
+      it("Should throw when there are badly formed tags", () => {
+        expect(() => {
+          tags.parseTagsNew("<a></b>", ["a", "b"]);
+        }).toThrow();
       });
     });
   });
