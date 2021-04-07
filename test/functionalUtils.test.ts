@@ -1,5 +1,4 @@
-import { isEmptyObject } from "./../src/functionalUtils";
-import { combineRecords } from "../src/functionalUtils";
+import { isEmptyObject, last, combineRecords } from "../src/functionalUtils";
 
 describe("functional util", () => {
   describe("combineRecords()", () => {
@@ -49,6 +48,26 @@ describe("functional util", () => {
       expect(isEmptyObject(null)).toBeFalsy();
       expect(isEmptyObject(undefined)).toBeFalsy();
       expect(isEmptyObject(NaN)).toBeFalsy();
+    });
+  });
+
+  describe("last()", () => {
+    it("Should return the last item in a list.", () => {
+      expect(last([1, 2, 3])).toBe(3);
+      expect(last([1])).toBe(1);
+      expect(last(["a", "b", "c"])).toBe("c");
+      expect(
+        last(
+          last([
+            [1, 2],
+            [2, 3],
+            [3, 4],
+          ])
+        )
+      ).toBe(4);
+    });
+    it("Should return undefined if the list is empty.", () => {
+      expect(last([])).toBeUndefined();
     });
   });
 });

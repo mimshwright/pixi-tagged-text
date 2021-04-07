@@ -1,4 +1,11 @@
-import { IMG_SRC_PROPERTY, TaggedTextTokenPartial } from "./../src/types";
+import {
+  IMG_SRC_PROPERTY,
+  TaggedTextTokenPartial,
+  StyledTokens,
+  TagTokens,
+  TextStyleSet,
+  StyledToken,
+} from "./../src/types";
 import * as style from "../src/style";
 
 describe("style module", () => {
@@ -137,6 +144,265 @@ describe("style module", () => {
       expect(style.isTokenImage(imgTokenWithoutAttributes)).toBeTruthy();
       expect(style.isTokenImage(srcOnlyToken)).toBeTruthy();
       expect(style.isTokenImage(trickyToken)).toBeFalsy();
+    });
+  });
+
+  describe("mapTagsToStyles()", () => {
+    it("Should not affect text only", () => {
+      expect(
+        style.mapTagsToStyles({ children: ["foo\nbar"] }, {})
+      ).toMatchObject({
+        children: ["foo\nbar"],
+      });
+    });
+    it("Should convert TagTokens into StyledTokens", () => {
+      const styles = {
+        a: { fontSize: 12 },
+      };
+
+      expect(
+        style.mapTagsToStyles(
+          {
+            tag: "a",
+            children: ["b"],
+          },
+          styles
+        )
+      ).toMatchObject({
+        style: styles.a,
+        tags: "a",
+        children: ["b"],
+      });
+
+      expect(
+        style.mapTagsToStyles(
+          {
+            children: ["1", { tag: "a", children: ["2"] }, "3"],
+          },
+          styles
+        )
+      ).toMatchObject({
+        children: ["1", { style: styles.a, children: ["2"] }, "3"],
+      });
+    });
+
+    describe("Memoized style hash", () => {
+      const styles: TextStyleSet = {
+        i: { fontStyle: "italic", fontFamily: "Arial" },
+        b: { fontWeight: "700", fontFamily: "Times" },
+      };
+      const input = {
+        children: [
+          "none ",
+          {
+            tag: "i",
+            children: ["Italic"],
+          },
+          " ",
+          {
+            tag: "b",
+            children: ["Bold"],
+          },
+          " ",
+          {
+            tag: "b",
+            children: ["Bold Again"],
+          },
+          " ",
+          {
+            tag: "i",
+            children: [
+              {
+                tag: "b",
+                children: ["Italic Bold"],
+              },
+            ],
+          },
+          " ",
+          {
+            tag: "b",
+            children: [
+              {
+                tag: "i",
+                children: ["Bold Italic"],
+              },
+            ],
+          },
+          " ",
+          {
+            tag: "b",
+            children: [
+              {
+                tag: "i",
+                children: ["Bold Italic Again"],
+              },
+            ],
+          },
+        ],
+      };
+
+      const expected = {
+        children: [
+          "none ",
+
+          {
+            style: styles.i,
+            tags: "i",
+            children: ["Italic"],
+          },
+          " ",
+          {
+            style: styles.b,
+            tags: "b",
+            children: ["Bold"],
+          },
+          " ",
+          {
+            style: styles.b,
+            tags: "b",
+            children: ["Bold Again"],
+          },
+          " ",
+          {
+            style: styles.i,
+            tags: "i",
+            children: [
+              {
+                style: { ...styles.i, ...styles.b },
+                tags: "i,b",
+                children: ["Italic Bold"],
+              },
+            ],
+          },
+          " ",
+          {
+            style: styles.b,
+            tags: "b",
+            children: [
+              {
+                style: { ...styles.b, ...styles.i },
+                tags: "b,i",
+                children: ["Bold Italic"],
+              },
+            ],
+          },
+          " ",
+          {
+            style: styles.b,
+            tags: "b",
+            children: [
+              {
+                style: { ...styles.b, ...styles.i },
+                tags: "b,i",
+                children: ["Bold Italic Again"],
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = style.mapTagsToStyles(input, styles);
+
+      const bold = result.children[3] as StyledToken;
+      const boldAgain = result.children[5] as StyledToken;
+      const italicBold = (result.children[7] as StyledToken)
+        .children[0] as StyledToken;
+      const boldItalic = (result.children[9] as StyledToken)
+        .children[0] as StyledToken;
+      const boldItalicAgain = (result.children[11] as StyledToken)
+        .children[0] as StyledToken;
+
+      it("Verifying that the indexes are as expected", () => {
+        expect(bold.children[0]).toBe("Bold");
+        expect(boldAgain.children[0]).toBe("Bold Again");
+        expect(italicBold.children[0]).toBe("Italic Bold");
+        expect(boldItalic.children[0]).toBe("Bold Italic");
+        expect(boldItalicAgain.children[0]).toBe("Bold Italic Again");
+      });
+
+      it("Verifying the entire tree", () => {
+        expect(result).toMatchObject(expected);
+      });
+      it("Should reuse styles with identical tags", () => {
+        expect(bold.style).toBe(boldAgain.style);
+        expect(boldItalic.style).toBe(boldItalicAgain.style);
+      });
+      it("Should NOT treat nested tags the same if they're in a different order.", () => {
+        expect(italicBold.style).not.toBe(boldItalic.style);
+        expect(italicBold.tags).not.toBe(boldItalic.tags);
+        expect(italicBold.tags).toBe("i,b");
+        expect(boldItalic.tags).toBe("b,i");
+        expect(italicBold.style.fontFamily).toBe("Times");
+        expect(boldItalic.style.fontFamily).toBe("Arial");
+      });
+    });
+
+    it("Should convert deeply nested Tokens", () => {
+      const styles = {
+        a: { fontSize: 12 },
+        b: { fontSize: 24 },
+        c: { fontSize: 36 },
+        d: { fontSize: 48 },
+      };
+
+      const deeplyNested: TagTokens = {
+        children: [
+          {
+            tag: "a",
+            children: [
+              {
+                tag: "b",
+                children: [
+                  {
+                    tag: "c",
+                    children: [
+                      {
+                        tag: "d",
+                        children: ["e"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      const expected: StyledTokens = {
+        children: [
+          {
+            style: styles.a,
+            tags: "a",
+            children: [
+              {
+                style: { ...styles.a, ...styles.b },
+                tags: "a,b",
+                children: [
+                  {
+                    style: { ...styles.a, ...styles.b, ...styles.c },
+                    tags: "a,b,c",
+                    children: [
+                      {
+                        tags: "a,b,c,d",
+                        style: {
+                          ...styles.a,
+                          ...styles.b,
+                          ...styles.c,
+                          ...styles.d,
+                        },
+                        children: ["e"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      expect(style.mapTagsToStyles(deeplyNested, styles)).toMatchObject(
+        expected
+      );
     });
   });
 });

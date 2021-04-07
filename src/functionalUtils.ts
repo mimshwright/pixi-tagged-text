@@ -11,3 +11,6 @@ export const combineRecords = <
 
 export const isEmptyObject = <T extends unknown>(a: T): boolean =>
   a instanceof Object && Object.keys(a).length === 0;
+
+/** Return the last item in a list. */
+export const last = <T>(a: T[]): T => a[a.length - 1];

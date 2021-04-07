@@ -1,4 +1,4 @@
-import { isEmptyObject } from "./functionalUtils";
+import { isEmptyObject, last } from "./functionalUtils";
 import {
   TagMatchData,
   TextStyleSet,
@@ -9,6 +9,7 @@ import {
   LINE_BREAK_TAG_NAME,
   Token,
   CompositeToken,
+  TagToken,
 } from "./types";
 
 // TODO: this can probably be just a static value without all the options and parameters.
@@ -270,20 +271,20 @@ export const parseTags = (
 export const removeTags = (input: string): string =>
   input.replace(getTagRegex(), "");
 
-export const isTextToken = (token: Token): boolean => typeof token === "string";
-export const isWhitespaceToken = (token: Token): boolean =>
-  isTextToken(token) &&
-  token !== "" &&
-  (token as string).split("").every((s) => s.search(/\s/) === 0);
-export const isNewlineToken = (token: Token): boolean =>
-  isWhitespaceToken(token) && token === "\n";
-export const isCompositeToken = (token: Token): boolean =>
-  isTextToken(token) === false && "children" in (token as CompositeToken);
+// export const isTextToken = (token: Token): boolean => typeof token === "string";
+// export const isWhitespaceToken = (token: Token): boolean =>
+//   isTextToken(token) &&
+//   token !== "" &&
+//   (token as string).split("").every((s) => s.search(/\s/) === 0);
+// export const isNewlineToken = (token: Token): boolean =>
+//   isWhitespaceToken(token) && token === "\n";
+// export const isCompositeToken = (token: Token): boolean =>
+//   isTextToken(token) === false && "children" in (token as CompositeToken);
 
 // export const makeSpacesSeparateWords = (segment: string): string[] =>
 //   segment.replace(" ", "__SPACE__ __SPACE__").split("__SPACE__");
 
-export const tagMatchToCompositeToken = (tag: TagMatchData): CompositeToken => {
+export const tagMatchToTagToken = (tag: TagMatchData): TagToken => {
   return {
     tag: tag.tagName,
     children: [],
@@ -292,9 +293,6 @@ export const tagMatchToCompositeToken = (tag: TagMatchData): CompositeToken => {
     ...(isEmptyObject(tag.attributes) ? {} : { attributes: tag.attributes }),
   };
 };
-// ({
-// children: makeSpacesSeparateWords(segment),
-// });
 
 export const createTokensNew = (
   segments: string[],
@@ -305,15 +303,13 @@ export const createTokensNew = (
     rootTokens.children.push(segments[0]);
   }
   // Track which tags are opened and closed and add them to the list.
-  const tokenStack: CompositeToken[] = [rootTokens];
-
-  const last = <T>(a: T[]): T => a[a.length - 1];
+  const tokenStack: TagToken[] = [rootTokens];
 
   for (let i = 0; i < tags.length; i++) {
     const tag = tags[i];
     const segment = segments[i + 1] ?? "";
     if (tag.isOpening) {
-      const token = tagMatchToCompositeToken(tag);
+      const token = tagMatchToTagToken(tag);
       if (segment !== "") {
         token.children.push(segment);
       }

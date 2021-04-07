@@ -89,6 +89,7 @@ describe("tags module", () => {
     });
   });
 
+  /*
   describe("Token identifier functions", () => {
     describe("isTextToken()", () => {
       it("Should return true if the token is text.", () => {
@@ -159,6 +160,7 @@ describe("tags module", () => {
       });
     });
   });
+*/
 
   describe("parseAttributes()", () => {
     it("Extracts keys and values from an HTML-ish attribute string.", () => {
@@ -274,35 +276,24 @@ describe("parseTags", () => {
         },
       ],
     });
+    expect(
+      tags.parseTagsNew("1<a>11 22\n3</a>33 444 <a>55<b>55\n6</b>6</a> 77", [
+        "a",
+        "b",
+      ])
+    ).toMatchObject({
+      children: [
+        "1",
+        {
+          tag: "a",
+          children: ["11 22\n3"],
+        },
+        "33 444 ",
+        { tag: "a", children: ["55", { tag: "b", children: ["55\n6"] }, "6"] },
+        " 77",
+      ],
+    });
   });
-
-  // it("Should parse single tags.", () => {
-  //   expect(tags.parseTags("<b>Hello</b>")).toMatchObject([
-  //     {
-  //       text: "Hello",
-  //       tags: [{ tagName: "b", attributes: {} }],
-  //     },
-  //   ]);
-  // });
-  // it("Should parse nested tags.", () => {
-  //   expect(tags.parseTags("<b><i>Hello</i></b>")).toMatchObject([
-  //     {
-  //       text: "Hello",
-  //       tags: [
-  //         { tagName: "b", attributes: {} },
-  //         { tagName: "i", attributes: {} },
-  //       ],
-  //     },
-  //   ]);
-  // });
-  // it("Should parse tags with attributes.", () => {
-  //   expect(tags.parseTags(`<b fontSize="32">Hello</b>`)).toMatchObject([
-  //     {
-  //       text: "Hello",
-  //       tags: [{ tagName: "b", attributes: { fontSize: 32 } }],
-  //     },
-  //   ]);
-  // });
 });
 
 describe("createToken()", () => {

@@ -7,6 +7,11 @@ import {
   TextStyleSet,
   IMG_SRC_PROPERTY,
   ImageMap,
+  TextToken,
+  TagToken,
+  TagTokens,
+  StyledTokens,
+  StyledToken,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 
@@ -141,4 +146,44 @@ export const attachSpritesToToken = (
   token.sprite = sprite;
 
   return token;
+};
+
+export const mapTagsToStyles = (
+  tokens: TagTokens,
+  styles: TextStyleSet
+): StyledTokens => {
+  const tagStack: TagWithAttributes[] = [];
+  const styleMap: Record<string, TextStyleExtended> = {};
+
+  const convertTagTokenToStyledToken = (
+    token: TagToken | TextToken
+  ): StyledToken | TextToken => {
+    if (typeof token === "string") {
+      return token as TextToken;
+    }
+
+    let style = {};
+    let tagHash = "";
+    if (token.tag) {
+      const { tag, attributes = {} } = token;
+      tagStack.push({ tagName: tag, attributes });
+      tagHash = tagStack.map((tag) => tag.tagName).join(",");
+      if (styleMap[tagHash] === undefined) {
+        styleMap[tagHash] = getStyleForTags(tagStack, styles);
+      }
+      style = styleMap[tagHash];
+    }
+
+    const styledToken = {
+      style,
+      tags: tagHash,
+      children: token.children.map(convertTagTokenToStyledToken),
+    };
+
+    tagStack.pop();
+
+    return styledToken;
+  };
+
+  return convertTagTokenToStyledToken(tokens) as StyledTokens;
 };
