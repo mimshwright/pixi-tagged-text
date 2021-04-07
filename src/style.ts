@@ -163,11 +163,12 @@ export const mapTagsToStyles = (
     }
 
     let style = {};
-    let tagHash = "";
+    let tags = "";
     if (token.tag) {
       const { tag, attributes = {} } = token;
       tagStack.push({ tagName: tag, attributes });
-      tagHash = tagStack.map((tag) => tag.tagName).join(",");
+      tags = tagStack.map((tag) => tag.tagName).join(",");
+      const tagHash = JSON.stringify(tagStack);
       if (styleMap[tagHash] === undefined) {
         styleMap[tagHash] = getStyleForTags(tagStack, styles);
       }
@@ -176,7 +177,7 @@ export const mapTagsToStyles = (
 
     const styledToken = {
       style,
-      tags: tagHash,
+      tags: tags,
       children: token.children.map(convertTagTokenToStyledToken),
     };
 

@@ -155,6 +155,7 @@ describe("style module", () => {
         children: ["foo\nbar"],
       });
     });
+
     it("Should convert TagTokens into StyledTokens", () => {
       const styles = {
         a: { fontSize: 12 },
@@ -184,6 +185,121 @@ describe("style module", () => {
       ).toMatchObject({
         children: ["1", { style: styles.a, children: ["2"] }, "3"],
       });
+    });
+
+    it("Should handle attributes", () => {
+      const input = {
+        children: [
+          {
+            tag: "b",
+            attributes: { fontSize: 123 },
+            children: [
+              "Bing",
+              {
+                tag: "i",
+                children: ["Bong"],
+              },
+            ],
+          },
+        ],
+      };
+      const styles = {
+        b: { fontSize: 24, fontWeight: "700" },
+        i: { fontStyle: "italic" },
+      };
+      const expected = {
+        children: [
+          {
+            tags: "b",
+            style: {
+              fontSize: 123,
+              fontWeight: "700",
+            },
+            children: [
+              "Bing",
+              {
+                tags: "b,i",
+                style: {
+                  fontStyle: "italic",
+                  fontWeight: "700",
+                  fontSize: 123,
+                },
+                children: ["Bong"],
+              },
+            ],
+          },
+        ],
+      };
+
+      expect(style.mapTagsToStyles(input, styles)).toMatchObject(expected);
+    });
+
+    it("Should convert deeply nested Tokens", () => {
+      const styles = {
+        a: { fontSize: 12 },
+        b: { fontSize: 24 },
+        c: { fontSize: 36 },
+        d: { fontSize: 48 },
+      };
+
+      const deeplyNested: TagTokens = {
+        children: [
+          {
+            tag: "a",
+            children: [
+              {
+                tag: "b",
+                children: [
+                  {
+                    tag: "c",
+                    children: [
+                      {
+                        tag: "d",
+                        children: ["e"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      const expected: StyledTokens = {
+        children: [
+          {
+            style: styles.a,
+            tags: "a",
+            children: [
+              {
+                style: { ...styles.a, ...styles.b },
+                tags: "a,b",
+                children: [
+                  {
+                    style: { ...styles.a, ...styles.b, ...styles.c },
+                    tags: "a,b,c",
+                    children: [
+                      {
+                        tags: "a,b,c,d",
+                        style: {
+                          ...styles.a,
+                          ...styles.b,
+                          ...styles.c,
+                          ...styles.d,
+                        },
+                        children: ["e"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      expect(style.mapTagsToStyles(deeplyNested, styles)).toMatchObject(
+        expected
+      );
     });
 
     describe("Memoized style hash", () => {
@@ -335,74 +451,6 @@ describe("style module", () => {
         expect(italicBold.style.fontFamily).toBe("Times");
         expect(boldItalic.style.fontFamily).toBe("Arial");
       });
-    });
-
-    it("Should convert deeply nested Tokens", () => {
-      const styles = {
-        a: { fontSize: 12 },
-        b: { fontSize: 24 },
-        c: { fontSize: 36 },
-        d: { fontSize: 48 },
-      };
-
-      const deeplyNested: TagTokens = {
-        children: [
-          {
-            tag: "a",
-            children: [
-              {
-                tag: "b",
-                children: [
-                  {
-                    tag: "c",
-                    children: [
-                      {
-                        tag: "d",
-                        children: ["e"],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-      const expected: StyledTokens = {
-        children: [
-          {
-            style: styles.a,
-            tags: "a",
-            children: [
-              {
-                style: { ...styles.a, ...styles.b },
-                tags: "a,b",
-                children: [
-                  {
-                    style: { ...styles.a, ...styles.b, ...styles.c },
-                    tags: "a,b,c",
-                    children: [
-                      {
-                        tags: "a,b,c,d",
-                        style: {
-                          ...styles.a,
-                          ...styles.b,
-                          ...styles.c,
-                          ...styles.d,
-                        },
-                        children: ["e"],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-      expect(style.mapTagsToStyles(deeplyNested, styles)).toMatchObject(
-        expected
-      );
     });
   });
 });
