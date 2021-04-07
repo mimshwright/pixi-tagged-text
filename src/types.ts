@@ -100,11 +100,13 @@ export interface TaggedTextToken extends TaggedTextTokenPartial {
 export type NewlineToken = "\n";
 export type WhitespaceToken = " " | "\t" | NewlineToken;
 export type TextToken = string;
+export type SpriteToken = PIXI.Sprite;
+
 export interface CompositeToken<T extends Token = Token> {
   children: T[];
 }
 
-export type Token = TextToken | CompositeToken;
+export type Token = TextToken | CompositeToken | SpriteToken;
 export type Tokens = CompositeToken;
 
 export interface TagToken extends CompositeToken<TagToken | TextToken> {
@@ -112,7 +114,9 @@ export interface TagToken extends CompositeToken<TagToken | TextToken> {
   attributes?: AttributesList;
 }
 export type TagTokens = TagToken;
-export interface StyledToken extends CompositeToken<StyledToken | TextToken> {
+
+export interface StyledToken
+  extends CompositeToken<StyledToken | TextToken | SpriteToken> {
   style: TextStyleExtended;
   tags: string;
 }

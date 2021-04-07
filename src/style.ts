@@ -12,8 +12,10 @@ import {
   TagTokens,
   StyledTokens,
   StyledToken,
+  SpriteToken,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
+import * as PIXI from "pixi.js";
 
 /**
  * Combine 2 styles into one.
@@ -150,7 +152,8 @@ export const attachSpritesToToken = (
 
 export const mapTagsToStyles = (
   tokens: TagTokens,
-  styles: TextStyleSet
+  styles: TextStyleSet,
+  imgMap?: ImageMap
 ): StyledTokens => {
   const tagStack: TagWithAttributes[] = [];
   const styleMap: Record<string, TextStyleExtended> = {};
@@ -162,7 +165,7 @@ export const mapTagsToStyles = (
       return token as TextToken;
     }
 
-    let style = {};
+    let style: TextStyleExtended = {};
     let tags = "";
     if (token.tag) {
       const { tag, attributes = {} } = token;
@@ -175,11 +178,21 @@ export const mapTagsToStyles = (
       style = styleMap[tagHash];
     }
 
-    const styledToken = {
+    const styledToken: StyledToken = {
       style,
       tags: tags,
       children: token.children.map(convertTagTokenToStyledToken),
     };
+
+    // If a matching sprite exits in the spritemap...
+    const imgKey = style[IMG_SRC_PROPERTY] ?? "";
+    if (imgKey && imgMap?.[imgKey]) {
+      const sprite: SpriteToken = imgMap[imgKey];
+      if (sprite instanceof PIXI.Sprite) {
+        // insert sprite as first token.
+        styledToken.children = [sprite, ...styledToken.children];
+      }
+    }
 
     tagStack.pop();
 

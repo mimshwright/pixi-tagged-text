@@ -1,3 +1,4 @@
+import * as PIXI from "pixi.js";
 import {
   IMG_SRC_PROPERTY,
   TaggedTextTokenPartial,
@@ -7,8 +8,14 @@ import {
   StyledToken,
 } from "./../src/types";
 import * as style from "../src/style";
+import iconSrc from "./icon.base64";
 
 describe("style module", () => {
+  const iconImage = new Image();
+  iconImage.src = `data:image/png;base64,${iconSrc}`;
+  const texture = PIXI.Texture.from(iconImage);
+  const icon = PIXI.Sprite.from(texture);
+
   describe("combineStyles()", () => {
     it("should combine 2 styles into one.", () => {
       expect(
@@ -300,6 +307,62 @@ describe("style module", () => {
       expect(style.mapTagsToStyles(deeplyNested, styles)).toMatchObject(
         expected
       );
+    });
+
+    describe("imgMap", () => {
+      const styles = {
+        img: { fontSize: 48, imgSrc: "img" },
+      };
+      const imageMap = { img: icon };
+
+      it("Should attach images to tokens that have image references.", () => {
+        const input = {
+          children: [
+            "foo ",
+            {
+              tag: "img",
+              children: [],
+            },
+          ],
+        };
+        const result = {
+          children: [
+            "foo ",
+            {
+              style: styles.img,
+              tags: "img",
+              children: [icon],
+            },
+          ],
+        };
+
+        expect(style.mapTagsToStyles(input, styles, imageMap)).toMatchObject(
+          result
+        );
+      });
+      it("Should place text inside an image tag to the right of the image.", () => {
+        const input = {
+          children: [
+            {
+              tag: "img",
+              children: ["text inside img tag"],
+            },
+          ],
+        };
+        const result = {
+          children: [
+            {
+              style: styles.img,
+              tags: "img",
+              children: [icon, "text inside img tag"],
+            },
+          ],
+        };
+
+        expect(style.mapTagsToStyles(input, styles, imageMap)).toMatchObject(
+          result
+        );
+      });
     });
 
     describe("Memoized style hash", () => {
