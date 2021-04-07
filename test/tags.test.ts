@@ -191,126 +191,198 @@ describe("tags module", () => {
       expect(tags.parseAttributes("")).toMatchObject({});
     });
   });
-});
 
-describe("parseTags", () => {
-  // const testText =
-  // '<b>Hello</b>, <b fontSize="32"><i>world</i>!<b>\nHow are you     ?\nI\'m\tgood.\n\n👍';
-  it("Should parse simple text.", () => {
-    expect(tags.parseTagsNew("Hello")).toMatchObject({ children: ["Hello"] });
+  describe("parseTagsNew()", () => {
+    describe("Simple", () => {
+      it("Should parse simple text.", () => {
+        expect(tags.parseTagsNew("Hello")).toMatchObject({
+          children: ["Hello"],
+        });
 
-    expect(tags.parseTagsNew("Hello, World!")).toMatchObject({
-      children: ["Hello, World!"],
-    });
-  });
-  it("Should keep newlines.", () => {
-    expect(tags.parseTagsNew("Hello\nWorld\n\n!")).toMatchObject({
-      children: ["Hello\nWorld\n\n!"],
-    });
-  });
+        expect(tags.parseTagsNew("Hello, World!")).toMatchObject({
+          children: ["Hello, World!"],
+        });
+      });
+      it("Should keep newlines.", () => {
+        expect(tags.parseTagsNew("Hello\nWorld\n\n!")).toMatchObject({
+          children: ["Hello\nWorld\n\n!"],
+        });
+      });
 
-  it("Should handle a single tag.", () => {
-    expect(tags.parseTagsNew("<a>b</a>", ["a"])).toMatchObject({
-      children: [{ tag: "a", children: ["b"] }],
-    });
+      it("Should handle a single tag that surrounds everything.", () => {
+        expect(tags.parseTagsNew("<a>b</a>", ["a"])).toMatchObject({
+          children: [{ tag: "a", children: ["b"] }],
+        });
+      });
 
-    expect(tags.parseTagsNew("a <b>c</b>", ["b"])).toMatchObject({
-      children: [
-        "a ",
-        {
-          tag: "b",
-          children: ["c"],
-        },
-      ],
-    });
-  });
-  it("Should handle nested tags.", () => {
-    expect(
-      tags.parseTagsNew("<a><b><c><d>e</d></c></b></a>", ["a", "b", "c", "d"])
-    ).toMatchObject({
-      children: [
-        {
-          tag: "a",
+      it("Should handle a single tag in the middle of the text.", () => {
+        expect(tags.parseTagsNew("a <b>c</b> d", ["b"])).toMatchObject({
           children: [
+            "a ",
             {
               tag: "b",
+              children: ["c"],
+            },
+            " d",
+          ],
+        });
+      });
+      it("Should handle multiple tags.", () => {
+        expect(
+          tags.parseTagsNew("<A>A</A> <B>B</B>", ["A", "B"])
+        ).toMatchObject({
+          children: [
+            {
+              tag: "A",
+              children: ["A"],
+            },
+            " ",
+            {
+              tag: "B",
+              children: ["B"],
+            },
+          ],
+        });
+      });
+    });
+
+    describe("Nested", () => {
+      it("Should handle nested tags.", () => {
+        expect(
+          tags.parseTagsNew("<a><b><c><d>e</d></c></b></a>", [
+            "a",
+            "b",
+            "c",
+            "d",
+          ])
+        ).toMatchObject({
+          children: [
+            {
+              tag: "a",
               children: [
-                { tag: "c", children: [{ tag: "d", children: ["e"] }] },
+                {
+                  tag: "b",
+                  children: [
+                    { tag: "c", children: [{ tag: "d", children: ["e"] }] },
+                  ],
+                },
               ],
             },
           ],
-        },
-      ],
+        });
+
+        expect(
+          tags.parseTagsNew("a <b>c <d>e</d> c</b> a", ["b", "d"])
+        ).toMatchObject({
+          children: [
+            "a ",
+            {
+              tag: "b",
+              children: ["c ", { tag: "d", children: ["e"] }, " c"],
+            },
+            " a",
+          ],
+        });
+      });
+    });
+    describe("Self-closing tags", () => {
+      it("Should handle self-closing tags.", () => {
+        expect(tags.parseTagsNew("a <b /> c", ["b"])).toMatchObject({
+          children: [
+            "a ",
+            {
+              tag: "b",
+              children: [],
+            },
+            " c",
+          ],
+        });
+        expect(tags.parseTagsNew("a<b>c<d/></b>", ["b", "d"])).toMatchObject({
+          children: [
+            "a",
+            {
+              tag: "b",
+              children: ["c", { tag: "d", children: [] }],
+            },
+          ],
+        });
+        expect(
+          tags.parseTagsNew(
+            "1<a>11 22\n3</a>33 444 <a>55<b>55\n6</b>6</a> 77",
+            ["a", "b"]
+          )
+        ).toMatchObject({
+          children: [
+            "1",
+            {
+              tag: "a",
+              children: ["11 22\n3"],
+            },
+            "33 444 ",
+            {
+              tag: "a",
+              children: ["55", { tag: "b", children: ["55\n6"] }, "6"],
+            },
+            " 77",
+          ],
+        });
+      });
     });
 
-    expect(
-      tags.parseTagsNew("a <b>c <d>e</d> c</b> a", ["b", "d"])
-    ).toMatchObject({
-      children: [
-        "a ",
-        {
-          tag: "b",
-          children: ["c ", { tag: "d", children: ["e"] }, " c"],
-        },
-        " a",
-      ],
-    });
-  });
-  it("Should handle self-closing tags.", () => {
-    expect(tags.parseTagsNew("a <b /> c", ["b"])).toMatchObject({
-      children: [
-        "a ",
-        {
-          tag: "b",
-          children: [],
-        },
-        " c",
-      ],
-    });
-    expect(tags.parseTagsNew("a<b>c<d/></b>", ["b", "d"])).toMatchObject({
-      children: [
-        "a",
-        {
-          tag: "b",
-          children: ["c", { tag: "d", children: [] }],
-        },
-      ],
-    });
-    expect(
-      tags.parseTagsNew("1<a>11 22\n3</a>33 444 <a>55<b>55\n6</b>6</a> 77", [
-        "a",
-        "b",
-      ])
-    ).toMatchObject({
-      children: [
-        "1",
-        {
-          tag: "a",
-          children: ["11 22\n3"],
-        },
-        "33 444 ",
-        { tag: "a", children: ["55", { tag: "b", children: ["55\n6"] }, "6"] },
-        " 77",
-      ],
-    });
-  });
-});
+    describe("Edge Cases", () => {
+      it("Should allow multiple nested tags of the same type.", () => {
+        expect(
+          tags.parseTagsNew("<A><A><A>A</A></A></A>", ["A"])
+        ).toMatchObject({
+          children: [
+            {
+              tag: "A",
+              children: [
+                {
+                  tag: "A",
+                  children: [
+                    {
+                      tag: "A",
+                      children: ["A"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
 
-describe("createToken()", () => {
-  it("should create a new Token (partial)", () => {
-    expect(
-      tags.createToken("Hello", [
-        { tagName: "b", attributes: { fontWeight: "700" } },
-      ])
-    ).toMatchObject({
-      text: "Hello",
-      tags: [{ tagName: "b", attributes: { fontWeight: "700" } }],
+      it("Should ignore tags not mentioned in the tag list.", () => {
+        expect(tags.parseTagsNew("<A>A</A> <B>B</B>", ["A"])).toMatchObject({
+          children: [
+            {
+              tag: "A",
+              children: ["A"],
+            },
+            " <B>B</B>",
+          ],
+        });
+      });
     });
   });
-  it("should provide empty string and empty array as default values", () => {
-    expect(tags.createToken()).toMatchObject({
-      text: "",
-      tags: [],
+
+  describe("createToken()", () => {
+    it("should create a new Token (partial)", () => {
+      expect(
+        tags.createToken("Hello", [
+          { tagName: "b", attributes: { fontWeight: "700" } },
+        ])
+      ).toMatchObject({
+        text: "Hello",
+        tags: [{ tagName: "b", attributes: { fontWeight: "700" } }],
+      });
+    });
+    it("should provide empty string and empty array as default values", () => {
+      expect(tags.createToken()).toMatchObject({
+        text: "",
+        tags: [],
+      });
     });
   });
 });
