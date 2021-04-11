@@ -1,4 +1,4 @@
-import { isEmptyObject, last } from "./functionalUtils";
+import { last } from "./functionalUtils";
 import {
   TagMatchData,
   TextStyleSet,
@@ -10,6 +10,7 @@ import {
   CompositeToken,
   TagToken,
   TextToken,
+  isEmptyObject,
 } from "./types";
 
 // TODO: this can probably be just a static value without all the options and parameters.
@@ -272,10 +273,6 @@ export const removeTags = (input: string): string =>
   input.replace(getTagRegex(), "");
 
 // export const isTextToken = (token: Token): boolean => typeof token === "string";
-// export const isWhitespaceToken = (token: Token): boolean =>
-//   isTextToken(token) &&
-//   token !== "" &&
-//   (token as string).split("").every((s) => s.search(/\s/) === 0);
 // export const isNewlineToken = (token: Token): boolean =>
 //   isWhitespaceToken(token) && token === "\n";
 // export const isCompositeToken = (token: Token): boolean =>

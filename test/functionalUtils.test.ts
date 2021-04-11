@@ -1,4 +1,9 @@
-import { isEmptyObject, last, combineRecords } from "../src/functionalUtils";
+import {
+  last,
+  combineRecords,
+  complement,
+  pluck,
+} from "../src/functionalUtils";
 
 describe("functional util", () => {
   describe("combineRecords()", () => {
@@ -35,22 +40,6 @@ describe("functional util", () => {
     });
   });
 
-  describe("isEmptyObject()", () => {
-    it("Should return true if the input is an empty object, i.e. {}", () => {
-      expect(isEmptyObject({})).toBeTruthy();
-      expect(isEmptyObject([])).toBeTruthy();
-    });
-    it("Should return false if the input is not empty or not an object", () => {
-      expect(isEmptyObject({ foo: "bar" })).toBeFalsy();
-      expect(isEmptyObject("Bar")).toBeFalsy();
-      expect(isEmptyObject(5)).toBeFalsy();
-      expect(isEmptyObject([1, 2, 3])).toBeFalsy();
-      expect(isEmptyObject(null)).toBeFalsy();
-      expect(isEmptyObject(undefined)).toBeFalsy();
-      expect(isEmptyObject(NaN)).toBeFalsy();
-    });
-  });
-
   describe("last()", () => {
     it("Should return the last item in a list.", () => {
       expect(last([1, 2, 3])).toBe(3);
@@ -68,6 +57,28 @@ describe("functional util", () => {
     });
     it("Should return undefined if the list is empty.", () => {
       expect(last([])).toBeUndefined();
+    });
+  });
+
+  describe("complement()", () => {
+    it("Should take a predicate and return a predicate that produces the opposite answer as the input.", () => {
+      const isFoo = (s: string): boolean => s === "foo";
+      const isNotFoo = complement(isFoo);
+
+      expect(isFoo("foo")).toBeTruthy();
+      expect(isFoo("bar")).toBeFalsy();
+      expect(isNotFoo("foo")).toBeFalsy();
+      expect(isNotFoo("bar")).toBeTruthy();
+    });
+  });
+
+  describe("pluck()", () => {
+    it("Should take a list of objects and return a list of the values of a given property. {string: T} Obj => string -> Obj[] -> T[]", () => {
+      const objects = [
+        { text: "hello", style: {} },
+        { text: "world!", style: {} },
+      ];
+      expect(pluck("text")(objects)).toMatchObject(["hello", "world!"]);
     });
   });
 });

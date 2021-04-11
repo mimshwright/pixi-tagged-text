@@ -106,25 +106,6 @@ describe("tags module", () => {
         ).toBeFalsy();
       });
     });
-    describe("isWhitespaceToken()", () => {
-      it("Should return true if the token is whitespace.", () => {
-        expect(tags.isWhitespaceToken(" ")).toBeTruthy();
-        expect(tags.isWhitespaceToken("\t")).toBeTruthy();
-        expect(tags.isWhitespaceToken("   ")).toBeTruthy();
-        expect(tags.isWhitespaceToken("\t  \t")).toBeTruthy();
-        expect(tags.isWhitespaceToken("\n")).toBeTruthy();
-        expect(tags.isWhitespaceToken("\n  ")).toBeTruthy();
-      });
-      it("Should return false if the token is not.", () => {
-        expect(tags.isWhitespaceToken("F")).toBeFalsy();
-        expect(tags.isWhitespaceToken("Hello")).toBeFalsy();
-        expect(tags.isWhitespaceToken("   F")).toBeFalsy();
-        expect(tags.isWhitespaceToken("\tF\t")).toBeFalsy();
-        expect(
-          tags.isWhitespaceToken({ tag: "b", children: ["a", "b", "c"] })
-        ).toBeFalsy();
-      });
-    });
     describe("isNewlineToken()", () => {
       it("Should return true if the token is a newline.", () => {
         expect(tags.isNewlineToken("\n")).toBeTruthy();

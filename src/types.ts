@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { complement } from "./functionalUtils";
 
 ///// GENERAL PURPOSE
 export interface Point {
@@ -21,6 +22,7 @@ export interface RichTextOptions {
   imgMap?: ImageMap;
   skipUpdates?: boolean;
   skipDraw?: boolean;
+  drawWhitespace?: boolean;
 }
 
 ///// STYLE PROPERTIES
@@ -91,11 +93,7 @@ export interface TaggedTextTokenPartial {
 }
 
 // Same as TaggedTextToken but without any optional properties.
-export interface TaggedTextToken extends TaggedTextTokenPartial {
-  style: TextStyleExtended;
-  fontProperties: PIXI.IFontMetrics;
-  measurement: Bounds;
-}
+export type TaggedTextToken = Required<TaggedTextTokenPartial>;
 
 export type NewlineToken = "\n";
 export type WhitespaceToken = " " | "\t" | NewlineToken;
@@ -129,3 +127,29 @@ export interface FinalToken {
   tags: string;
   fontProperties: PIXI.IFontMetrics;
 }
+export interface SpriteFinalToken extends FinalToken {
+  content: SpriteToken;
+}
+export interface TextFinalToken extends FinalToken {
+  content: TextToken;
+}
+
+export interface WhitespaceFinalToken extends TextFinalToken {
+  content: WhitespaceToken;
+}
+
+export const isWhitespace = (s: string): s is WhitespaceToken =>
+  s !== "" &&
+  s.split("").every((char: string): boolean => char.search(/\s/) === 0);
+
+export const isSpriteToken = (t: FinalToken): t is SpriteFinalToken =>
+  t.content instanceof PIXI.Sprite;
+export const isTextToken = (t: FinalToken): t is TextFinalToken =>
+  typeof t.content === "string";
+export const isWhitespaceToken = (t: FinalToken): t is WhitespaceFinalToken =>
+  isTextToken(t) && isWhitespace(t.content);
+
+export const isNotWhitespaceToken = complement(isWhitespaceToken);
+
+export const isEmptyObject = <T extends unknown>(a: T): boolean =>
+  a instanceof Object && Object.keys(a).length === 0;

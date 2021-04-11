@@ -1,4 +1,4 @@
-import { combineRecords, isEmptyObject } from "./functionalUtils";
+import { combineRecords } from "./functionalUtils";
 import {
   AttributesList,
   TaggedTextTokenPartial,
@@ -13,6 +13,7 @@ import {
   StyledTokens,
   StyledToken,
   SpriteToken,
+  isEmptyObject,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";

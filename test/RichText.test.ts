@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { pluck } from "../src/functionalUtils";
 import RichText from "../src/RichText";
 import iconSrc from "./icon.base64";
 
@@ -90,6 +91,38 @@ describe("RichText", () => {
         });
       });
 
+      describe("drawWhitespace", () => {
+        const noDrawWhitespace = new RichText("a b\nc", {});
+        const drawWhitespace = new RichText(
+          "a b\nc",
+          {},
+          { drawWhitespace: true }
+        );
+
+        it("Should be false by default.", () => {
+          expect(noDrawWhitespace.options.drawWhitespace).toBeFalsy();
+          expect(drawWhitespace.options.drawWhitespace).toBeTruthy();
+        });
+
+        it("When false, whitespace is not drawn as a text field.", () => {
+          const { textFields } = noDrawWhitespace;
+          expect(textFields).toHaveLength(3);
+          expect(pluck("text")(textFields)).toMatchObject(["a", "b", "c"]);
+        });
+
+        it("When true, whitespace is drawn as a text field.", () => {
+          const { textFields } = drawWhitespace;
+          expect(textFields).toHaveLength(5);
+          expect(pluck("text")(textFields)).toMatchObject([
+            "a",
+            " ",
+            "b",
+            "\n",
+            "c",
+          ]);
+        });
+      });
+
       describe("skipUpdates & skipDraw", () => {
         const text = "Test <b>test</b>";
         const control = new RichText(text, style);
@@ -112,8 +145,8 @@ describe("RichText", () => {
           skipDraw.update();
           expect(skipDraw.textContainer.children).toHaveLength(0);
           skipDraw.draw();
-          expect(skipDraw.tokens).toHaveLength(1);
-          expect(skipDraw.tokens[0]).toHaveLength(2);
+          expect(skipDraw.textFields).toHaveLength(2);
+          expect(skipDraw.tokens).toHaveLength(3);
           expect(skipDraw.getBounds()).toMatchObject(control.getBounds());
         });
         it("Default should be to automatically call update.", () => {
@@ -138,10 +171,10 @@ describe("RichText", () => {
           expect(control.textFields).toHaveLength(0);
           control.setText("abc def ghi", true);
           expect(control.textFields).toHaveLength(0);
-          expect(control.tokens[0]).toHaveLength(0);
+          expect(control.tokens).toHaveLength(0);
           control.update(true);
           expect(control.textFields).toHaveLength(0);
-          expect(control.tokens[0]).toHaveLength(3);
+          expect(control.tokens).toHaveLength(5);
           control.update(false);
           expect(control.textFields).toHaveLength(3);
         });
