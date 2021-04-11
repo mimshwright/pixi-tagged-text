@@ -6,7 +6,7 @@ export interface Point {
   y: number;
 }
 
-export type Measurement = PIXI.Rectangle;
+export type Bounds = PIXI.Rectangle;
 
 ///// OPTIONS
 
@@ -79,7 +79,7 @@ export type TagStack = TagMatchData[];
 
 ///// PARSED TOKENS
 
-export type MeasurementLine = Measurement[];
+export type MeasurementLine = Bounds[];
 export type MeasurementLines = MeasurementLine[];
 export interface TaggedTextTokenPartial {
   text: string;
@@ -87,14 +87,14 @@ export interface TaggedTextTokenPartial {
   sprite?: PIXI.Sprite;
   style?: TextStyleExtended;
   fontProperties?: PIXI.IFontMetrics;
-  measurement?: Measurement;
+  measurement?: Bounds;
 }
 
 // Same as TaggedTextToken but without any optional properties.
 export interface TaggedTextToken extends TaggedTextTokenPartial {
   style: TextStyleExtended;
   fontProperties: PIXI.IFontMetrics;
-  measurement: Measurement;
+  measurement: Bounds;
 }
 
 export type NewlineToken = "\n";
@@ -120,4 +120,12 @@ export interface StyledToken
   style: TextStyleExtended;
   tags: string;
 }
+
 export type StyledTokens = CompositeToken<StyledToken | TextToken>;
+export interface FinalToken {
+  content: TextToken | SpriteToken;
+  bounds: Bounds;
+  style: TextStyleExtended;
+  tags: string;
+  fontProperties: PIXI.IFontMetrics;
+}

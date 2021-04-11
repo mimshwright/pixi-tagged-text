@@ -7,9 +7,9 @@ import {
   TaggedTextTokenPartial,
   TagStack,
   LINE_BREAK_TAG_NAME,
-  Token,
   CompositeToken,
   TagToken,
+  TextToken,
 } from "./types";
 
 // TODO: this can probably be just a static value without all the options and parameters.
@@ -297,8 +297,8 @@ export const tagMatchToTagToken = (tag: TagMatchData): TagToken => {
 export const createTokensNew = (
   segments: string[],
   tags: TagMatchData[]
-): Token[] => {
-  const rootTokens: CompositeToken = { children: [] };
+): (TagToken | TextToken)[] => {
+  const rootTokens: CompositeToken<TagToken | TextToken> = { children: [] };
   if (segments[0] !== "") {
     rootTokens.children.push(segments[0]);
   }
@@ -314,7 +314,7 @@ export const createTokensNew = (
         token.children.push(segment);
       }
       last(tokenStack).children.push(token);
-      tokenStack.push(token as CompositeToken);
+      tokenStack.push(token as CompositeToken<TagToken | TextToken>);
     } else {
       const poppedToken = tokenStack.pop();
       if (poppedToken === undefined || poppedToken.tag !== tag.tagName) {
@@ -341,7 +341,7 @@ export const createTokensNew = (
 export const parseTagsNew = (
   input: string,
   matchedTagNames?: string[]
-): CompositeToken => {
+): CompositeToken<TagToken | TextToken> => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
 
   input = replaceSelfClosingTags(input);

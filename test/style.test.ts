@@ -155,6 +155,8 @@ describe("style module", () => {
   });
 
   describe("mapTagsToStyles()", () => {
+    // TODO: Test for default style!
+
     it("Should not affect text only", () => {
       expect(
         style.mapTagsToStyles({ children: ["foo\nbar"] }, {})

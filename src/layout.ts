@@ -1,8 +1,9 @@
+import { TextStyleExtended } from "./../dist/types.d";
 import { getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import {
   Align,
-  Measurement,
+  Bounds,
   MeasurementLine,
   MeasurementLines,
   Point,
@@ -11,6 +12,12 @@ import {
   VAlign,
   LINE_BREAK_TAG_NAME,
   IMG_DISPLAY_PROPERTY,
+  StyledTokens,
+  FinalToken,
+  StyledToken,
+  TextToken,
+  SpriteToken,
+  SplitStyle,
 } from "./types";
 
 /**
@@ -133,12 +140,7 @@ export const verticalAlignInLines = (
         sprite,
       } = word;
 
-      const newMeasurement: Measurement = new PIXI.Rectangle(
-        x,
-        y,
-        width,
-        height
-      );
+      const newMeasurement: Bounds = new PIXI.Rectangle(x, y, width, height);
       const valign = overrideValign ?? style.valign;
 
       const elementAscent =
@@ -418,4 +420,106 @@ export const calculateMeasurements = (
   const vAligned = verticalAlignInLines(measuredTokens, lineSpacing);
 
   return vAligned;
+};
+
+const notEmptyString = (s: string) => s !== "";
+
+const SPLIT_MARKER = `_🔪_`;
+const splitAroundWhitespace = (s: string) =>
+  s.replace(/\s/g, `${SPLIT_MARKER}$&${SPLIT_MARKER}`).split(SPLIT_MARKER);
+
+export const splitText = (s: string, method: SplitStyle): string[] => {
+  if (method === "words") {
+    return [s].flatMap(splitAroundWhitespace).filter(notEmptyString);
+  } else if (method === "characters") {
+    return s.split("");
+  } else {
+    throw new Error("unsupported split style");
+  }
+};
+
+export const calculateFinalTokens = (
+  styledTokens: StyledTokens,
+  splitStyle: SplitStyle = "words"
+): FinalToken[] => {
+  // Create a text field to use for measurements.
+  const sizer = new PIXI.Text("");
+
+  let tags = "";
+  let style: TextStyleExtended = {};
+  let fontProperties: PIXI.IFontMetrics;
+
+  const generateFinalTokenFromStyledToken = (
+    token: StyledToken | TextToken | SpriteToken
+  ): FinalToken[] => {
+    let output: FinalToken[] = [];
+
+    if (typeof token === "string") {
+      // split into pieces and convert into tokens.
+      const textSegments = splitText(token, splitStyle);
+
+      // console.log({ input: token, output: textSegments });
+
+      const textTokens = textSegments.map(
+        (str): FinalToken => {
+          sizer.text = str;
+          const bounds = rectFromContainer(sizer);
+          return {
+            content: str,
+            style,
+            tags,
+            fontProperties,
+            bounds,
+          };
+        }
+      );
+
+      output = output.concat(textTokens);
+    } else if (token instanceof PIXI.Sprite) {
+      // handle images
+      const bounds = rectFromContainer(token);
+      output.push({
+        content: token as SpriteToken,
+        style,
+        tags,
+        fontProperties,
+        bounds,
+      });
+    } else {
+      // token is a composite
+      const styledToken = token as StyledToken;
+      const { children } = styledToken;
+
+      // set tags and styles for children of this composite token.
+      style = styledToken.style;
+      tags = styledToken.tags;
+
+      sizer.style = {
+        ...style,
+        // Override some styles for the purposes of sizing text.
+        wordWrap: false,
+        dropShadowBlur: 0,
+        dropShadowDistance: 0,
+        dropShadowAngle: 0,
+        dropShadow: false,
+      };
+
+      fontProperties = getFontPropertiesOfText(sizer, true);
+
+      if (style === undefined) {
+        throw new Error(
+          `Expected to find a 'style' property on ${styledToken}`
+        );
+      }
+      output = output.concat(
+        children.flatMap(generateFinalTokenFromStyledToken)
+      );
+
+      // unset tags and styles for this composite token.
+      style = {};
+      tags = "";
+    }
+    return output;
+  };
+  return styledTokens.children.flatMap(generateFinalTokenFromStyledToken);
 };

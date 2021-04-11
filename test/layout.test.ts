@@ -1,5 +1,9 @@
+import { splitText } from "./../src/layout";
 import * as PIXI from "pixi.js";
 import * as layout from "../src/layout";
+import { mapTagsToStyles } from "../src/style";
+import { parseTagsNew } from "../src/tags";
+import { SplitStyle } from "../src/types";
 
 const R = (...args: number[]) => new PIXI.Rectangle(...args);
 
@@ -223,40 +227,223 @@ describe("layout module", () => {
     });
   });
 
-  // describe.skip("verticalAlignInLines()", () => {
-  //   const lines = [
-  //     [R(0, 0, W, 20), R(100, 0, W, 40)],
-  //     [R(0, 30, W, 30), R(100, 30, W, 40), R(200, 30, W, 10)],
-  //     [R(0, 60, W, 20)],
-  //   ];
-
-  //   const top = layout.verticalAlignInLines(lines, 0);
-  //   const bottom = layout.verticalAlignInLines(lines, 0);
-  //   const middle = layout.verticalAlignInLines(lines, 0);
-  //   it("should position text vertically in a line so that it fits correctly.", () => {
-  //     expect(top).toMatchObject([
-  //       [{ y: 0 }, { y: 0 }],
-  //       [{ y: 0 }, { y: 0 }, { y: 0 }],
-  //       [{ y: 0 }],
-  //     ]);
-  //     expect(bottom).toMatchObject([
-  //       [{ y: 20 }, { y: 0 }],
-  //       [{ y: 10 }, { y: 0 }, { y: 30 }],
-  //       [{ y: 0 }],
-  //     ]);
-  //     expect(middle).toMatchObject([
-  //       [{ y: 10 }, { y: 0 }],
-  //       [{ y: 5 }, { y: 0 }, { y: 15 }],
-  //       [{ y: 0 }],
-  //     ]);
-  //   });
-  //   it("should create a new object rather than editing the original.", () => {
-  //     expect(top[0]).not.toBe(lines[0]);
-  //     expect(top[0][0]).not.toBe(lines[0][0]);
-  //     expect(middle[0]).not.toBe(lines[0]);
-  //     expect(middle[0][0]).not.toBe(lines[0][0]);
-  //     expect(bottom[0]).not.toBe(lines[0]);
-  //     expect(bottom[0][0]).not.toBe(lines[0][0]);
-  //   });
-  // });
+  describe("splitText()", () => {
+    const helloWorld = "Hello, world!";
+    it("Should split words into segments. If you choose words, it will split on whitespace.", () => {
+      expect(layout.splitText(helloWorld, "words")).toMatchObject([
+        "Hello,",
+        " ",
+        "world!",
+      ]);
+    });
+    it("Should split on character if specified", () => {
+      expect(layout.splitText(helloWorld, "characters")).toMatchObject([
+        "H",
+        "e",
+        "l",
+        "l",
+        "o",
+        ",",
+        " ",
+        "w",
+        "o",
+        "r",
+        "l",
+        "d",
+        "!",
+      ]);
+    });
+  });
+  it("Should throw if the method is unknown.", () => {
+    expect(() => {
+      splitText("abc", "bogus" as SplitStyle);
+    }).toThrow();
+  });
 });
+
+describe("calculateFinalTokens()", () => {
+  const f = layout.calculateFinalTokens;
+  it("Should exist", () => {
+    expect(f).toBeInstanceOf(Function);
+  });
+
+  describe("splitStyle", () => {
+    const helloWorld = { children: ["Hello, world!"] };
+    it("Should split on whitespace by default", () => {
+      expect(f(helloWorld)).toMatchObject([
+        { content: "Hello," },
+        { content: " " },
+        { content: "world!" },
+      ]);
+    });
+    it("Should split on character if specified", () => {
+      expect(f(helloWorld, "characters")).toMatchObject([
+        { content: "H" },
+        { content: "e" },
+        { content: "l" },
+        { content: "l" },
+        { content: "o" },
+        { content: "," },
+        { content: " " },
+        { content: "w" },
+        { content: "o" },
+        { content: "r" },
+        { content: "l" },
+        { content: "d" },
+        { content: "!" },
+      ]);
+    });
+  });
+
+  describe("end to end conversion", () => {
+    const textToTags = parseTagsNew;
+    const tagsToStyles = mapTagsToStyles;
+    const stylesToLayout = f;
+
+    const text =
+      "<b>Hello, <i>World!</i></b>\nHow are you? I'm <b>S</b>U<b>P</b>E<b>R</b>!";
+    const styles = {
+      b: { fontWeight: "700" },
+      i: { fontStyle: "italic" },
+    };
+    const tagTokens = textToTags(text, Object.keys(styles));
+    const styleTokens = tagsToStyles(tagTokens, styles);
+    const finalTokens = stylesToLayout(styleTokens);
+
+    console.log(finalTokens);
+
+    it("Should give similar size properties to text with the same styles and same text.", () => {
+      const space1 = finalTokens[5];
+      const space2 = finalTokens[7];
+
+      expect(space1.style).toBe(space2.style);
+      expect(space1.content).toBe(space2.content);
+      expect(space1.tags).toBe(space2.tags);
+      expect(space1.fontProperties).toMatchObject(space2.fontProperties);
+      expect(space1.bounds.width).toBe(space2.bounds.width);
+      expect(space1.bounds.height).toBe(space2.bounds.height);
+    });
+    it("Should fully convert text to final tokens.", () => {
+      expect(finalTokens).toMatchObject([
+        {
+          content: "Hello,",
+          style: styles.b,
+          tags: "b",
+        },
+        {
+          content: " ",
+          style: styles.b,
+          tags: "b",
+        },
+        {
+          content: "World!",
+          style: { ...styles.b, ...styles.i },
+          tags: "b,i",
+        },
+        {
+          content: "\n",
+          style: {},
+          tags: "",
+        },
+        {
+          content: "How",
+          style: {},
+        },
+        {
+          content: " ",
+          style: {},
+        },
+        {
+          content: "are",
+          style: {},
+        },
+        {
+          content: " ",
+          style: {},
+        },
+        {
+          content: "you?",
+          style: {},
+        },
+        {
+          content: " ",
+          style: {},
+        },
+        {
+          content: "I'm",
+          style: {},
+        },
+        {
+          content: " ",
+          style: {},
+        },
+        {
+          content: "S",
+          style: styles.b,
+          tags: "b",
+        },
+        {
+          content: "U",
+          style: {},
+          tags: "",
+        },
+        {
+          content: "P",
+          style: styles.b,
+        },
+        {
+          content: "E",
+          style: {},
+        },
+        {
+          content: "R",
+          style: styles.b,
+        },
+        {
+          content: "!",
+          style: {},
+        },
+      ]);
+    });
+    it("Should unset styles when there are no styles", () => {
+      expect(finalTokens[4].style).not.toHaveProperty("fontWeight");
+    });
+  });
+});
+
+// describe.skip("verticalAlignInLines()", () => {
+//   const lines = [
+//     [R(0, 0, W, 20), R(100, 0, W, 40)],
+//     [R(0, 30, W, 30), R(100, 30, W, 40), R(200, 30, W, 10)],
+//     [R(0, 60, W, 20)],
+//   ];
+
+//   const top = layout.verticalAlignInLines(lines, 0);
+//   const bottom = layout.verticalAlignInLines(lines, 0);
+//   const middle = layout.verticalAlignInLines(lines, 0);
+//   it("should position text vertically in a line so that it fits correctly.", () => {
+//     expect(top).toMatchObject([
+//       [{ y: 0 }, { y: 0 }],
+//       [{ y: 0 }, { y: 0 }, { y: 0 }],
+//       [{ y: 0 }],
+//     ]);
+//     expect(bottom).toMatchObject([
+//       [{ y: 20 }, { y: 0 }],
+//       [{ y: 10 }, { y: 0 }, { y: 30 }],
+//       [{ y: 0 }],
+//     ]);
+//     expect(middle).toMatchObject([
+//       [{ y: 10 }, { y: 0 }],
+//       [{ y: 5 }, { y: 0 }, { y: 15 }],
+//       [{ y: 0 }],
+//     ]);
+//   });
+//   it("should create a new object rather than editing the original.", () => {
+//     expect(top[0]).not.toBe(lines[0]);
+//     expect(top[0][0]).not.toBe(lines[0][0]);
+//     expect(middle[0]).not.toBe(lines[0]);
+//     expect(middle[0][0]).not.toBe(lines[0][0]);
+//     expect(bottom[0]).not.toBe(lines[0]);
+//     expect(bottom[0][0]).not.toBe(lines[0][0]);
+//   });
+// });

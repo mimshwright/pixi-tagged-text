@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { parseTags, removeTags } from "./tags";
+import { parseTags, parseTagsNew, removeTags } from "./tags";
 import {
   RichTextOptions,
   TextStyleSet,
@@ -17,6 +17,7 @@ import {
   combineAllStyles,
   getStyleForTag as getStyleForTagExt,
   getStyleForToken,
+  mapTagsToStyles,
 } from "./style";
 import { addChildrenToContainer } from "./pixiUtils";
 
@@ -354,19 +355,20 @@ export default class RichText extends PIXI.Sprite {
    * is provided in this.options.
    */
   public update(skipDraw?: boolean): TaggedTextToken[][] {
-    // steps:
-    // Pre-process text.
-    // Parse tags in the text.
-    // Measure font for each style
-    // Assign styles to each segment.
-    // Measure each segment
-    // Create the text segments, position and add them. (draw)
-
     const parsedTags = parseTags(this.text, this.tagStyles);
     const tagStyles = this.tagStyles;
     const imgMap = this.options.imgMap ?? {};
 
-    // const styledTokens = mapTagsToStyles(parsedTags, tagStyles);
+    // Pre-process text.
+    // Parse tags in the text.
+    const tagTokensNew = parseTagsNew(this.text, Object.keys(this.tagStyles));
+    // Assign styles to each segment.
+    const styledTokens = mapTagsToStyles(tagTokensNew, tagStyles, imgMap);
+    styledTokens;
+    // Measure font for each style
+    // Measure each segment
+    // Create the text segments, position and add them. (draw)
+    // const finalTokens = createLayout(styledTokens);
 
     const tokensWithStyle = parsedTags.map((t) => {
       t.style = getStyleForToken(t, tagStyles);
@@ -512,7 +514,6 @@ export default class RichText extends PIXI.Sprite {
     }
   }
 
-  // FIXME: for some reason, this doesn't work on the first time it's used in the demos.
   public drawDebug(tokens: TaggedTextToken[][]): void {
     this._debugGraphics = new PIXI.Graphics();
     this.debugContainer.addChild(this._debugGraphics);
@@ -559,14 +560,6 @@ export default class RichText extends PIXI.Sprite {
           info.y = y + 1;
           this.debugContainer.addChild(info);
         }
-
-        // const size = new PIXI.Text(
-        //   `(${x},${y},${width},${height})`,
-        //   DEBUG.TEXT_STYLE
-        // );
-        // size.x = x + 1;
-        // size.y = y + 13;
-        // this.debugContainer.addChild(size);
       }
       if (this.defaultStyle.wordWrap) {
         const w = this.defaultStyle.wordWrapWidth ?? this.width;
