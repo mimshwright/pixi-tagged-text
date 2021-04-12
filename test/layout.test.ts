@@ -24,12 +24,6 @@ describe("layout module", () => {
     });
   });
 
-  describe("calculateMeasurements()", () => {
-    it("should be a function", () => {
-      expect(layout.calculateMeasurements).toBeInstanceOf(Function);
-    });
-  });
-
   describe("translatePoint()", () => {
     const rect = R(10, 10, 20, 20);
     const offset = new PIXI.Point(15, -5);
@@ -319,9 +313,9 @@ describe("calculateFinalTokens()", () => {
       expect(space1.style).toBe(space2.style);
       expect(space1.content).toBe(space2.content);
       expect(space1.tags).toBe(space2.tags);
-      expect(space1.fontProperties).toMatchObject(space2.fontProperties);
       expect(space1.bounds.width).toBe(space2.bounds.width);
       expect(space1.bounds.height).toBe(space2.bounds.height);
+      expect(space1.fontProperties).toMatchObject(space2.fontProperties);
     });
     it("Should fully convert text to final tokens.", () => {
       expect(finalTokens).toMatchObject([

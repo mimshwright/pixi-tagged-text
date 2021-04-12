@@ -1,12 +1,8 @@
 import { last } from "./functionalUtils";
 import {
   TagMatchData,
-  TextStyleSet,
   AttributesList,
   TagWithAttributes,
-  TaggedTextTokenPartial,
-  TagStack,
-  LINE_BREAK_TAG_NAME,
   CompositeToken,
   TagToken,
   TextToken,
@@ -22,8 +18,7 @@ import {
  * @param tagNamesToMatch List of tag-names that will be matched by the RegExp
  */
 export const getTagRegex = (tagNamesToMatch: string[] = ["\\w+"]): RegExp => {
-  const matchingTagNames =
-    tagNamesToMatch.join("|") + "|" + LINE_BREAK_TAG_NAME;
+  const matchingTagNames = tagNamesToMatch.join("|");
 
   const captureGroup = (a: string) => `(${a})`;
   const noCaptureGroup = (a: string) => `(?:${a})`;
@@ -110,65 +105,6 @@ export const tagMatchDataToTagWithAttributes = (
   attributes: tag.attributes,
 });
 
-export const createToken = (
-  text = "",
-  tags: TagWithAttributes[] = []
-): TaggedTextTokenPartial => ({
-  text,
-  tags,
-});
-
-const splitWords = (input: string): string[] =>
-  input.split(" ").map((s, i, { length }) => s + (i < length - 1 ? " " : ""));
-
-const splitTokensIntoWords = (
-  tokens: TaggedTextTokenPartial[]
-): TaggedTextTokenPartial[] =>
-  tokens.flatMap(({ text, tags }) =>
-    splitWords(text).map((word) => createToken(word, tags))
-  );
-
-export const createTokens = (
-  segments: string[],
-  tags: TagMatchData[]
-): TaggedTextTokenPartial[] => {
-  // Add the entire text with no tag as a default value in case there are no tags.
-  const firstSegmentWithoutTags: TaggedTextTokenPartial = createToken(
-    segments[0]
-  );
-  const tokens: TaggedTextTokenPartial[] = [firstSegmentWithoutTags];
-
-  // Track which tags are opened and closed and add them to the list.
-  const activeTags: TagStack = [];
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i];
-    const segment = segments[i + 1] ?? "";
-    if (tag.isOpening) {
-      activeTags.push(tag);
-    } else {
-      const poppedTag = activeTags.pop();
-      if (poppedTag === undefined || poppedTag.tagName !== tag.tagName) {
-        throw new Error(
-          `Unexpected tag nesting. Found a closing tag "${tag.tag}" that doesn't match the previously open tag "${poppedTag?.tag}"`
-        );
-      }
-    }
-
-    tokens.push(
-      createToken(segment, activeTags.map(tagMatchDataToTagWithAttributes))
-    );
-  }
-  if (activeTags.length > 0) {
-    console.warn(
-      `Found ${activeTags.length} unclosed tags in\n${activeTags
-        .map((tag) => tag.tagName)
-        .join("-")}`
-    );
-  }
-
-  return splitTokensIntoWords(tokens);
-};
-
 /**
  * Splits original text into an untagged list of string segments.
  * @param input Original text input
@@ -229,45 +165,6 @@ export const replaceSelfClosingTags = (input: string): string =>
     output = output.replace(/\s>/g, ">");
     return output;
   });
-
-/**
- * Replaces \n with special tags that will be recognized by the parser.
- */
-export const replaceLineBreaks = (input: string): string =>
-  input.replace(/\n/g, `<${LINE_BREAK_TAG_NAME}></${LINE_BREAK_TAG_NAME}>`);
-
-/**
- * Converts a string into a list of tokens that match segments of text with styles.
- *
- * @param input Input string with XML-style tags.
- * @param tagStyles Used to only tokenize tags that have styles defined for them.
- */
-export const parseTags = (
-  input: string,
-  tagStyles?: TextStyleSet
-): TaggedTextTokenPartial[] => {
-  // TODO: Warn the user if tags were found that are not defined in the tagStyles.
-  const tagNames = tagStyles ? Object.keys(tagStyles) : undefined;
-
-  input = replaceSelfClosingTags(input);
-  input = replaceLineBreaks(input);
-  const re = getTagRegex(tagNames);
-  const matchesRaw: RegExpExecArray[] = [];
-  const tagMatches: TagMatchData[] = [];
-  let match;
-  while ((match = re.exec(input))) {
-    matchesRaw.push(match);
-
-    const tagMatch = createTagMatchData(match);
-    tagMatches.push(tagMatch);
-  }
-
-  const segments = extractSegments(input, tagMatches);
-
-  const tokens = createTokens(segments, tagMatches);
-
-  return tokens;
-};
 
 export const removeTags = (input: string): string =>
   input.replace(getTagRegex(), "");
@@ -335,15 +232,20 @@ export const createTokensNew = (
   return rootTokens.children;
 };
 
+/**
+ * Converts a string into a list of tokens that match segments of text with styles.
+ *
+ * @param input Input string with XML-style tags.
+ * @param tagNamesToMatch Used to only tokenize tags that have styles defined for them.
+ */
 export const parseTagsNew = (
   input: string,
-  matchedTagNames?: string[]
+  tagNamesToMatch?: string[]
 ): CompositeToken<TagToken | TextToken> => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
 
   input = replaceSelfClosingTags(input);
-  // input = replaceLineBreaks(input);
-  const re = getTagRegex(matchedTagNames);
+  const re = getTagRegex(tagNamesToMatch);
   const matchesRaw: RegExpExecArray[] = [];
   const tagMatches: TagMatchData[] = [];
   let match;

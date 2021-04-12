@@ -3,6 +3,8 @@ import {
   combineRecords,
   complement,
   pluck,
+  isDefined,
+  assoc,
 } from "../src/functionalUtils";
 
 describe("functional util", () => {
@@ -37,6 +39,15 @@ describe("functional util", () => {
       expect(a).not.toStrictEqual(c);
       expect(b).not.toHaveProperty("x");
       expect(b).not.toStrictEqual(c);
+    });
+  });
+
+  describe("isDefined()", () => {
+    it("Should return true if defined and otherwise false.", () => {
+      expect(isDefined("a")).toBeTruthy();
+      expect(isDefined("")).toBeTruthy();
+      expect(isDefined(null)).toBeTruthy();
+      expect(isDefined(undefined)).toBeFalsy();
     });
   });
 
@@ -79,6 +90,20 @@ describe("functional util", () => {
         { text: "world!", style: {} },
       ];
       expect(pluck("text")(objects)).toMatchObject(["hello", "world!"]);
+    });
+  });
+
+  describe("assoc()", () => {
+    it("Should set a property on a shallow clone of an object.", () => {
+      const arr = ["hello", "world"];
+      const arrayWithTitle = assoc("title")("greeting")(arr);
+      expect(arr.length).toBe(2);
+      expect(arr.push).toBeInstanceOf(Function);
+      expect(arr).not.toBe(arrayWithTitle);
+      expect(arr[0]).toBe(arrayWithTitle[0]);
+      expect(arrayWithTitle.length).toBeUndefined();
+      expect(arrayWithTitle.push).toBeUndefined();
+      expect(arrayWithTitle.title).toBe("greeting");
     });
   });
 });

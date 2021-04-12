@@ -1,7 +1,6 @@
-import { combineRecords } from "./functionalUtils";
+import { combineRecords, isDefined, pluck } from "./functionalUtils";
 import {
   AttributesList,
-  TaggedTextTokenPartial,
   TagWithAttributes,
   TextStyleExtended,
   TextStyleSet,
@@ -21,10 +20,10 @@ import * as PIXI from "pixi.js";
 /**
  * Combine 2 styles into one.
  */
-export const combineStyles = (
+export const combineStyles: (
   a: TextStyleExtended,
   b: TextStyleExtended
-): TextStyleExtended => combineRecords(a, b);
+) => TextStyleExtended = combineRecords;
 
 /**
  * Combines multiple styles into one.
@@ -33,10 +32,7 @@ export const combineStyles = (
 export const combineAllStyles = (
   styles: (TextStyleExtended | undefined)[]
 ): TextStyleExtended =>
-  (styles.filter((s) => s !== undefined) as TextStyleExtended[]).reduce(
-    combineStyles,
-    {}
-  );
+  (styles.filter(isDefined) as TextStyleExtended[]).reduce(combineStyles, {});
 
 export const convertAttributeValues = (
   attributes: AttributesList
@@ -107,50 +103,6 @@ export const getStyleForTags = (
   // TODO: Memoize
   combineAllStyles(tags.map((tag) => tagWithAttributesToStyle(tag, tagStyles)));
 
-/**
- * Gets style associated with the stacked tags for the token.
- */
-export const getStyleForToken = (
-  token: TaggedTextTokenPartial,
-  tagStyles: TextStyleSet
-): TextStyleExtended =>
-  combineStyles(tagStyles.default, getStyleForTags(token.tags, tagStyles));
-
-/**
- * Returns true if the tag has an imgSrc property in one of its styles.
- */
-export const isTokenImage = (token: TaggedTextTokenPartial): boolean =>
-  token.style?.[IMG_SRC_PROPERTY] !== undefined ||
-  token.tags.filter(
-    ({ attributes }) => attributes[IMG_SRC_PROPERTY] !== undefined
-  ).length > 0;
-
-export const attachSpritesToToken = (
-  token: TaggedTextTokenPartial,
-  imgMap: ImageMap
-): TaggedTextTokenPartial => {
-  if (isTokenImage(token) === false) return token;
-
-  const imgSrc = token.style?.[IMG_SRC_PROPERTY] as string;
-  const sprite = cloneSprite(imgMap[imgSrc]);
-
-  if (sprite === undefined) {
-    throw new Error(
-      `An image tag with ${IMG_SRC_PROPERTY}="${imgSrc}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
-    );
-  }
-
-  if (token.text !== "" && token.text !== " ") {
-    console.error(
-      `Encountered an image tag with ${IMG_SRC_PROPERTY}="${imgSrc}" but also contains the text "${token.text}". Text inside of image tags is not currently supported and has been removed.`
-    );
-  }
-  token.text = " ";
-  token.sprite = sprite;
-
-  return token;
-};
-
 export const mapTagsToStyles = (
   tokens: TagTokens,
   styles: TextStyleSet,
@@ -171,11 +123,13 @@ export const mapTagsToStyles = (
     if (token.tag) {
       const { tag, attributes = {} } = token;
       tagStack.push({ tagName: tag, attributes });
-      tags = tagStack.map((tag) => tag.tagName).join(",");
+      tags = pluck("tagName")(tagStack).join(",");
+
       const tagHash = JSON.stringify(tagStack);
       if (styleMap[tagHash] === undefined) {
         styleMap[tagHash] = getStyleForTags(tagStack, styles);
       }
+
       style = styleMap[tagHash];
     }
 
@@ -185,14 +139,29 @@ export const mapTagsToStyles = (
       children: token.children.map(convertTagTokenToStyledToken),
     };
 
-    // If a matching sprite exits in the spritemap...
+    // If a matching sprite exits in the imgMap...
     const imgKey = style[IMG_SRC_PROPERTY] ?? "";
-    if (imgKey && imgMap?.[imgKey]) {
-      const sprite: SpriteToken = imgMap[imgKey];
-      if (sprite instanceof PIXI.Sprite) {
-        // insert sprite as first token.
-        styledToken.children = [sprite, ...styledToken.children];
+    if (imgKey) {
+      if (imgMap === undefined) {
+        throw new Error(
+          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but no imgMap was provided. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
+        );
       }
+      const sprite: SpriteToken | undefined = imgMap[imgKey];
+      if (sprite === undefined) {
+        throw new Error(
+          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
+        );
+      }
+      if (sprite instanceof PIXI.Sprite === false) {
+        throw new Error(
+          `The image reference you provided for "${imgKey}" is not a Sprite. The imgMap can only accept PIXI.Sprite instances.`
+        );
+      }
+
+      // insert sprite as first token.
+      const cloneOfSprite = cloneSprite(sprite);
+      styledToken.children = [cloneOfSprite, ...styledToken.children];
     }
 
     tagStack.pop();

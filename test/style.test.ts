@@ -1,7 +1,5 @@
 import * as PIXI from "pixi.js";
 import {
-  IMG_SRC_PROPERTY,
-  TaggedTextTokenPartial,
   StyledTokens,
   TagTokens,
   TextStyleSet,
@@ -120,37 +118,6 @@ describe("style module", () => {
         ...tagStyles.strong,
         ...tagStyles.blue,
       });
-    });
-  });
-  describe("isTokenImage", () => {
-    it("should return true if a token contains src field.", () => {
-      const plainToken: TaggedTextTokenPartial = {
-        text: "Hello",
-        tags: [{ tagName: "b", attributes: {} }],
-      };
-      const imgToken: TaggedTextTokenPartial = {
-        text: "",
-        tags: [{ tagName: "img", attributes: { [IMG_SRC_PROPERTY]: "icon" } }],
-      };
-      const imgTokenWithoutAttributes: TaggedTextTokenPartial = {
-        text: "",
-        tags: [{ tagName: "img", attributes: {} }],
-        style: { [IMG_SRC_PROPERTY]: "icon" },
-      };
-      const srcOnlyToken: TaggedTextTokenPartial = {
-        text: "",
-        tags: [{ tagName: "span", attributes: { [IMG_SRC_PROPERTY]: "icon" } }],
-      };
-      const trickyToken: TaggedTextTokenPartial = {
-        text: "",
-        tags: [{ tagName: "picture", attributes: { link: "icon" } }],
-      };
-
-      expect(style.isTokenImage(plainToken)).toBeFalsy();
-      expect(style.isTokenImage(imgToken)).toBeTruthy();
-      expect(style.isTokenImage(imgTokenWithoutAttributes)).toBeTruthy();
-      expect(style.isTokenImage(srcOnlyToken)).toBeTruthy();
-      expect(style.isTokenImage(trickyToken)).toBeFalsy();
     });
   });
 

@@ -1,5 +1,4 @@
 import * as tags from "../src/tags";
-import { LINE_BREAK_TAG_NAME } from "../src/types";
 
 describe("tags module", () => {
   describe("replaceSelfClosingTags()", () => {
@@ -81,14 +80,6 @@ describe("tags module", () => {
     });
   });
 
-  describe("replaceLineBreaks()", () => {
-    it("should replace line breaks in multi-line text with tags.", () => {
-      const BR = LINE_BREAK_TAG_NAME;
-      const s = tags.replaceLineBreaks(`Multi-\nline\nTEXT!`);
-      expect(s).toEqual(`Multi-<${BR}></${BR}>line<${BR}></${BR}>TEXT!`);
-    });
-  });
-
   /*
   describe("Token identifier functions", () => {
     describe("isTextToken()", () => {
@@ -106,18 +97,7 @@ describe("tags module", () => {
         ).toBeFalsy();
       });
     });
-    describe("isNewlineToken()", () => {
-      it("Should return true if the token is a newline.", () => {
-        expect(tags.isNewlineToken("\n")).toBeTruthy();
-      });
-      it("Should return false if the token is not.", () => {
-        expect(tags.isNewlineToken("")).toBeFalsy();
-        expect(tags.isNewlineToken("F")).toBeFalsy();
-        expect(tags.isNewlineToken("   \n")).toBeFalsy();
-        expect(tags.isNewlineToken("\n\n")).toBeFalsy();
-        expect(tags.isNewlineToken({ tag: "b", children: ["\n"] })).toBeFalsy();
-      });
-    });
+
     describe("isCompositeToken()", () => {
       it("Should return true if the token is a group of child tokens.", () => {
         expect(
@@ -400,25 +380,6 @@ describe("tags module", () => {
         expect(() => {
           tags.parseTagsNew("<a></b>", ["a", "b"]);
         }).toThrow();
-      });
-    });
-  });
-
-  describe("createToken()", () => {
-    it("should create a new Token (partial)", () => {
-      expect(
-        tags.createToken("Hello", [
-          { tagName: "b", attributes: { fontWeight: "700" } },
-        ])
-      ).toMatchObject({
-        text: "Hello",
-        tags: [{ tagName: "b", attributes: { fontWeight: "700" } }],
-      });
-    });
-    it("should provide empty string and empty array as default values", () => {
-      expect(tags.createToken()).toMatchObject({
-        text: "",
-        tags: [],
       });
     });
   });

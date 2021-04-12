@@ -2,16 +2,20 @@ import * as PIXI from "pixi.js";
 import { complement } from "./functionalUtils";
 
 ///// GENERAL PURPOSE
-export interface Point {
-  x: number;
-  y: number;
-}
 
-export type Bounds = PIXI.Rectangle;
+// Point without any extra methods and stuff.
+const shallowPixiPoint = { ...new PIXI.Point() };
+export type Point = typeof shallowPixiPoint;
+
+// Rect without any extra methods and stuff.
+const shallowPixiRectangle = { ...new PIXI.Rectangle() };
+export type Rectangle = typeof shallowPixiRectangle;
+
+export type Bounds = Rectangle;
+export type LineBounds = Bounds[];
 
 ///// OPTIONS
 
-// TODO: implement splitStyle: characters
 export type SplitStyle = "words" | "characters";
 export type SpriteReference = PIXI.Sprite;
 export type ImageMap = Record<string, SpriteReference>;
@@ -28,7 +32,6 @@ export interface RichTextOptions {
 ///// STYLE PROPERTIES
 
 // PROPERTY NAMES
-export const LINE_BREAK_TAG_NAME = "__br__";
 export const IMG_SRC_PROPERTY = "imgSrc";
 export const IMG_DISPLAY_PROPERTY = "imgDisplay";
 
@@ -47,10 +50,8 @@ export interface TextStyle
     Partial<PIXI.TextStyle> {
   align?: Align;
 }
-export interface TextStyleExtended extends TextStyle {
-  lineSpacing?: number;
-  valign?: VAlign;
 
+export interface ImageStyles {
   [IMG_SRC_PROPERTY]?: ImageSource;
   [IMG_DISPLAY_PROPERTY]?: ImageDisplayMode;
   imgScale?: ImageDimensionPercentage;
@@ -58,6 +59,11 @@ export interface TextStyleExtended extends TextStyle {
   imgScaleY?: ImageDimensionPercentage;
   imgWidth?: ImageDimension;
   imgHeight?: ImageDimension;
+}
+
+export interface TextStyleExtended extends TextStyle, ImageStyles {
+  lineSpacing?: number;
+  valign?: VAlign;
 }
 
 export type TextStyleSet = Record<string, TextStyleExtended>;
@@ -72,6 +78,7 @@ export interface TagWithAttributes {
   tagName: string;
   attributes: AttributesList;
 }
+
 export interface TagMatchData extends TagWithAttributes {
   tag: string;
   isOpening: boolean;
@@ -80,20 +87,6 @@ export interface TagMatchData extends TagWithAttributes {
 export type TagStack = TagMatchData[];
 
 ///// PARSED TOKENS
-
-export type MeasurementLine = Bounds[];
-export type MeasurementLines = MeasurementLine[];
-export interface TaggedTextTokenPartial {
-  text: string;
-  tags: TagWithAttributes[];
-  sprite?: PIXI.Sprite;
-  style?: TextStyleExtended;
-  fontProperties?: PIXI.IFontMetrics;
-  measurement?: Bounds;
-}
-
-// Same as TaggedTextToken but without any optional properties.
-export type TaggedTextToken = Required<TaggedTextTokenPartial>;
 
 export type NewlineToken = "\n";
 export type WhitespaceToken = " " | "\t" | NewlineToken;
@@ -122,10 +115,10 @@ export interface StyledToken
 export type StyledTokens = CompositeToken<StyledToken | TextToken>;
 export interface FinalToken {
   content: TextToken | SpriteToken;
-  bounds: Bounds;
+  bounds: Rectangle;
+  fontProperties: PIXI.IFontMetrics;
   style: TextStyleExtended;
   tags: string;
-  fontProperties: PIXI.IFontMetrics;
 }
 export interface SpriteFinalToken extends FinalToken {
   content: SpriteToken;
@@ -141,6 +134,8 @@ export interface WhitespaceFinalToken extends TextFinalToken {
 export const isWhitespace = (s: string): s is WhitespaceToken =>
   s !== "" &&
   s.split("").every((char: string): boolean => char.search(/\s/) === 0);
+export const isNewline = (s: string): s is NewlineToken =>
+  isWhitespace(s) && s === "\n";
 
 export const isSpriteToken = (t: FinalToken): t is SpriteFinalToken =>
   t.content instanceof PIXI.Sprite;
@@ -148,7 +143,6 @@ export const isTextToken = (t: FinalToken): t is TextFinalToken =>
   typeof t.content === "string";
 export const isWhitespaceToken = (t: FinalToken): t is WhitespaceFinalToken =>
   isTextToken(t) && isWhitespace(t.content);
-
 export const isNotWhitespaceToken = complement(isWhitespaceToken);
 
 export const isEmptyObject = <T extends unknown>(a: T): boolean =>

@@ -1,12 +1,11 @@
 import * as PIXI from "pixi.js";
-import { parseTags, parseTagsNew, removeTags } from "./tags";
+import { parseTagsNew, removeTags } from "./tags";
 import {
   RichTextOptions,
   TextStyleSet,
   TextStyleExtended,
   TagWithAttributes,
   AttributesList,
-  TaggedTextToken,
   ImageMap,
   IMG_SRC_PROPERTY,
   IMG_DISPLAY_PROPERTY,
@@ -15,16 +14,16 @@ import {
   TextFinalToken,
   isTextToken,
   isNotWhitespaceToken,
+  SpriteFinalToken,
 } from "./types";
-import { calculateFinalTokens, calculateMeasurements } from "./layout";
+import { calculateFinalTokens } from "./layout";
 import {
-  attachSpritesToToken,
   combineAllStyles,
   getStyleForTag as getStyleForTagExt,
-  getStyleForToken,
   mapTagsToStyles,
 } from "./style";
 import { addChildrenToContainer } from "./pixiUtils";
+import { pluck } from "./functionalUtils";
 
 const DEFAULT_STYLE: TextStyleExtended = {
   align: "left",
@@ -360,10 +359,15 @@ export default class RichText extends PIXI.Sprite {
    * Options are true, false, or undefined. Undefined is the default and means it uses whatever setting
    * is provided in this.options.
    */
-  public update(skipDraw?: boolean): TaggedTextToken[][] {
-    const parsedTags = parseTags(this.text, this.tagStyles);
+  public update(skipDraw?: boolean): FinalToken[] {
+    // Determine default style properties
     const tagStyles = this.tagStyles;
-    const imgMap = this.options.imgMap ?? {};
+    const { imgMap, splitStyle } = this.options;
+    // const wordWrapWidth = this.defaultStyle.wordWrap
+    //   ? this.defaultStyle.wordWrapWidth
+    //   : Number.POSITIVE_INFINITY;
+    // const align = this.defaultStyle.align;
+    // const lineSpacing = this.defaultStyle.lineSpacing;
 
     // Pre-process text.
     // Parse tags in the text.
@@ -374,33 +378,8 @@ export default class RichText extends PIXI.Sprite {
     // Measure font for each style
     // Measure each segment
     // Create the text segments, position and add them. (draw)
-    const newFinalTokens = calculateFinalTokens(styledTokens);
-    // const finalTokens = createLayout(styledTokens);
+    const newFinalTokens = calculateFinalTokens(styledTokens, splitStyle);
 
-    const tokensWithStyle = parsedTags.map((t) => {
-      t.style = getStyleForToken(t, tagStyles);
-      return t;
-    });
-
-    const tokensWithSprites = tokensWithStyle.map((t) =>
-      attachSpritesToToken(t, imgMap)
-    );
-
-    // Determine default style properties
-    const wordWrapWidth = this.defaultStyle.wordWrap
-      ? this.defaultStyle.wordWrapWidth
-      : Number.POSITIVE_INFINITY;
-    const align = this.defaultStyle.align;
-    const lineSpacing = this.defaultStyle.lineSpacing;
-
-    const finalTokens = calculateMeasurements(
-      tokensWithSprites,
-      wordWrapWidth,
-      align,
-      lineSpacing
-    );
-
-    // this._tokens = finalTokens;
     this._tokens = newFinalTokens;
     this._needsDraw = true;
 
@@ -418,7 +397,7 @@ export default class RichText extends PIXI.Sprite {
 
     this._needsUpdate = false;
 
-    return finalTokens;
+    return newFinalTokens;
   }
 
   /**
@@ -500,9 +479,8 @@ export default class RichText extends PIXI.Sprite {
   }
 
   private getSpritesFromTokens(tokens: FinalToken[]): PIXI.Sprite[] {
-    const spriteTokens = tokens.filter(isSpriteToken);
-    const sprites = spriteTokens.map(({ content }) => content) as PIXI.Sprite[];
-    return sprites;
+    const spriteTokens: SpriteFinalToken[] = tokens.filter(isSpriteToken);
+    return pluck<PIXI.Sprite, SpriteFinalToken>("content")(spriteTokens);
   }
 
   private createTextFieldForToken(token: TextFinalToken): PIXI.Text {

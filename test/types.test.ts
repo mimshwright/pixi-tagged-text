@@ -5,19 +5,20 @@ import {
   isTextToken,
   isWhitespace,
   isWhitespaceToken,
+  isNewline,
 } from "./../src/types";
 
 describe("Type validation", () => {
   const textToken = {
     content: "Hello",
-    bounds: new PIXI.Rectangle(),
+    bounds: { ...new PIXI.Rectangle() },
     fontProperties: { ascent: 10, descent: 3, fontSize: 13 },
     style: {},
     tags: "img",
   };
   const spriteToken = {
     content: new PIXI.Sprite(),
-    bounds: new PIXI.Rectangle(),
+    bounds: { ...new PIXI.Rectangle() },
     fontProperties: { ascent: 10, descent: 3, fontSize: 13 },
     style: {},
     tags: "img",
@@ -40,6 +41,18 @@ describe("Type validation", () => {
     });
     it("Should return false if it's empty.", () => {
       expect(isWhitespace("")).toBeFalsy();
+    });
+  });
+
+  describe("isNewline()", () => {
+    it("Should return true if the token is a newline.", () => {
+      expect(isNewline("\n")).toBeTruthy();
+    });
+    it("Should return false if the token is not.", () => {
+      expect(isNewline("")).toBeFalsy();
+      expect(isNewline("F")).toBeFalsy();
+      expect(isNewline("   \n")).toBeFalsy();
+      expect(isNewline("\n\n")).toBeFalsy();
     });
   });
 

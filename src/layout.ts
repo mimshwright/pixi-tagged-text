@@ -1,23 +1,20 @@
-import { TextStyleExtended } from "./../dist/types.d";
-import { getFontPropertiesOfText } from "./pixiUtils";
+import { last, first, assoc } from "./functionalUtils";
+import { getFontPropertiesOfText, INITIAL_FONT_PROPS } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import {
   Align,
   Bounds,
-  MeasurementLine,
-  MeasurementLines,
+  LineBounds,
   Point,
-  TaggedTextToken,
-  TaggedTextTokenPartial,
-  VAlign,
-  LINE_BREAK_TAG_NAME,
-  IMG_DISPLAY_PROPERTY,
+  // VAlign,
+  // IMG_DISPLAY_PROPERTY,
   StyledTokens,
   FinalToken,
   StyledToken,
   TextToken,
   SpriteToken,
   SplitStyle,
+  TextStyleExtended,
 } from "./types";
 
 /**
@@ -36,7 +33,7 @@ export const updateOffsetForNewLine = (
 const rectFromContainer = (
   container: PIXI.Container,
   offset: Point = { x: 0, y: 0 }
-): PIXI.Rectangle => {
+): Bounds => {
   const w = container.width;
   const h = container.height;
   const x = offset.x + container.x;
@@ -51,7 +48,9 @@ const rectFromContainer = (
  * @param offset Amount to translate the target.
  * @param point Target to translate.
  */
-export const translatePoint = (offset: Point) => (point: Point): Point => ({
+export const translatePoint = <P extends Point>(offset: Point) => (
+  point: P
+): P => ({
   ...point,
   x: point.x + offset.x,
   y: point.y + offset.y,
@@ -61,12 +60,12 @@ export const translatePoint = (offset: Point) => (point: Point): Point => ({
  * Same as translatePoint but for all the points in an array.
  */
 export const translateLine = (offset: Point) => (
-  line: MeasurementLine
-): MeasurementLine => line.map(translatePoint(offset)) as MeasurementLine;
+  line: LineBounds
+): LineBounds => line.map(translatePoint(offset));
 
-export const lineWidth = (line: MeasurementLine): number => {
-  const firstWord = line[0];
-  const lastWord = line[line.length - 1];
+export const lineWidth = (wordsInLine: LineBounds): number => {
+  const firstWord = first(wordsInLine);
+  const lastWord = last(wordsInLine);
 
   if (firstWord === undefined) {
     return 0;
@@ -79,25 +78,26 @@ export const lineWidth = (line: MeasurementLine): number => {
 
 export const center = (x: number, context: number): number => (context - x) / 2;
 
-const getTallestToken = (line: TaggedTextToken[]): TaggedTextToken =>
+/*
+const getTallestToken = (line: FinalToken[]): FinalToken =>
   line.reduce(
     (tallest, current) => {
-      if (
-        (current.measurement?.height ?? 0) > (tallest?.measurement?.height ?? 0)
-      ) {
+      if ((current.bounds.height ?? 0) > (tallest?.bounds.height ?? 0)) {
         return current;
       }
       return tallest;
     },
     {
-      text: "No Tokens on this line with height > 0.",
-      tags: [],
-      measurement: new PIXI.Rectangle(0, 0, 0, 0),
+      content: "No Tokens on this line with height > 0.",
+      tags: "",
+      bounds: new PIXI.Rectangle(0, 0, 0, 0),
       style: {},
       fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
     }
   );
+  */
 
+/*
 export const verticalAlignInLines = (
   lines: TaggedTextToken[][],
   lineSpacing: number,
@@ -178,71 +178,72 @@ export const verticalAlignInLines = (
   }
 
   return newLines;
-};
-// ? lines.map(valignTop)
-//   : valign === "middle"
-//   ? lines.map(valignMiddle)
-//   : valign === "bottom"
-//   ? lines.map(valignBottom)
-//   : lines;
 
-export const alignLeft = (line: MeasurementLine): MeasurementLine =>
+  // ? lines.map(valignTop)
+  //   : valign === "middle"
+  //   ? lines.map(valignMiddle)
+  //   : valign === "bottom"
+  //   ? lines.map(valignBottom)
+  //   : lines;
+};
+*/
+
+const setX: (x: number) => (p: Bounds) => Bounds = assoc("x");
+
+export const alignLeft = (line: LineBounds): LineBounds =>
   line.reduce(
-    (allWords: MeasurementLine, { y, width, height }, i) =>
+    (newLine: LineBounds, bounds: Bounds, i: number): LineBounds =>
+      // is first word?
       i === 0
-        ? [new PIXI.Rectangle(0, y, width, height)]
-        : [
-            ...allWords,
-            new PIXI.Rectangle(
-              allWords[i - 1].x + allWords[i - 1].width,
-              y,
-              width,
-              height
-            ),
-          ],
+        ? [setX(0)(bounds)]
+        : newLine.concat([
+            setX(newLine[i - 1].x + newLine[i - 1].width)(bounds),
+          ]),
     []
   );
 
 export const alignRight = (maxWidth: number) => (
-  line: MeasurementLine
-): MeasurementLine =>
+  line: LineBounds
+): LineBounds =>
   translateLine({
     x: maxWidth - lineWidth(line),
     y: 0,
-  })(line);
+  })(alignLeft(line));
 
 export const alignCenter = (maxWidth: number) => (
-  line: MeasurementLine
-): MeasurementLine =>
-  translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(line);
+  line: LineBounds
+): LineBounds =>
+  translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(
+    alignLeft(line)
+  );
 
 export const alignJustify = (maxLineWidth: number) => (
-  line: MeasurementLine
-): MeasurementLine => {
+  line: LineBounds
+): LineBounds => {
   if (line.length === 0) {
     return [];
   }
 
   if (line.length === 1) {
-    const { y, width, height } = line[0];
-    return [new PIXI.Rectangle(0, y, width, height)];
+    const bounds = line[0];
+    return [setX(0)(bounds)];
   }
 
-  const result: MeasurementLine = [];
+  const result: LineBounds = [];
   const w = lineWidth(line);
   const totalSpace = maxLineWidth - w;
   const spacerWidth = totalSpace / (line.length - 1);
 
   let previousWord;
   for (let i = 0; i < line.length; i++) {
-    const { y, width, height } = line[i];
+    const bounds = line[i];
     let x;
     if (previousWord === undefined) {
       x = 0;
     } else {
       x = previousWord.right + spacerWidth;
     }
-    const newWord: PIXI.Rectangle = new PIXI.Rectangle(x, y, width, height);
+    const newWord: Bounds = setX(x)(bounds);
     previousWord = newWord;
     result[i] = newWord;
   }
@@ -255,8 +256,8 @@ export const alignJustify = (maxLineWidth: number) => (
 export const alignTextInLines = (
   align: Align,
   maxLineWidth: number,
-  lines: MeasurementLines
-): MeasurementLines => {
+  lines: LineBounds[]
+): LineBounds[] => {
   const output =
     align === "left"
       ? lines.map(alignLeft)
@@ -279,7 +280,8 @@ export const alignTextInLines = (
  * @param lineSpacing Number of pixels between each line of text.
  * @returns Array of Rectangle objects pertaining to each piece of text.
  */
-export const calculateMeasurements = (
+/*
+export const calculateMeasurementsOld = (
   tokens: TaggedTextTokenPartial[],
   maxLineWidth: number = Number.POSITIVE_INFINITY,
   align: Align = "left",
@@ -422,19 +424,29 @@ export const calculateMeasurements = (
   return vAligned;
 };
 
+*/
+
 const notEmptyString = (s: string) => s !== "";
 
 const SPLIT_MARKER = `_🔪_`;
 const splitAroundWhitespace = (s: string) =>
   s.replace(/\s/g, `${SPLIT_MARKER}$&${SPLIT_MARKER}`).split(SPLIT_MARKER);
 
-export const splitText = (s: string, method: SplitStyle): string[] => {
-  if (method === "words") {
+export const splitText = (s: string, splitStyle: SplitStyle): string[] => {
+  if (splitStyle === "words") {
     return [s].flatMap(splitAroundWhitespace).filter(notEmptyString);
-  } else if (method === "characters") {
+  } else if (splitStyle === "characters") {
     return s.split("");
   } else {
-    throw new Error("unsupported split style");
+    // unsupported splitStyle.
+    let suggestion = ` Supported styles are "words" and "characters"`;
+    const badStyle = (splitStyle as string).toLowerCase();
+    if (badStyle.indexOf("char") === 0) {
+      suggestion = `Did you mean "characters"?`;
+    } else if (badStyle.indexOf("wor") === 0) {
+      suggestion = `Did you mean "words"?`;
+    }
+    throw new Error(`Unsupported split style "${splitStyle}". ${suggestion}`);
   }
 };
 
@@ -447,7 +459,7 @@ export const calculateFinalTokens = (
 
   let tags = "";
   let style: TextStyleExtended = {};
-  let fontProperties: PIXI.IFontMetrics;
+  let fontProperties: PIXI.IFontMetrics = INITIAL_FONT_PROPS;
 
   const generateFinalTokenFromStyledToken = (
     token: StyledToken | TextToken | SpriteToken
@@ -468,8 +480,8 @@ export const calculateFinalTokens = (
             content: str,
             style,
             tags,
-            fontProperties,
             bounds,
+            fontProperties,
           };
         }
       );
@@ -482,8 +494,8 @@ export const calculateFinalTokens = (
         content: token as SpriteToken,
         style,
         tags,
-        fontProperties,
         bounds,
+        fontProperties,
       });
     } else {
       // token is a composite
