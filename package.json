@@ -55,7 +55,7 @@
     "prettier": "^2.2.1",
     "standard-version": "^9.1.1",
     "ts-jest": "^26.5.3",
-    "typescript": "^4.2.3"
+    "typescript": "^4.2.4"
   },
   "scripts": {
     "demo": "npm run build && http-server . --port 8080 & opener http://localhost:8080/demo/index.html",
