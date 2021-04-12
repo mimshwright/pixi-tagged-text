@@ -101,39 +101,34 @@ and <ms>multistyle</ms> text for
         </div>
         <div class="pixi" id="img">
           <script>
-                      const thinking = PIXI.Sprite.from("./icon.png");
-                      const doot = PIXI.Sprite.from("./doot.png");
+            const thinking = PIXI.Sprite.from("./icon.png");
+            const doot = PIXI.Sprite.from("./doot.png");
 
-                      const imgText = `<h2>Inline Images!</h2>
-            Add an image.
-            <img imgSrc="doot" imgDisplay="inline" />
-            Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
-            `,
-                      const imgStyle = {
-                        default: {
-                          fontFamily: "Arial",
-                          fontSize: "24px",
-                          fill: "#FFFFCC",
-                          align: "center",
-                        },
-                        h2: {
-                          fontSize: 36,
-                          fill: "#44CC99",
-                        },
-                        img: {},
-                        icon: {},
-                      };
+            const imgText = `<h2>Inline Images!</h2>
+Add an image.
+<img imgSrc="doot" imgDisplay="inline" />
+Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
+            const imgStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#FFFFCC",
+                align: "center",
+              },
+              h2: {
+                fontSize: 36,
+                fill: "#44CC99",
+              },
+              img: {},
+              icon: {},
+            };
 
-                      const imgRichText = new RichText(
-                        imgText,
-                        imgStyle,
-                        {
-                          debug: true,
-                          imgMap: { thinking, doot },
-                        }
-                      );
+            const imgRichText = new RichText(imgText, imgStyle, {
+              debug: true,
+              imgMap: { thinking, doot },
+            });
 
-                      const imgApp = createDemo("img", imgRichText);
+            const imgApp = createDemo("img", imgRichText);
           </script>
         </div>
       </div>
