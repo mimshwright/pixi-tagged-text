@@ -6,6 +6,7 @@ import {
   isDefined,
   assoc,
 } from "../src/functionalUtils";
+import * as PIXI from "pixi.js";
 
 describe("functional util", () => {
   describe("combineRecords()", () => {
@@ -95,15 +96,17 @@ describe("functional util", () => {
 
   describe("assoc()", () => {
     it("Should set a property on a shallow clone of an object.", () => {
-      const arr = ["hello", "world"];
-      const arrayWithTitle = assoc("title")("greeting")(arr);
-      expect(arr.length).toBe(2);
-      expect(arr.push).toBeInstanceOf(Function);
-      expect(arr).not.toBe(arrayWithTitle);
-      expect(arr[0]).toBe(arrayWithTitle[0]);
-      expect(arrayWithTitle.length).toBeUndefined();
-      expect(arrayWithTitle.push).toBeUndefined();
-      expect(arrayWithTitle.title).toBe("greeting");
+      const rect = new PIXI.Rectangle(10, 10, 20, 20);
+      const rectWithArea = assoc("area")(400)(
+        (rect as unknown) as Record<string, unknown>
+      );
+      expect(rect.right).toBe(30);
+      expect(rect.clone).toBeInstanceOf(Function);
+      expect(rect).not.toBe(rectWithArea);
+      expect(rect.x).toBe(rectWithArea.x);
+      expect(rectWithArea.right).toBeUndefined();
+      expect(rectWithArea.clone).toBeUndefined();
+      expect(rectWithArea.area).toBe(400);
     });
   });
 });

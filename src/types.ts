@@ -3,13 +3,14 @@ import { complement } from "./functionalUtils";
 
 ///// GENERAL PURPOSE
 
-// Point without any extra methods and stuff.
-const shallowPixiPoint = { ...new PIXI.Point() };
-export type Point = typeof shallowPixiPoint;
-
-// Rect without any extra methods and stuff.
-const shallowPixiRectangle = { ...new PIXI.Rectangle() };
-export type Rectangle = typeof shallowPixiRectangle;
+export type Point = {
+  x: number;
+  y: number;
+};
+export type Rectangle = Point & {
+  width: number;
+  height: number;
+};
 
 export type Bounds = Rectangle;
 export type LineBounds = Bounds[];

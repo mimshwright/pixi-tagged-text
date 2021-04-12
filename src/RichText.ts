@@ -439,39 +439,6 @@ export default class RichText extends PIXI.Sprite {
     this._needsDraw = false;
   }
 
-  /**
-   * Converts the text properties from this.tokens into a human readable string.
-   * This is automatically logged to the console on update when debug option is set to true.
-   */
-  public toDebugString(): string {
-    let s = this.untaggedText + "\n  ";
-    if (this._tokens !== undefined) {
-      s += this._tokens
-        .map((token, tokenNumber) => {
-          const nl = "\n    ";
-          let s = `  "${token.content}":`;
-          // s += `${nl}line: ${lineNumber},
-          s += `${nl}word: ${tokenNumber}`;
-          s += `${nl}tags: ${
-            token.tags.length === 0
-              ? "<none>"
-              : token.tags
-                  .split(",")
-                  .map((tag) => `<${tag}>`)
-                  .join(", ")
-          }`;
-          s += `${nl}style: ${Object.entries(token.style)
-            .map((e) => e.join(":"))
-            .join("; ")}`;
-          s += `${nl}size: x:${token.bounds.x} y:${token.bounds.y} width:${token.bounds.width} height:${token.bounds.height} / left:${token.bounds.left} right:${token.bounds.right} top:${token.bounds.top} bottom:${token.bounds.bottom}`;
-          s += `${nl}font: fontSize:${token.fontProperties.fontSize} ascent:${token.fontProperties.ascent} descent:${token.fontProperties.descent}`;
-          return s;
-        })
-        .join("\n");
-    }
-    return s;
-  }
-
   private createTextFieldsForTokens(tokens: FinalToken[]): PIXI.Text[] {
     return tokens
       .filter(isTextToken)
@@ -503,6 +470,39 @@ export default class RichText extends PIXI.Sprite {
         sprite.y = m.y;
       }
     }
+  }
+
+  /**
+   * Converts the text properties from this.tokens into a human readable string.
+   * This is automatically logged to the console on update when debug option is set to true.
+   */
+  public toDebugString(): string {
+    let s = this.untaggedText + "\n  ";
+    if (this._tokens !== undefined) {
+      s += this._tokens
+        .map((token, tokenNumber) => {
+          const nl = "\n    ";
+          let s = `  "${token.content}":`;
+          // s += `${nl}line: ${lineNumber},
+          s += `${nl}word: ${tokenNumber}`;
+          s += `${nl}tags: ${
+            token.tags.length === 0
+              ? "<none>"
+              : token.tags
+                  .split(",")
+                  .map((tag) => `<${tag}>`)
+                  .join(", ")
+          }`;
+          s += `${nl}style: ${Object.entries(token.style)
+            .map((e) => e.join(":"))
+            .join("; ")}`;
+          s += `${nl}size: x:${token.bounds.x} y:${token.bounds.y} width:${token.bounds.width} height:${token.bounds.height}`;
+          s += `${nl}font: fontSize:${token.fontProperties.fontSize} ascent:${token.fontProperties.ascent} descent:${token.fontProperties.descent}`;
+          return s;
+        })
+        .join("\n");
+    }
+    return s;
   }
 
   public drawDebug(tokens: FinalToken[]): void {

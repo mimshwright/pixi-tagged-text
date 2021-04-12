@@ -304,8 +304,6 @@ describe("calculateFinalTokens()", () => {
     const styleTokens = tagsToStyles(tagTokens, styles);
     const finalTokens = stylesToLayout(styleTokens);
 
-    console.log(finalTokens);
-
     it("Should give similar size properties to text with the same styles and same text.", () => {
       const space1 = finalTokens[5];
       const space2 = finalTokens[7];

@@ -39,6 +39,9 @@ export const pluck = <T extends unknown, U extends unknown>(key: keyof U) => (
   objects: U[]
 ): T[] => (objects as (U & Record<string, T>)[]).map<T>((o) => o[key]);
 
-export const assoc = <T extends unknown, U extends Record<string, unknown>>(
-  key: string
-) => (value: T) => (object: U): U => ({ ...object, [key]: value });
+export const assoc = <T extends Record<string, U>, U extends unknown>(
+  key: keyof T
+) => (value: U) => (object: T): T => ({
+  ...object,
+  ...{ [key]: value },
+});

@@ -73,7 +73,7 @@ export const lineWidth = (wordsInLine: LineBounds): number => {
   if (lastWord === firstWord) {
     return firstWord.width;
   }
-  return lastWord.right - firstWord.left;
+  return lastWord.x + lastWord.width - firstWord.x;
 };
 
 export const center = (x: number, context: number): number => (context - x) / 2;
@@ -188,16 +188,16 @@ export const verticalAlignInLines = (
 };
 */
 
-const setX: (x: number) => (p: Bounds) => Bounds = assoc("x");
+const setBoundsX = assoc<Bounds, number>("x");
 
 export const alignLeft = (line: LineBounds): LineBounds =>
   line.reduce(
     (newLine: LineBounds, bounds: Bounds, i: number): LineBounds =>
       // is first word?
       i === 0
-        ? [setX(0)(bounds)]
+        ? [setBoundsX(0)(bounds)]
         : newLine.concat([
-            setX(newLine[i - 1].x + newLine[i - 1].width)(bounds),
+            setBoundsX(newLine[i - 1].x + newLine[i - 1].width)(bounds),
           ]),
     []
   );
@@ -226,7 +226,7 @@ export const alignJustify = (maxLineWidth: number) => (
 
   if (line.length === 1) {
     const bounds = line[0];
-    return [setX(0)(bounds)];
+    return [setBoundsX(0)(bounds)];
   }
 
   const result: LineBounds = [];
@@ -241,9 +241,17 @@ export const alignJustify = (maxLineWidth: number) => (
     if (previousWord === undefined) {
       x = 0;
     } else {
-      x = previousWord.right + spacerWidth;
+      x = previousWord.x + previousWord.width + spacerWidth;
     }
-    const newWord: Bounds = setX(x)(bounds);
+    if (isNaN(x)) {
+      console.log(line);
+      console.log(previousWord);
+
+      throw new Error(
+        `Something went wrong with the justified layout calculation. x is NaN.`
+      );
+    }
+    const newWord: Bounds = setBoundsX(x)(bounds);
     previousWord = newWord;
     result[i] = newWord;
   }

@@ -34,13 +34,31 @@ describe("RichText", () => {
 
     describe("constructor takes a list of options.", () => {
       describe("debug", () => {
-        const control = new RichText("Test <b>test</b>", style);
-        const debug = new RichText("Test <b>test</b> test", style, {
+        const control = new RichText("Test <b><i>test</i></b>", style);
+        const debug = new RichText("Test <b><i>test</i></b> test", style, {
           debug: true,
         });
+        const blank = new RichText("", style, { debug: true });
+
+        it("Draws all shapes into one graphics layer.", () => {
+          expect(blank.debugContainer.children).toHaveLength(1);
+          expect(blank.debugContainer.getChildAt(0)).toBeInstanceOf(
+            PIXI.Graphics
+          );
+        });
+
         it("Should show debug information if you set debug to true.", () => {
-          expect(debug.debugContainer.children).toHaveLength(5);
+          // one element for the graphics layer
+          // 3 elements for the text layers
+          expect(debug.debugContainer.children).toHaveLength(4);
+
           expect(debug.debugContainer.getBounds().width).toBeGreaterThan(100);
+        });
+        it("Should show the tag names for styled text.", () => {
+          expect(debug.debugContainer.getChildAt(2)).toHaveProperty(
+            "text",
+            "b,i"
+          );
         });
 
         it("Should have debug set to false by default.", () => {
