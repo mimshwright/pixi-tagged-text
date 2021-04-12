@@ -113,7 +113,7 @@ export interface StyledToken
   tags: string;
 }
 
-export type StyledTokens = CompositeToken<StyledToken | TextToken>;
+export type StyledTokens = StyledToken;
 export interface FinalToken {
   content: TextToken | SpriteToken;
   bounds: Rectangle;

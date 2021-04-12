@@ -92,24 +92,35 @@ export const tagWithAttributesToStyle = (
 
 /**
  * Gets styles for several tags and returns a single combined style object.
+ * Results are cached for future requests.
  * @param tags Tags (with attribues) to look up.
  * @param tagStyles Set of tag styles to search.
+ * @param styleCache An object that holds the cached values for the combined styles.
  * @returns
  */
 export const getStyleForTags = (
   tags: TagWithAttributes[],
-  tagStyles: TextStyleSet
-): TextStyleExtended =>
-  // TODO: Memoize
-  combineAllStyles(tags.map((tag) => tagWithAttributesToStyle(tag, tagStyles)));
+  tagStyles: TextStyleSet,
+  styleCache: TextStyleSet
+): TextStyleExtended => {
+  const tagHash = JSON.stringify(tags);
+  if (styleCache[tagHash] === undefined) {
+    const defaultStyle = tagStyles.default;
+    const styles = tags.map((tag) => tagWithAttributesToStyle(tag, tagStyles));
+    const stylesWithDefault = [defaultStyle, ...styles];
+    styleCache[tagHash] = combineAllStyles(stylesWithDefault);
+  }
+  return styleCache[tagHash];
+};
 
 export const mapTagsToStyles = (
   tokens: TagTokens,
   styles: TextStyleSet,
   imgMap?: ImageMap
 ): StyledTokens => {
+  const defaultStyle: TextStyleExtended = styles.default ?? {};
   const tagStack: TagWithAttributes[] = [];
-  const styleMap: Record<string, TextStyleExtended> = {};
+  const styleCache = {};
 
   const convertTagTokenToStyledToken = (
     token: TagToken | TextToken
@@ -118,24 +129,22 @@ export const mapTagsToStyles = (
       return token as TextToken;
     }
 
-    let style: TextStyleExtended = {};
+    const { tag, attributes = {} } = token;
+    let style: TextStyleExtended = defaultStyle;
     let tags = "";
-    if (token.tag) {
-      const { tag, attributes = {} } = token;
+
+    if (tag) {
+      // Put the current tag on the stack.
       tagStack.push({ tagName: tag, attributes });
+      // Get tag names as comma separates string
       tags = pluck("tagName")(tagStack).join(",");
-
-      const tagHash = JSON.stringify(tagStack);
-      if (styleMap[tagHash] === undefined) {
-        styleMap[tagHash] = getStyleForTags(tagStack, styles);
-      }
-
-      style = styleMap[tagHash];
+      // Merge all tags into a style object.
+      style = getStyleForTags(tagStack, styles, styleCache);
     }
 
     const styledToken: StyledToken = {
       style,
-      tags: tags,
+      tags,
       children: token.children.map(convertTagTokenToStyledToken),
     };
 
@@ -164,6 +173,7 @@ export const mapTagsToStyles = (
       styledToken.children = [cloneOfSprite, ...styledToken.children];
     }
 
+    // Remove the last tag from the stack
     tagStack.pop();
 
     return styledToken;

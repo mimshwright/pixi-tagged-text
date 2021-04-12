@@ -1,9 +1,9 @@
 import * as PIXI from "pixi.js";
 import {
-  StyledTokens,
   TagTokens,
   TextStyleSet,
   StyledToken,
+  TextStyleExtended,
 } from "./../src/types";
 import * as style from "../src/style";
 import iconSrc from "./icon.base64";
@@ -93,7 +93,12 @@ describe("style module", () => {
 
   describe("getStyleForTags()", () => {
     it("should combine several styles with attributes to create one style.", () => {
+      const styleCache = {};
       const tagStyles = {
+        default: {
+          stroke: "#FF3399",
+          strokeThickness: 2,
+        },
         strong: {
           fontWeight: "700",
         },
@@ -111,8 +116,13 @@ describe("style module", () => {
       const blueTag = { tagName: "blue", attributes: {} };
 
       expect(
-        style.getStyleForTags([emTag, strongTag, blueTag], tagStyles)
+        style.getStyleForTags(
+          [emTag, strongTag, blueTag],
+          tagStyles,
+          styleCache
+        )
       ).toMatchObject({
+        ...tagStyles.default,
         ...tagStyles.em,
         ...emTag.attributes,
         ...tagStyles.strong,
@@ -122,9 +132,13 @@ describe("style module", () => {
   });
 
   describe("mapTagsToStyles()", () => {
-    // TODO: Test for default style!
+    const def: TextStyleExtended = {
+      fontSize: 18,
+      fontFamily: "Courier",
+      wordWrapWidth: 400,
+    };
 
-    it("Should not affect text only", () => {
+    it("Should not affect text only tokens", () => {
       expect(
         style.mapTagsToStyles({ children: ["foo\nbar"] }, {})
       ).toMatchObject({
@@ -132,10 +146,27 @@ describe("style module", () => {
       });
     });
 
+    it("Should apply the default styles if there are no other tags.", () => {
+      expect(
+        style.mapTagsToStyles(
+          {
+            children: ["Hello"],
+          },
+          { default: def }
+        )
+      ).toMatchObject({
+        style: def,
+        tags: "",
+        children: ["Hello"],
+      });
+    });
+
     it("Should convert TagTokens into StyledTokens", () => {
       const styles = {
+        default: def,
         a: { fontSize: 12 },
       };
+      const aPlusDefault = { ...styles.default, ...styles.a };
 
       expect(
         style.mapTagsToStyles(
@@ -146,7 +177,7 @@ describe("style module", () => {
           styles
         )
       ).toMatchObject({
-        style: styles.a,
+        style: aPlusDefault,
         tags: "a",
         children: ["b"],
       });
@@ -159,7 +190,8 @@ describe("style module", () => {
           styles
         )
       ).toMatchObject({
-        children: ["1", { style: styles.a, children: ["2"] }, "3"],
+        style: def,
+        children: ["1", { style: aPlusDefault, children: ["2"] }, "3"],
       });
     });
 
@@ -182,12 +214,15 @@ describe("style module", () => {
       const styles = {
         b: { fontSize: 24, fontWeight: "700" },
         i: { fontStyle: "italic" },
+        default: def,
       };
       const expected = {
         children: [
           {
             tags: "b",
             style: {
+              fontFamily: "Courier",
+              wordWrapWidth: 400,
               fontSize: 123,
               fontWeight: "700",
             },
@@ -196,6 +231,8 @@ describe("style module", () => {
               {
                 tags: "b,i",
                 style: {
+                  fontFamily: "Courier",
+                  wordWrapWidth: 400,
                   fontStyle: "italic",
                   fontWeight: "700",
                   fontSize: 123,
@@ -211,7 +248,9 @@ describe("style module", () => {
     });
 
     it("Should convert deeply nested Tokens", () => {
+      const italic = { fontStyle: "italic" };
       const styles = {
+        default: italic,
         a: { fontSize: 12 },
         b: { fontSize: 24 },
         c: { fontSize: 36 },
@@ -241,23 +280,30 @@ describe("style module", () => {
           },
         ],
       };
-      const expected: StyledTokens = {
+      expect(style.mapTagsToStyles(deeplyNested, styles)).toMatchObject({
+        style: styles.default,
         children: [
           {
-            style: styles.a,
+            style: { ...styles.default, ...styles.a },
             tags: "a",
             children: [
               {
-                style: { ...styles.a, ...styles.b },
+                style: { ...styles.default, ...styles.a, ...styles.b },
                 tags: "a,b",
                 children: [
                   {
-                    style: { ...styles.a, ...styles.b, ...styles.c },
+                    style: {
+                      ...styles.default,
+                      ...styles.a,
+                      ...styles.b,
+                      ...styles.c,
+                    },
                     tags: "a,b,c",
                     children: [
                       {
                         tags: "a,b,c,d",
                         style: {
+                          ...styles.default,
                           ...styles.a,
                           ...styles.b,
                           ...styles.c,
@@ -272,10 +318,7 @@ describe("style module", () => {
             ],
           },
         ],
-      };
-      expect(style.mapTagsToStyles(deeplyNested, styles)).toMatchObject(
-        expected
-      );
+      });
     });
 
     describe("imgMap", () => {

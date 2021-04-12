@@ -262,7 +262,7 @@ describe("calculateFinalTokens()", () => {
   });
 
   describe("splitStyle", () => {
-    const helloWorld = { children: ["Hello, world!"] };
+    const helloWorld = { children: ["Hello, world!"], tags: "", style: {} };
     it("Should split on whitespace by default", () => {
       expect(f(helloWorld)).toMatchObject([
         { content: "Hello," },
