@@ -85,9 +85,9 @@ and <ms>multistyle</ms> text for
 
             const basic = new RichText(
               basicText,
-              basicStyle,
+              basicStyle
 
-              { debug: true, debugConsole: true }
+              // { debug: true, debugConsole: true }
             );
 
             createDemo("basic", basic);
@@ -152,17 +152,19 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 fill: "white",
               },
             };
+            const alignOptions = { debug: true };
 
             let left = new RichText(
               alignText.replace("left", "<b>left</b>"),
               {
                 ...alignStyle,
                 default: {
+                  ...alignStyle.default,
                   align: "left",
                   fill: "teal",
                 },
               },
-              opt
+              alignOptions
             );
 
             let right = new RichText(
@@ -170,11 +172,12 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               {
                 ...alignStyle,
                 default: {
+                  ...alignStyle.default,
                   align: "right",
                   fill: "orange",
                 },
               },
-              opt
+              alignOptions
             );
             right.x = 330;
             right.y = 30;
@@ -184,11 +187,12 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               {
                 ...alignStyle,
                 default: {
+                  ...alignStyle.default,
                   align: "center",
                   fill: "yellow",
                 },
               },
-              opt
+              alignOptions
             );
             center.x = 30;
             center.y = 330;
@@ -198,11 +202,12 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               {
                 ...alignStyle,
                 default: {
+                  ...alignStyle.default,
                   align: "justify",
                   fill: "pink",
                 },
               },
-              opt
+              alignOptions
             );
             justify.x = 330;
             justify.y = 330;
@@ -272,7 +277,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         <div class="pixi" id="attributes">
           <script>
             // Basics
-            const attributesText = `You can add <em>attributes</em> to your tags!\nThey will <em fontStyle="italic">overwrite</em> the <em fill="#FF8822">values</em><br></br>for any existing <em fontFamily="Courier" fill="#FFFF00" fontWeight="400">tag styles</em>.`;
+            const attributesText = `You can add <em>attributes</em> to your tags!\nThey will <em fontStyle="italic">overwrite</em> the <em fill="#FF8822">values</em> for any existing <em fontFamily="Courier" fill="#FFFF00" fontWeight="400">tag styles</em>.`;
             const attributesStyle = {
               default: {
                 fontFamily: "Arial",
@@ -384,7 +389,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         <div class="pixi" id="wrapping2">
           <script>
             // Wrapping and Alignment II
-            const wrappingText2 = `Use splitStyle:"character" to allow line breaks between characters.
+            const wrappingText2 = `Use splitStyle:"character" to allow line breaks between characters. Can be useful for languages such as chinese.
 全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。`;
             const wrappingStyle2 = {
               default: {
@@ -393,7 +398,6 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 fill: "#cccccc",
                 wordWrap: true,
                 wordWrapWidth: 250,
-                breakWords: true,
               },
               blue: { fill: 0x4488ff, stroke: 0x2244cc, fontSize: "24px" },
               red: { fill: 0xff8888, stroke: 0xcc4444 },
@@ -405,6 +409,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               wrappingStyle2,
               {
                 splitStyle: "characters",
+                debug: true,
               }
             );
             createDemo("wrapping2", richTextWrapping2);
@@ -533,7 +538,19 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
             let time = 0;
 
             const applySineWaveToYPositionOfText = (text, i, time) => {
-              text.y = originalYPositions[i] + Math.sin(time / 10 + i) * 10;
+              const amplitude = 5;
+              const frequency = 0.1;
+              const phaseOffsetPerLetter = 1;
+              const frequencyChangePerLetter = 0.05;
+              const amplitudeChangePerLetter = -0.2;
+
+              text.y =
+                originalYPositions[i] +
+                Math.sin(
+                  time * frequency * (1 + i * frequencyChangePerLetter) +
+                    i * phaseOffsetPerLetter
+                ) *
+                  (amplitude + amplitudeChangePerLetter * i);
             };
 
             const animationStep = (delta) => {

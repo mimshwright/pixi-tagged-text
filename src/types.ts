@@ -121,6 +121,10 @@ export interface FinalToken {
   style: TextStyleExtended;
   tags: string;
 }
+export type WordToken = FinalToken[];
+export type LineToken = WordToken[];
+export type ParagraphToken = LineToken[];
+
 export interface SpriteFinalToken extends FinalToken {
   content: SpriteToken;
 }

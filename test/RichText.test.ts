@@ -33,7 +33,7 @@ describe("RichText", () => {
     });
 
     describe("constructor takes a list of options.", () => {
-      describe("debug", () => {
+      describe.skip("debug", () => {
         const control = new RichText("Test <b><i>test</i></b>", style);
         const debug = new RichText("Test <b><i>test</i></b> test", style, {
           debug: true,

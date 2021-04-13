@@ -16,6 +16,12 @@ import {
   SplitStyle,
   TextStyleExtended,
   isNewlineToken,
+  isWhitespaceToken,
+  IMG_DISPLAY_PROPERTY,
+  isSpriteToken,
+  ParagraphToken,
+  LineToken,
+  WordToken,
 } from "./types";
 
 /**
@@ -188,6 +194,21 @@ export const verticalAlignInLines = (
   //   : lines;
 };
 */
+
+/*
+export const alignLeft = (line: LineToken): LineToken =>
+  line.map((word) => {
+    let previousSegment: FinalToken;
+    return word.map((segment, i) => {
+      const x = previousSegment
+        ? previousSegment.bounds.x + previousSegment.bounds.width
+        : 0;
+      const newSegment = { ...segment, bounds: { ...segment.bounds, x } };
+      previousSegment = segment;
+      return newSegment;
+    });
+  });
+  */
 
 const setBoundsX = assoc<Bounds, number>("x");
 
@@ -435,28 +456,129 @@ export const calculateMeasurementsOld = (
 
 */
 
-const layout = (tokens: FinalToken[]): FinalToken[] => {
-  const tokensWithLayout = [];
+const layout = (
+  tokens: FinalToken[],
+  maxWidth: number,
+  lineSpacing: number,
+  align: Align
+): ParagraphToken => {
   const cursor = { x: 0, y: 0 };
+  let wordWidth = 0;
+  let word: WordToken = [];
+  let line: LineToken = [];
+  const lines: ParagraphToken = [];
+  let tallestHeight = 0;
+
+  function finalizeLineAndMoveCursorToNextLine() {
+    // finalize Line
+    lines.push(line);
+    line = [];
+
+    // move cursor to next line
+    cursor.x = 0;
+    cursor.y = cursor.y + tallestHeight;
+
+    // reset tallestHeight
+    tallestHeight = 0;
+  }
+
+  function setTallestHeight(token: FinalToken): void {
+    tallestHeight = Math.max(
+      tallestHeight,
+      token.fontProperties.fontSize,
+      lineSpacing
+    );
+    // Don't try to measure the height of newline tokens
+    if (isNewlineToken(token) === false) {
+      tallestHeight = Math.max(tallestHeight, token.bounds.height);
+    }
+  }
+
+  function positionTokenAtCursorAndAdvanceCursor(token: FinalToken): void {
+    // position token at cursor
+    setTallestHeight(token);
+    token.bounds.x = cursor.x;
+    token.bounds.y = cursor.y;
+    // advance cursor
+    cursor.x += token.bounds.width;
+  }
+
+  function positionWordAtCursorAndAdvanceCursor(): void {
+    word.forEach(positionTokenAtCursorAndAdvanceCursor);
+  }
+
+  function wordShouldWrap(): boolean {
+    return cursor.x + wordWidth > maxWidth;
+  }
+
+  function isBlockImage(token: FinalToken): boolean {
+    return token.style[IMG_DISPLAY_PROPERTY] === "block";
+  }
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
+    const isLastToken = i === tokens.length - 1;
+    const isWhitespace = isWhitespaceToken(token);
+    const isImage = isSpriteToken(token);
+    const isEndOfWord = isWhitespace || isImage;
 
-    token.bounds.x = cursor.x;
-    token.bounds.y = cursor.y;
+    setTallestHeight(token);
 
-    if (isNewlineToken(token)) {
-      cursor.x = 0;
-      cursor.y = token.bounds.y + token.bounds.height;
-    } else {
-      cursor.x = token.bounds.x + token.bounds.width;
-      cursor.y = token.bounds.y;
+    // the current word is finished, position the segments in the word buffer.
+    if (isEndOfWord) {
+      // if it exceeds the wrap width, wrap it to next line.
+      // Note, the word will only move to the next line once when it encounters an end of word token like a space or image.
+      if (wordShouldWrap()) {
+        finalizeLineAndMoveCursorToNextLine();
+      }
+
+      // move the word segments to the cursor location
+      positionWordAtCursorAndAdvanceCursor();
+
+      // add word to line
+      line.push(word);
+
+      // reset word buffer
+      word = [];
+      wordWidth = 0;
     }
 
-    tokensWithLayout.push(token);
+    setTallestHeight(token);
+
+    if (isWhitespace) {
+      // position the whitespace.
+      positionTokenAtCursorAndAdvanceCursor(token);
+
+      // If the token is a newline character,
+      // move the cursor to next line.
+      if (isNewlineToken(token)) {
+        finalizeLineAndMoveCursorToNextLine();
+      }
+    } else {
+      // if non-whitespace...
+      // add the token to the current word buffer.
+      word.push(token);
+      wordWidth += token.bounds.width;
+
+      if (isImage) {
+        if (isBlockImage(token)) {
+          finalizeLineAndMoveCursorToNextLine();
+          positionWordAtCursorAndAdvanceCursor();
+        }
+      }
+      if (isLastToken) {
+        positionWordAtCursorAndAdvanceCursor();
+        line.push(word);
+        lines.push(line);
+      }
+    }
   }
 
-  return tokensWithLayout;
+  // do horizontal alignment.
+  align;
+  // lines = alignTextInLines(align, maxWidth, lines);
+
+  return lines;
 };
 
 const notEmptyString = (s: string) => s !== "";
@@ -486,7 +608,7 @@ export const splitText = (s: string, splitStyle: SplitStyle): string[] => {
 export const calculateFinalTokens = (
   styledTokens: StyledTokens,
   splitStyle: SplitStyle = "words"
-): FinalToken[] => {
+): ParagraphToken => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
   const defaultStyle = styledTokens.style;
@@ -506,6 +628,17 @@ export const calculateFinalTokens = (
 
       // console.log({ input: token, output: textSegments });
 
+      sizer.style = {
+        ...style,
+        // Override some styles for the purposes of sizing text.
+        wordWrap: false,
+        dropShadowBlur: 0,
+        dropShadowDistance: 0,
+        dropShadowAngle: 0,
+        dropShadow: false,
+      };
+      fontProperties = getFontPropertiesOfText(sizer, true);
+
       const textTokens = textSegments.map(
         (str): FinalToken => {
           sizer.text = str;
@@ -522,10 +655,27 @@ export const calculateFinalTokens = (
 
       output = output.concat(textTokens);
     } else if (token instanceof PIXI.Sprite) {
+      const sprite = token;
+      const imgDisplay = style[IMG_DISPLAY_PROPERTY];
+      // const isBlockImage = imgDisplay === "block";
+      const isIcon = imgDisplay === "icon";
+
+      if (isIcon) {
+        // Set to minimum of 1 to avoid devide by zero.
+        // if it's height is zero or one it probably hasn't loaded yet.
+        // It will get refreshed after it loads.
+        const h = Math.max(sprite.height, 1);
+
+        if (h > 1 && sprite.scale.y === 1) {
+          const ratio = fontProperties.ascent / h;
+          sprite.scale.set(ratio);
+        }
+      }
+
       // handle images
-      const bounds = rectFromContainer(token);
+      const bounds = rectFromContainer(sprite);
       output.push({
-        content: token as SpriteToken,
+        content: sprite,
         style,
         tags,
         bounds,
@@ -546,18 +696,6 @@ export const calculateFinalTokens = (
         );
       }
 
-      sizer.style = {
-        ...style,
-        // Override some styles for the purposes of sizing text.
-        wordWrap: false,
-        dropShadowBlur: 0,
-        dropShadowDistance: 0,
-        dropShadowAngle: 0,
-        dropShadow: false,
-      };
-
-      fontProperties = getFontPropertiesOfText(sizer, true);
-
       output = output.concat(
         children.flatMap(generateFinalTokenFromStyledToken)
       );
@@ -573,7 +711,11 @@ export const calculateFinalTokens = (
     generateFinalTokenFromStyledToken
   );
 
-  const finalTokensWithLayout = layout(finalTokens);
+  const maxWidth = defaultStyle.wordWrapWidth ?? Number.POSITIVE_INFINITY;
+  const lineSpacing = defaultStyle.lineSpacing ?? 0;
+  const align = defaultStyle.align ?? "left";
 
-  return finalTokensWithLayout;
+  const lines = layout(finalTokens, maxWidth, lineSpacing, align);
+
+  return lines;
 };
