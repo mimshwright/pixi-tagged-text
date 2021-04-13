@@ -131,6 +131,9 @@ export interface TextFinalToken extends FinalToken {
 export interface WhitespaceFinalToken extends TextFinalToken {
   content: WhitespaceToken;
 }
+export interface NewlineFinalToken extends TextFinalToken {
+  content: NewlineToken;
+}
 
 export const isWhitespace = (s: string): s is WhitespaceToken =>
   s !== "" &&
@@ -144,6 +147,8 @@ export const isTextToken = (t: FinalToken): t is TextFinalToken =>
   typeof t.content === "string";
 export const isWhitespaceToken = (t: FinalToken): t is WhitespaceFinalToken =>
   isTextToken(t) && isWhitespace(t.content);
+export const isNewlineToken = (t: FinalToken): t is NewlineFinalToken =>
+  isTextToken(t) && isNewline(t.content);
 export const isNotWhitespaceToken = complement(isWhitespaceToken);
 
 export const isEmptyObject = <T extends unknown>(a: T): boolean =>

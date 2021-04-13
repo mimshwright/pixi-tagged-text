@@ -15,6 +15,7 @@ import {
   SpriteToken,
   SplitStyle,
   TextStyleExtended,
+  isNewlineToken,
 } from "./types";
 
 /**
@@ -434,6 +435,30 @@ export const calculateMeasurementsOld = (
 
 */
 
+const layout = (tokens: FinalToken[]): FinalToken[] => {
+  const tokensWithLayout = [];
+  const cursor = { x: 0, y: 0 };
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+
+    token.bounds.x = cursor.x;
+    token.bounds.y = cursor.y;
+
+    if (isNewlineToken(token)) {
+      cursor.x = 0;
+      cursor.y = token.bounds.y + token.bounds.height;
+    } else {
+      cursor.x = token.bounds.x + token.bounds.width;
+      cursor.y = token.bounds.y;
+    }
+
+    tokensWithLayout.push(token);
+  }
+
+  return tokensWithLayout;
+};
+
 const notEmptyString = (s: string) => s !== "";
 
 const SPLIT_MARKER = `_🔪_`;
@@ -464,9 +489,10 @@ export const calculateFinalTokens = (
 ): FinalToken[] => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
+  const defaultStyle = styledTokens.style;
 
   let tags = "";
-  let style: TextStyleExtended = {};
+  let style: TextStyleExtended = defaultStyle;
   let fontProperties: PIXI.IFontMetrics = INITIAL_FONT_PROPS;
 
   const generateFinalTokenFromStyledToken = (
@@ -514,6 +540,12 @@ export const calculateFinalTokens = (
       style = styledToken.style;
       tags = styledToken.tags;
 
+      if (style === undefined) {
+        throw new Error(
+          `Expected to find a 'style' property on ${styledToken}`
+        );
+      }
+
       sizer.style = {
         ...style,
         // Override some styles for the purposes of sizing text.
@@ -526,20 +558,22 @@ export const calculateFinalTokens = (
 
       fontProperties = getFontPropertiesOfText(sizer, true);
 
-      if (style === undefined) {
-        throw new Error(
-          `Expected to find a 'style' property on ${styledToken}`
-        );
-      }
       output = output.concat(
         children.flatMap(generateFinalTokenFromStyledToken)
       );
 
       // unset tags and styles for this composite token.
-      style = {};
+      style = defaultStyle;
       tags = "";
     }
     return output;
   };
-  return styledTokens.children.flatMap(generateFinalTokenFromStyledToken);
+
+  const finalTokens = styledTokens.children.flatMap(
+    generateFinalTokenFromStyledToken
+  );
+
+  const finalTokensWithLayout = layout(finalTokens);
+
+  return finalTokensWithLayout;
 };

@@ -87,7 +87,7 @@ and <ms>multistyle</ms> text for
               basicText,
               basicStyle,
 
-              { debug: true }
+              { debug: true, debugConsole: true }
             );
 
             createDemo("basic", basic);
@@ -125,6 +125,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
 
             const imgRichText = new RichText(imgText, imgStyle, {
               debug: true,
+              debugConsole: true,
               imgMap: { thinking, doot },
             });
 

@@ -132,7 +132,7 @@ describe("style module", () => {
   });
 
   describe("mapTagsToStyles()", () => {
-    const def: TextStyleExtended = {
+    const defaultStyle: TextStyleExtended = {
       fontSize: 18,
       fontFamily: "Courier",
       wordWrapWidth: 400,
@@ -152,10 +152,10 @@ describe("style module", () => {
           {
             children: ["Hello"],
           },
-          { default: def }
+          { default: defaultStyle }
         )
       ).toMatchObject({
-        style: def,
+        style: defaultStyle,
         tags: "",
         children: ["Hello"],
       });
@@ -163,7 +163,7 @@ describe("style module", () => {
 
     it("Should convert TagTokens into StyledTokens", () => {
       const styles = {
-        default: def,
+        default: defaultStyle,
         a: { fontSize: 12 },
       };
       const aPlusDefault = { ...styles.default, ...styles.a };
@@ -190,7 +190,8 @@ describe("style module", () => {
           styles
         )
       ).toMatchObject({
-        style: def,
+        style: defaultStyle,
+        tags: "",
         children: ["1", { style: aPlusDefault, children: ["2"] }, "3"],
       });
     });
@@ -214,7 +215,7 @@ describe("style module", () => {
       const styles = {
         b: { fontSize: 24, fontWeight: "700" },
         i: { fontStyle: "italic" },
-        default: def,
+        default: defaultStyle,
       };
       const expected = {
         children: [

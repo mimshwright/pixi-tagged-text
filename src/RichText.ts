@@ -15,6 +15,7 @@ import {
   isTextToken,
   isNotWhitespaceToken,
   SpriteFinalToken,
+  isNewlineToken,
 } from "./types";
 import { calculateFinalTokens } from "./layout";
 import {
@@ -482,7 +483,17 @@ export default class RichText extends PIXI.Sprite {
       s += this._tokens
         .map((token, tokenNumber) => {
           const nl = "\n    ";
-          let s = `  "${token.content}":`;
+          let text = "";
+          if (isTextToken(token)) {
+            if (isNewlineToken(token)) {
+              text = `\\n`;
+            } else {
+              text = `"${token.content}"`;
+            }
+          } else if (isSpriteToken(token)) {
+            text = `[Image]`;
+          }
+          let s = `  ${text}:`;
           // s += `${nl}line: ${lineNumber},
           s += `${nl}word: ${tokenNumber}`;
           s += `${nl}tags: ${

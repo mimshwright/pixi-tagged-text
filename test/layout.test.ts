@@ -256,22 +256,23 @@ describe("layout module", () => {
 });
 
 describe("calculateFinalTokens()", () => {
-  const f = layout.calculateFinalTokens;
   it("Should exist", () => {
-    expect(f).toBeInstanceOf(Function);
+    expect(layout.calculateFinalTokens).toBeInstanceOf(Function);
   });
 
   describe("splitStyle", () => {
     const helloWorld = { children: ["Hello, world!"], tags: "", style: {} };
     it("Should split on whitespace by default", () => {
-      expect(f(helloWorld)).toMatchObject([
+      expect(layout.calculateFinalTokens(helloWorld)).toMatchObject([
         { content: "Hello," },
         { content: " " },
         { content: "world!" },
       ]);
     });
     it("Should split on character if specified", () => {
-      expect(f(helloWorld, "characters")).toMatchObject([
+      expect(
+        layout.calculateFinalTokens(helloWorld, "characters")
+      ).toMatchObject([
         { content: "H" },
         { content: "e" },
         { content: "l" },
@@ -292,17 +293,24 @@ describe("calculateFinalTokens()", () => {
   describe("end to end conversion", () => {
     const textToTags = parseTagsNew;
     const tagsToStyles = mapTagsToStyles;
-    const stylesToLayout = f;
+    const stylesToLayout = layout.calculateFinalTokens;
 
     const text =
       "<b>Hello, <i>World!</i></b>\nHow are you? I'm <b>S</b>U<b>P</b>E<b>R</b>!";
     const styles = {
+      default: {
+        fontFamily: "arial",
+      },
       b: { fontWeight: "700" },
       i: { fontStyle: "italic" },
     };
     const tagTokens = textToTags(text, Object.keys(styles));
     const styleTokens = tagsToStyles(tagTokens, styles);
     const finalTokens = stylesToLayout(styleTokens);
+
+    it("Should have default styles for styleTokens", () => {
+      expect(styleTokens.style).toMatchObject(styles.default);
+    });
 
     it("Should give similar size properties to text with the same styles and same text.", () => {
       const space1 = finalTokens[5];
@@ -315,85 +323,90 @@ describe("calculateFinalTokens()", () => {
       expect(space1.bounds.height).toBe(space2.bounds.height);
       expect(space1.fontProperties).toMatchObject(space2.fontProperties);
     });
+
     it("Should fully convert text to final tokens.", () => {
+      const d = styles.default;
+      const b = { ...styles.default, ...styles.b };
+      const bi = { ...styles.default, ...styles.b, ...styles.i };
+
       expect(finalTokens).toMatchObject([
         {
           content: "Hello,",
-          style: styles.b,
+          style: b,
           tags: "b",
         },
         {
           content: " ",
-          style: styles.b,
+          style: b,
           tags: "b",
         },
         {
           content: "World!",
-          style: { ...styles.b, ...styles.i },
+          style: bi,
           tags: "b,i",
         },
         {
           content: "\n",
-          style: {},
+          style: d,
           tags: "",
         },
         {
           content: "How",
-          style: {},
+          style: d,
         },
         {
           content: " ",
-          style: {},
+          style: d,
         },
         {
           content: "are",
-          style: {},
+          style: d,
         },
         {
           content: " ",
-          style: {},
+          style: d,
         },
         {
           content: "you?",
-          style: {},
+          style: d,
         },
         {
           content: " ",
-          style: {},
+          style: d,
         },
         {
           content: "I'm",
-          style: {},
+          style: d,
         },
         {
           content: " ",
-          style: {},
+          style: d,
         },
         {
           content: "S",
-          style: styles.b,
+          style: b,
           tags: "b",
         },
         {
           content: "U",
-          style: {},
+          style: d,
           tags: "",
         },
         {
           content: "P",
-          style: styles.b,
+          style: b,
         },
         {
           content: "E",
-          style: {},
+          style: d,
         },
         {
           content: "R",
-          style: styles.b,
+          style: b,
         },
         {
           content: "!",
-          style: {},
+          style: d,
         },
       ]);
     });
