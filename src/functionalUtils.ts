@@ -1,3 +1,5 @@
+import { Nested } from "./types";
+
 /**
  * a -> boolean
  */
@@ -45,3 +47,26 @@ export const assoc = <T extends Record<string, U>, U extends unknown>(
   ...object,
   ...{ [key]: value },
 });
+
+export const mapProp = <T, U>(k: keyof U) => (f: (t: T) => T) => (o: U): U => ({
+  ...o,
+  [k]: f((o as U & Record<string, T>)[k]),
+});
+
+// export const every = <T>(p: Predicate<T>) => (a: T[]): boolean => a.every(p);
+
+export const flatReduce = <T, U>(f: (acc: U, t: T) => U, acc: U) => (
+  nested: Nested<T>
+): U => [nested].flat(255).reduce(f, acc);
+
+type FlatReduceRetrun<T, U> = (nested: Nested<T>) => U;
+
+export const flatEvery = <T>(p: Predicate<T>): FlatReduceRetrun<T, boolean> =>
+  flatReduce<T, boolean>((acc: boolean, t: T) => acc && p(t), true);
+
+export const nestedMap = <T, U>(f: (t: T) => U) => (
+  nested: Nested<T>
+): Nested<U> =>
+  nested instanceof Array ? nested.map(nestedMap(f)) : f(nested);
+
+export type Unary<Param, Return> = (p: Param) => Return;

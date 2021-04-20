@@ -454,12 +454,12 @@ export default class RichText extends PIXI.Sprite {
 
     tokens.forEach((t) => {
       if (isTextToken(t)) {
-        displayObject = this.createTextFieldForToken(t);
+        displayObject = this.createTextFieldForToken(t as TextFinalToken);
         this._textFields.push(displayObject as PIXI.Text);
         this.textContainer.addChild(displayObject);
       }
       if (isSpriteToken(t)) {
-        displayObject = t.content;
+        displayObject = t.content as PIXI.Sprite;
         this._sprites.push(displayObject as PIXI.Sprite);
         this.spriteContainer.addChild(displayObject);
       }

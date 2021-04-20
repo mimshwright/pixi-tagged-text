@@ -6,6 +6,7 @@ import {
   isWhitespace,
   isWhitespaceToken,
   isNewline,
+  isNewlineToken,
 } from "./../src/types";
 
 describe("Type validation", () => {
@@ -23,6 +24,12 @@ describe("Type validation", () => {
     style: {},
     tags: "img",
   };
+
+  const spaceToken = { ...textToken, content: " " };
+  const multispaceToken = { ...textToken, content: " " };
+  const tabToken = { ...textToken, content: "\t" };
+  const newlineToken = { ...textToken, content: "\n" };
+  const emptyToken = { ...textToken, content: "" };
 
   describe("isWhitespace()", () => {
     it("Should return true if the token is whitespace.", () => {
@@ -63,21 +70,46 @@ describe("Type validation", () => {
     it("Should return false if the token is not a text token.", () => {
       expect(isTextToken(spriteToken)).toBeFalsy();
     });
+    it("Should word recursively.", () => {
+      expect(isTextToken([textToken, textToken])).toBeTruthy();
+      expect(isTextToken([[textToken], textToken])).toBeTruthy();
+      expect(isTextToken([textToken, spriteToken])).toBeFalsy();
+    });
   });
 
   describe("isWhitespaceToken()", () => {
     it("Should return true if the token is whitespace.", () => {
-      expect(isWhitespaceToken({ ...textToken, content: " " })).toBeTruthy();
-      expect(isWhitespaceToken({ ...textToken, content: "   " })).toBeTruthy();
-      expect(isWhitespaceToken({ ...textToken, content: "\n" })).toBeTruthy();
-      expect(isWhitespaceToken({ ...textToken, content: "\t" })).toBeTruthy();
+      expect(isWhitespaceToken(spaceToken)).toBeTruthy();
+      expect(isWhitespaceToken(multispaceToken)).toBeTruthy();
+      expect(isWhitespaceToken(tabToken)).toBeTruthy();
+      expect(isWhitespaceToken(newlineToken)).toBeTruthy();
     });
     it("Should return false if the token is not.", () => {
       expect(isWhitespaceToken(textToken)).toBeFalsy();
       expect(isWhitespaceToken(spriteToken)).toBeFalsy();
     });
     it("Should return false if it's empty.", () => {
-      expect(isWhitespaceToken({ ...textToken, content: "" })).toBeFalsy();
+      expect(isWhitespaceToken(emptyToken)).toBeFalsy();
+    });
+    it("Should word recursively.", () => {
+      expect(isWhitespaceToken([spaceToken, newlineToken])).toBeTruthy();
+      expect(isWhitespaceToken([spaceToken, textToken])).toBeFalsy();
+    });
+  });
+  describe("isNewlineToken()", () => {
+    it("Should return true if the token is a newline.", () => {
+      expect(isNewlineToken(newlineToken)).toBeTruthy();
+    });
+    it("Should return false if the token is not.", () => {
+      expect(isNewlineToken(textToken)).toBeFalsy();
+      expect(isNewlineToken(spriteToken)).toBeFalsy();
+      expect(isNewlineToken(spaceToken)).toBeFalsy();
+    });
+    it("Should word recursively.", () => {
+      expect(
+        isNewlineToken([newlineToken, [newlineToken], newlineToken])
+      ).toBeTruthy();
+      expect(isNewlineToken([newlineToken, [spaceToken]])).toBeFalsy();
     });
   });
 
@@ -87,6 +119,10 @@ describe("Type validation", () => {
     });
     it("Should return false if the content is not a sprite", () => {
       expect(isSpriteToken(textToken)).toBeFalsy();
+    });
+    it("Should work recursively.", () => {
+      expect(isSpriteToken([[spriteToken], spriteToken])).toBeTruthy();
+      expect(isSpriteToken([spriteToken, textToken])).toBeFalsy();
     });
   });
 

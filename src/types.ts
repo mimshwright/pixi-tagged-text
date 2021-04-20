@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { complement } from "./functionalUtils";
+import { complement, flatEvery } from "./functionalUtils";
 
 ///// GENERAL PURPOSE
 
@@ -13,7 +13,8 @@ export type Rectangle = Point & {
 };
 
 export type Bounds = Rectangle;
-export type LineBounds = Bounds[];
+
+export type Nested<T> = T | Array<Nested<T>>;
 
 ///// OPTIONS
 
@@ -121,6 +122,15 @@ export interface FinalToken {
   style: TextStyleExtended;
   tags: string;
 }
+
+export const createEmptyFinalToken = (): FinalToken => ({
+  content: "",
+  bounds: new PIXI.Rectangle(),
+  fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
+  style: {},
+  tags: "",
+});
+
 export type WordToken = FinalToken[];
 export type LineToken = WordToken[];
 export type ParagraphToken = LineToken[];
@@ -145,14 +155,22 @@ export const isWhitespace = (s: string): s is WhitespaceToken =>
 export const isNewline = (s: string): s is NewlineToken =>
   isWhitespace(s) && s === "\n";
 
-export const isSpriteToken = (t: FinalToken): t is SpriteFinalToken =>
+export const _isSpriteToken = (t: FinalToken): t is SpriteFinalToken =>
   t.content instanceof PIXI.Sprite;
-export const isTextToken = (t: FinalToken): t is TextFinalToken =>
+export const isSpriteToken = flatEvery(_isSpriteToken);
+
+export const _isTextToken = (t: FinalToken): t is TextFinalToken =>
   typeof t.content === "string";
-export const isWhitespaceToken = (t: FinalToken): t is WhitespaceFinalToken =>
-  isTextToken(t) && isWhitespace(t.content);
-export const isNewlineToken = (t: FinalToken): t is NewlineFinalToken =>
-  isTextToken(t) && isNewline(t.content);
+export const isTextToken = flatEvery(_isTextToken);
+
+export const _isWhitespaceToken = (t: FinalToken): t is WhitespaceFinalToken =>
+  _isTextToken(t) && isWhitespace(t.content);
+export const isWhitespaceToken = flatEvery(_isWhitespaceToken);
+
+export const _isNewlineToken = (t: FinalToken): t is NewlineFinalToken =>
+  _isTextToken(t) && isNewline(t.content);
+export const isNewlineToken = flatEvery(_isNewlineToken);
+
 export const isNotWhitespaceToken = complement(isWhitespaceToken);
 
 export const isEmptyObject = <T extends unknown>(a: T): boolean =>

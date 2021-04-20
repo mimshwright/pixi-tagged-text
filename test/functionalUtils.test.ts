@@ -1,3 +1,5 @@
+import { flatReduce, nestedMap } from "./../src/functionalUtils";
+import { isWhitespace, Nested } from "./../src/types";
 import {
   last,
   combineRecords,
@@ -5,6 +7,7 @@ import {
   pluck,
   isDefined,
   assoc,
+  flatEvery,
 } from "../src/functionalUtils";
 import * as PIXI from "pixi.js";
 
@@ -107,6 +110,72 @@ describe("functional util", () => {
       expect(rectWithArea.right).toBeUndefined();
       expect(rectWithArea.clone).toBeUndefined();
       expect(rectWithArea.area).toBe(400);
+    });
+  });
+
+  describe("flatReduce()", () => {
+    it("Should run reduce on a flatted nested array.", () => {
+      const nested: Nested<number> = [
+        1,
+        2,
+        [3, 4, [5], 6, [7, 8, 9, [10]]],
+        11,
+      ];
+      const isEven = (n: number) => n % 2 === 0;
+      const concatIfEven = (a: number[], n: number) =>
+        isEven(n) ? a.concat(n) : a;
+      const flatConcatIfEvent = flatReduce(concatIfEven, []);
+
+      expect(flatConcatIfEvent(nested)).toMatchObject([2, 4, 6, 8, 10]);
+      expect(flatConcatIfEvent(6)).toMatchObject([6]);
+    });
+  });
+
+  describe("flatEvery()", () => {
+    const whitespace = " ";
+    const whitespaceFlat = [" ", "\n", " "];
+    const whitespaceNested = [" ", [["\n", "\n"], " "]];
+    const notWhitespace = "D";
+    const notWhitespaceFlat = [" ", "D"];
+    const notWhitespaceNested = [" ", ["D"]];
+
+    const isWhitespaceFlat = flatEvery(isWhitespace);
+
+    it("Should work on single items outside of lists.", () => {
+      expect(isWhitespaceFlat(whitespace)).toBeTruthy();
+      expect(isWhitespaceFlat(whitespace)).toBe(isWhitespace(whitespace));
+      expect(isWhitespaceFlat(notWhitespace)).toBeFalsy();
+    });
+    it("Should work on flat arrays.", () => {
+      expect(isWhitespaceFlat(whitespaceFlat)).toBeTruthy();
+      expect(isWhitespaceFlat(whitespaceFlat)).toBe(
+        whitespaceFlat.every(isWhitespace)
+      );
+      expect(isWhitespaceFlat(notWhitespaceFlat)).toBeFalsy();
+    });
+    it("Should work on nested arrays.", () => {
+      expect(isWhitespaceFlat(whitespaceNested)).toBeTruthy();
+      expect(isWhitespaceFlat(notWhitespaceNested)).toBeFalsy();
+    });
+  });
+
+  describe("nestedMap()", () => {
+    const toUpper = (s: string): string => s.toUpperCase();
+    it("Should map over values in an array.", () => {
+      const input = ["a", "b", "c"];
+      expect(nestedMap(toUpper)(input)).toMatchObject(input.map(toUpper));
+    });
+    it("If it encounters additional mappable items, it should map over those items too. It should keep the original structure.", () => {
+      const input = ["a", ["b", ["c"], "d"], "e"];
+      expect(nestedMap(toUpper)(input)).toMatchObject([
+        "A",
+        ["B", ["C"], "D"],
+        "E",
+      ]);
+    });
+    it("Because it works on nests, single items will also be processed.", () => {
+      const input = "a";
+      expect(nestedMap(toUpper)(input)).toBe("A");
     });
   });
 });

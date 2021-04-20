@@ -124,13 +124,11 @@ describe("RichText", () => {
 
         it("When false, whitespace is not drawn as a text field.", () => {
           const { textFields } = noDrawWhitespace;
-          expect(textFields).toHaveLength(3);
           expect(pluck("text")(textFields)).toMatchObject(["a", "b", "c"]);
         });
 
         it("When true, whitespace is drawn as a text field.", () => {
           const { textFields } = drawWhitespace;
-          expect(textFields).toHaveLength(5);
           expect(pluck("text")(textFields)).toMatchObject([
             "a",
             " ",
@@ -191,7 +189,13 @@ describe("RichText", () => {
           expect(skipDraw.textContainer.children).toHaveLength(0);
           skipDraw.draw();
           expect(skipDraw.textFields).toHaveLength(2);
-          expect(skipDraw.tokens).toHaveLength(3);
+          expect(skipDraw.tokens).toMatchObject([
+            [
+              [{ content: "Test" }],
+              [{ content: " " }],
+              [{ content: "test", tags: "b" }],
+            ],
+          ]);
           expect(skipDraw.getBounds()).toMatchObject(control.getBounds());
         });
         it("Default should be to automatically call update.", () => {
@@ -219,7 +223,15 @@ describe("RichText", () => {
           expect(control.tokens).toHaveLength(0);
           control.update(true);
           expect(control.textFields).toHaveLength(0);
-          expect(control.tokens).toHaveLength(5);
+          expect(control.tokens).toMatchObject([
+            [
+              [{ content: "abc" }],
+              [{ content: " " }],
+              [{ content: "def" }],
+              [{ content: " " }],
+              [{ content: "ghi" }],
+            ],
+          ]);
           control.update(false);
           expect(control.textFields).toHaveLength(3);
         });
@@ -401,10 +413,23 @@ Line 4`);
   describe("update()", () => {
     const t = new RichText(`<b>Test</b>`, style);
     it("Should render the text as pixi text elements.", () => {
-      const tokens = t.update();
-      expect(tokens).toHaveLength(1);
-      expect(tokens[0].content).toBe("Test");
-      expect(tokens[0].tags).toBe("b");
+      const lines = t.update();
+      const [line] = lines;
+      const [word] = line;
+      const [segment] = word;
+      const { content: chars } = segment;
+
+      // lines
+      expect(lines).toHaveLength(1);
+      // words
+      expect(line).toHaveLength(1);
+      // segments
+      expect(word).toHaveLength(1);
+      // chars
+      expect(segment).toHaveProperty("content");
+      expect(chars).toHaveLength(4);
+      expect(chars).toBe("Test");
+      expect(segment.tags).toBe("b");
     });
   });
 

@@ -1,3 +1,4 @@
+import { createEmptyFinalToken, StyledToken } from "./../src/types";
 import { splitText } from "./../src/layout";
 import * as PIXI from "pixi.js";
 import * as layout from "../src/layout";
@@ -8,8 +9,8 @@ import { SplitStyle } from "../src/types";
 const R = (...args: number[]) => new PIXI.Rectangle(...args);
 
 describe("layout module", () => {
-  const W = 100;
-  const H = 20;
+  // const W = 100;
+  // const H = 20;
   const maxLineWidth = 500;
 
   describe("updateOffsetForNewLine()", () => {
@@ -21,6 +22,59 @@ describe("layout module", () => {
     });
     it("should return a copy of the input, not the original input.", () => {
       expect(offset).not.toStrictEqual(result);
+    });
+  });
+
+  describe("concatBounds()", () => {
+    it("Should combine two bounds into one.", () => {
+      const bounds = { x: 10, y: 10, width: 20, height: 20 };
+      const newBounds = { x: 0, y: 5, width: 15, height: 30 };
+      expect(layout.concatBounds(bounds, newBounds)).toMatchObject({
+        x: 0,
+        y: 5,
+        width: 30,
+        height: 30,
+      });
+    });
+  });
+
+  describe("getBoundsNested()", () => {
+    const testToken = (
+      x: number,
+      y: number,
+      width: number,
+      height: number
+    ) => ({
+      ...createEmptyFinalToken(),
+      ...{ bounds: { x, y, width, height } },
+    });
+
+    it("Should return the bounding box of a nested group of tokens.", () => {
+      let word0 = [testToken(0, 0, 30, 15)];
+      let word1 = [testToken(30, 0, 30, 15)];
+      let word2 = [
+        testToken(40, 0, 10, 15),
+        testToken(50, 0, 10, 15),
+        testToken(60, 0, 10, 15),
+      ];
+
+      expect(layout.getBoundsNested([word0, word1, word2])).toMatchObject({
+        x: 0,
+        y: 0,
+        width: 70,
+        height: 15,
+      });
+
+      word0 = [testToken(30, 40, 50, 10)];
+      word1 = [testToken(80, 30, 50, 30)];
+      word2 = [testToken(130, 40, 50, 10)];
+
+      expect(layout.getBoundsNested([word0, word1, word2])).toMatchObject({
+        x: 30,
+        y: 30,
+        width: 150,
+        height: 30,
+      });
     });
   });
 
@@ -159,65 +213,101 @@ describe("layout module", () => {
     });
   });
 
-  describe("alignTextInLines()", () => {
-    // This function really just combines the other align functions and runs them
-    // based on an `Align` string on multiple lines.
+  // describe.skip("alignTextInLines()", () => {
+  //   // This function really just combines the other align functions and runs them
+  //   // based on an `Align` string on multiple lines.
 
-    const lines = [
-      [R(0, 0, W, H), R(100, 0, W, H)],
-      [R(0, 30, W, H), R(100, 30, W, H), R(200, 30, W, H)],
-      [R(0, 60, W, H)],
-    ];
+  //   const lines = [
+  //     [R(0, 0, W, H), R(100, 0, W, H)],
+  //     [R(0, 30, W, H), R(100, 30, W, H), R(200, 30, W, H)],
+  //     [R(0, 60, W, H)],
+  //   ];
 
-    const right = layout.alignTextInLines("right", maxLineWidth, lines);
-    const center = layout.alignTextInLines("center", maxLineWidth, lines);
-    const left = layout.alignTextInLines("left", maxLineWidth, lines);
-    const justify = layout.alignTextInLines("justify", maxLineWidth, lines);
+  //   const right = layout.alignTextInLines("right", maxLineWidth, lines);
+  //   const center = layout.alignTextInLines("center", maxLineWidth, lines);
+  //   const left = layout.alignTextInLines("left", maxLineWidth, lines);
+  //   const justify = layout.alignTextInLines("justify", maxLineWidth, lines);
 
-    it("should reposition items from lines of text (MeasurementLines) based on the alignment and width of container.", () => {
-      expect(right).toMatchObject([
-        [{ x: maxLineWidth - W * 2 }, { x: maxLineWidth - W }],
-        [
-          { x: maxLineWidth - W * 3 },
-          { x: maxLineWidth - W * 2 },
-          { x: maxLineWidth - W },
-        ],
-        [{ x: maxLineWidth - W }],
+  //   it("should reposition items from lines of text (MeasurementLines) based on the alignment and width of container.", () => {
+  //     expect(right).toMatchObject([
+  //       [{ x: maxLineWidth - W * 2 }, { x: maxLineWidth - W }],
+  //       [
+  //         { x: maxLineWidth - W * 3 },
+  //         { x: maxLineWidth - W * 2 },
+  //         { x: maxLineWidth - W },
+  //       ],
+  //       [{ x: maxLineWidth - W }],
+  //     ]);
+  //     expect(center).toMatchObject([
+  //       [
+  //         { x: (maxLineWidth - W * 2) / 2 },
+  //         { x: (maxLineWidth - W * 2) / 2 + W },
+  //       ],
+  //       [
+  //         { x: (maxLineWidth - W * 3) / 2 },
+  //         { x: (maxLineWidth - W * 3) / 2 + W },
+  //         { x: (maxLineWidth - W * 3) / 2 + W * 2 },
+  //       ],
+  //       [{ x: (maxLineWidth - W) / 2 }],
+  //     ]);
+  //     expect(left).toMatchObject([
+  //       [{ x: W * 0 }, { x: W * 1 }],
+  //       [{ x: W * 0 }, { x: W * 1 }, { x: W * 2 }],
+  //       [{ x: W * 0 }],
+  //     ]);
+
+  //     expect(justify).toMatchObject([
+  //       [{ x: 0 }, { x: maxLineWidth - W }],
+  //       [
+  //         { x: 0 },
+  //         { x: (maxLineWidth - 3 * W) / 2 + W },
+  //         { x: maxLineWidth - W },
+  //       ],
+  //       [{ x: 0 }],
+  //     ]);
+  //   });
+
+  //   it("should create a new object rather than editing the original.", () => {
+  //     expect(left[0]).not.toBe(lines[0]);
+  //     expect(right[0]).not.toBe(lines[0]);
+  //     expect(center[0]).not.toBe(lines[0]);
+  //     expect(justify[0]).not.toBe(lines[0]);
+  //   });
+  // });
+
+  describe("splitAroundWhitespace()", () => {
+    it("Should split at every whitespace but not delete the whitespace, keept it.", () => {
+      expect(layout.splitAroundWhitespace("a b c")).toMatchObject([
+        "a",
+        " ",
+        "b",
+        " ",
+        "c",
       ]);
-      expect(center).toMatchObject([
-        [
-          { x: (maxLineWidth - W * 2) / 2 },
-          { x: (maxLineWidth - W * 2) / 2 + W },
-        ],
-        [
-          { x: (maxLineWidth - W * 3) / 2 },
-          { x: (maxLineWidth - W * 3) / 2 + W },
-          { x: (maxLineWidth - W * 3) / 2 + W * 2 },
-        ],
-        [{ x: (maxLineWidth - W) / 2 }],
+      expect(layout.splitAroundWhitespace("a\nb")).toMatchObject([
+        "a",
+        "\n",
+        "b",
       ]);
-      expect(left).toMatchObject([
-        [{ x: W * 0 }, { x: W * 1 }],
-        [{ x: W * 0 }, { x: W * 1 }, { x: W * 2 }],
-        [{ x: W * 0 }],
+      expect(layout.splitAroundWhitespace("a\tb")).toMatchObject([
+        "a",
+        "\t",
+        "b",
       ]);
-
-      expect(justify).toMatchObject([
-        [{ x: 0 }, { x: maxLineWidth - W }],
-        [
-          { x: 0 },
-          { x: (maxLineWidth - 3 * W) / 2 + W },
-          { x: maxLineWidth - W },
-        ],
-        [{ x: 0 }],
+      expect(layout.splitAroundWhitespace("a \n b")).toMatchObject([
+        "a",
+        " ",
+        "\n",
+        " ",
+        "b",
       ]);
-    });
-
-    it("should create a new object rather than editing the original.", () => {
-      expect(left[0]).not.toBe(lines[0]);
-      expect(right[0]).not.toBe(lines[0]);
-      expect(center[0]).not.toBe(lines[0]);
-      expect(justify[0]).not.toBe(lines[0]);
+      expect(layout.splitAroundWhitespace("a   b")).toMatchObject([
+        "a",
+        " ",
+        " ",
+        " ",
+        "b",
+      ]);
     });
   });
 
@@ -247,6 +337,15 @@ describe("layout module", () => {
         "!",
       ]);
     });
+    it("Should treat every whitespace as a separate piece.", () => {
+      expect(layout.splitText("Hello,   world!", "words")).toMatchObject([
+        "Hello,",
+        " ",
+        " ",
+        " ",
+        "world!",
+      ]);
+    });
   });
   it("Should throw if the method is unknown.", () => {
     expect(() => {
@@ -260,32 +359,65 @@ describe("calculateFinalTokens()", () => {
     expect(layout.calculateFinalTokens).toBeInstanceOf(Function);
   });
 
+  it("Should throw if the styledToken has no style", () => {
+    expect(() => {
+      const fakeStyled = { children: ["No styles?"], tags: "" } as StyledToken;
+      layout.calculateFinalTokens(fakeStyled);
+    }).toThrow();
+  });
+
   describe("splitStyle", () => {
-    const helloWorld = { children: ["Hello, world!"], tags: "", style: {} };
+    const lws = {
+      children: ["Lines, words, & segments!"],
+      tags: "",
+      style: {},
+    };
+    const result = layout.calculateFinalTokens(lws);
     it("Should split on whitespace by default", () => {
-      expect(layout.calculateFinalTokens(helloWorld)).toMatchObject([
-        { content: "Hello," },
-        { content: " " },
-        { content: "world!" },
+      expect(result).toHaveLength(1);
+      // line 0
+      // ["Lines,", " ", "words,", " ", "&", " ", "segmemnts!" ]
+      expect(result[0]).toHaveLength(7);
+      // word 0
+      expect(result[0][0]).toHaveLength(1);
+      // word 0 section 0
+      expect(result[0][0][0]).toHaveProperty("content", "Lines,");
+      // word 1 section 0
+      expect(result[0][1][0]).toHaveProperty("content", " ");
+      expect(result[0]).toMatchObject([
+        [{ content: "Lines," }],
+        [{ content: " " }],
+        [{ content: "words," }],
+        [{ content: " " }],
+        [{ content: "&" }],
+        [{ content: " " }],
+        [{ content: "segments!" }],
       ]);
     });
     it("Should split on character if specified", () => {
+      const helloWorld = { children: ["Hello, world!"], tags: "", style: {} };
       expect(
         layout.calculateFinalTokens(helloWorld, "characters")
       ).toMatchObject([
-        { content: "H" },
-        { content: "e" },
-        { content: "l" },
-        { content: "l" },
-        { content: "o" },
-        { content: "," },
-        { content: " " },
-        { content: "w" },
-        { content: "o" },
-        { content: "r" },
-        { content: "l" },
-        { content: "d" },
-        { content: "!" },
+        [
+          [
+            { content: "H" },
+            { content: "e" },
+            { content: "l" },
+            { content: "l" },
+            { content: "o" },
+            { content: "," },
+          ],
+          [{ content: " " }],
+          [
+            { content: "w" },
+            { content: "o" },
+            { content: "r" },
+            { content: "l" },
+            { content: "d" },
+            { content: "!" },
+          ],
+        ],
       ]);
     });
   });
@@ -308,14 +440,31 @@ describe("calculateFinalTokens()", () => {
     const styleTokens = tagsToStyles(tagTokens, styles);
     const finalTokens = stylesToLayout(styleTokens);
 
+    const [line0, line1] = finalTokens;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [hello, s0, world, n0] = line0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [how, s1, are, s2, you, s3, im, s4, superWord] = line1;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [s, u, p, e, r, bang] = superWord;
+
     it("Should have default styles for styleTokens", () => {
       expect(styleTokens.style).toMatchObject(styles.default);
     });
 
-    it("Should give similar size properties to text with the same styles and same text.", () => {
-      const space1 = finalTokens[5];
-      const space2 = finalTokens[7];
+    it("Most words should have length 0 but Should treat SuPeR! as one word", () => {
+      expect(hello).toHaveLength(1);
+      expect(s0).toHaveLength(1);
+      expect(n0).toHaveLength(1);
 
+      expect(superWord).toHaveLength(6);
+      expect(s).toHaveProperty("tags", "b");
+      expect(u).toHaveProperty("tags", "");
+    });
+
+    it("Should give similar size properties to text with the same styles and same text.", () => {
+      const [space1] = s1;
+      const [space2] = s2;
       expect(space1.style).toBe(space2.style);
       expect(space1.content).toBe(space2.content);
       expect(space1.tags).toBe(space2.tags);
@@ -329,89 +478,131 @@ describe("calculateFinalTokens()", () => {
       const b = { ...styles.default, ...styles.b };
       const bi = { ...styles.default, ...styles.b, ...styles.i };
 
-      expect(finalTokens).toMatchObject([
-        {
-          content: "Hello,",
-          style: b,
-          tags: "b",
-        },
-        {
-          content: " ",
-          style: b,
-          tags: "b",
-        },
-        {
-          content: "World!",
-          style: bi,
-          tags: "b,i",
-        },
-        {
-          content: "\n",
-          style: d,
-          tags: "",
-        },
-        {
-          content: "How",
-          style: d,
-        },
-        {
-          content: " ",
-          style: d,
-        },
-        {
-          content: "are",
-          style: d,
-        },
-        {
-          content: " ",
-          style: d,
-        },
-        {
-          content: "you?",
-          style: d,
-        },
-        {
-          content: " ",
-          style: d,
-        },
-        {
-          content: "I'm",
-          style: d,
-        },
-        {
-          content: " ",
-          style: d,
-        },
-        {
-          content: "S",
-          style: b,
-          tags: "b",
-        },
-        {
-          content: "U",
-          style: d,
-          tags: "",
-        },
-        {
-          content: "P",
-          style: b,
-        },
-        {
-          content: "E",
-          style: d,
-        },
-        {
-          content: "R",
-          style: b,
-        },
-        {
-          content: "!",
-          style: d,
-        },
-      ]);
+      expect(finalTokens).toMatchObject(
+        // all lines
+        [
+          // line 0
+          [
+            // word 0
+            [
+              // segment 0
+              {
+                content: "Hello,",
+                style: b,
+                tags: "b",
+              },
+            ],
+            // word 1
+            [
+              {
+                content: " ",
+                style: b,
+                tags: "b",
+              },
+            ],
+            // word 2
+            [
+              {
+                content: "World!",
+                style: bi,
+                tags: "b,i",
+              },
+            ],
+            // word 3
+            [
+              {
+                content: "\n",
+                style: d,
+                tags: "",
+              },
+            ],
+          ],
+          // line 1
+          [
+            [
+              {
+                content: "How",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: " ",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: "are",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: " ",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: "you?",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: " ",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: "I'm",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: " ",
+                style: d,
+              },
+            ],
+            // word 8 has multiple segments
+            [
+              // segment 0
+              {
+                content: "S",
+                style: b,
+                tags: "b",
+              },
+              {
+                content: "U",
+                style: d,
+                tags: "",
+              },
+              {
+                content: "P",
+                style: b,
+              },
+              {
+                content: "E",
+                style: d,
+              },
+              {
+                content: "R",
+                style: b,
+              },
+              {
+                content: "!",
+                style: d,
+              },
+            ],
+          ],
+        ]
+      );
     });
     it("Should unset styles when there are no styles", () => {
-      expect(finalTokens[4].style).not.toHaveProperty("fontWeight");
+      expect(how[0].style).not.toHaveProperty("fontWeight");
     });
   });
 });

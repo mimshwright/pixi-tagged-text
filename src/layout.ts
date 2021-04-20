@@ -1,10 +1,16 @@
-import { last, first, assoc } from "./functionalUtils";
+import {
+  last,
+  first,
+  assoc,
+  mapProp,
+  flatReduce,
+  Unary,
+} from "./functionalUtils";
 import { getFontPropertiesOfText, INITIAL_FONT_PROPS } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import {
   Align,
   Bounds,
-  LineBounds,
   Point,
   // VAlign,
   // IMG_DISPLAY_PROPERTY,
@@ -22,6 +28,7 @@ import {
   ParagraphToken,
   LineToken,
   WordToken,
+  Nested,
 } from "./types";
 
 /**
@@ -49,6 +56,12 @@ const rectFromContainer = (
   return new PIXI.Rectangle(x, y, w, h);
 };
 
+// const setPoint = <P extends Point>(position: Point) => (point: P): P => ({
+//   ...point,
+//   x: position.x,
+//   y: position.y,
+// });
+
 /**
  * Move a point by an offset.
  * Point p => p -> p-> -> p
@@ -66,11 +79,19 @@ export const translatePoint = <P extends Point>(offset: Point) => (
 /**
  * Same as translatePoint but for all the points in an array.
  */
-export const translateLine = (offset: Point) => (
-  line: LineBounds
-): LineBounds => line.map(translatePoint(offset));
+export const translateLine = (offset: Point) => (line: Bounds[]): Bounds[] =>
+  line.map(translatePoint(offset));
 
-export const lineWidth = (wordsInLine: LineBounds): number => {
+export const translateWord = (offset: Point) => (word: WordToken): WordToken =>
+  word.map((token) =>
+    mapProp<Bounds, FinalToken>("bounds")(translatePoint(offset))(token)
+  );
+
+export const translateTokenLine = (offset: Point) => (
+  line: LineToken
+): LineToken => line.map(translateWord(offset));
+
+export const lineWidth = (wordsInLine: Bounds[]): number => {
   const firstWord = first(wordsInLine);
   const lastWord = last(wordsInLine);
 
@@ -212,9 +233,56 @@ export const alignLeft = (line: LineToken): LineToken =>
 
 const setBoundsX = assoc<Bounds, number>("x");
 
-export const alignLeft = (line: LineBounds): LineBounds =>
+// const positionWordX = (x: number) => (word: WordToken): WordToken => {
+//   let prevBounds: Bounds;
+//   return word.map((token) => {
+//     if (prevBounds === undefined) {
+//       token.bounds.x = x;
+//       prevBounds = token.bounds;
+//     } else {
+//       token.bounds.x = prevBounds.x + prevBounds.width;
+//     }
+//     return token;
+//   });
+// };
+
+export const concatBounds = (
+  originalBounds: Bounds,
+  bounds: Bounds
+): Bounds => {
+  if (isNaN(originalBounds.x)) {
+    return bounds;
+  }
+
+  const x = Math.min(originalBounds.x, bounds.x);
+  const y = Math.min(originalBounds.y, bounds.y);
+  const right = Math.max(
+    originalBounds.x + originalBounds.width,
+    bounds.x + bounds.width
+  );
+  const bottom = Math.max(
+    originalBounds.y + originalBounds.height,
+    bounds.y + bounds.height
+  );
+  const width = right - x;
+  const height = bottom - y;
+
+  return { x, y, width, height };
+};
+
+export const getBoundsNested: Unary<Nested<FinalToken>, Bounds> = flatReduce<
+  FinalToken,
+  Bounds
+>((acc: Bounds, t: FinalToken) => concatBounds(acc, t.bounds), {
+  x: NaN,
+  y: NaN,
+  width: NaN,
+  height: NaN,
+});
+
+export const alignLeft = (line: Bounds[]): Bounds[] =>
   line.reduce(
-    (newLine: LineBounds, bounds: Bounds, i: number): LineBounds =>
+    (newLine: Bounds[], bounds: Bounds, i: number): Bounds[] =>
       // is first word?
       i === 0
         ? [setBoundsX(0)(bounds)]
@@ -224,24 +292,46 @@ export const alignLeft = (line: LineBounds): LineBounds =>
     []
   );
 
-export const alignRight = (maxWidth: number) => (
-  line: LineBounds
-): LineBounds =>
+// export const alignLeft = (line: WordToken[]): WordToken[] => {
+//   let previousWordBounds: Bounds;
+//   return line.map((word: WordToken) => {
+//     // is first word?
+//     if (previousWordBounds === undefined) {
+//       positionWordX(0)(word);
+//     } else {
+//       positionWordX(previousWordBounds.x + previousWordBounds.width);
+//     }
+//     previousWordBounds = getWordBounds(word);
+//     return word;
+//   });
+// };
+
+export const alignRight = (maxWidth: number) => (line: Bounds[]): Bounds[] =>
   translateLine({
     x: maxWidth - lineWidth(line),
     y: 0,
   })(alignLeft(line));
 
-export const alignCenter = (maxWidth: number) => (
-  line: LineBounds
-): LineBounds =>
+// export const alignRight = (maxWidth: number) => (line: LineToken): LineToken =>
+//   translateTokenLine({
+//     x: maxWidth - getLineBounds(line).width,
+//     y: 0,
+//   })(alignLeft(line));
+
+export const alignCenter = (maxWidth: number) => (line: Bounds[]): Bounds[] =>
   translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(
     alignLeft(line)
   );
 
+// export const alignCenter = (maxWidth: number) => (line: LineToken): LineToken =>
+//   translateTokenLine({
+//     x: center(getLineBounds(line).width, maxWidth),
+//     y: 0,
+//   })(alignLeft(line));
+
 export const alignJustify = (maxLineWidth: number) => (
-  line: LineBounds
-): LineBounds => {
+  line: Bounds[]
+): Bounds[] => {
   if (line.length === 0) {
     return [];
   }
@@ -251,7 +341,7 @@ export const alignJustify = (maxLineWidth: number) => (
     return [setBoundsX(0)(bounds)];
   }
 
-  const result: LineBounds = [];
+  const result: Bounds[] = [];
   const w = lineWidth(line);
   const totalSpace = maxLineWidth - w;
   const spacerWidth = totalSpace / (line.length - 1);
@@ -280,25 +370,47 @@ export const alignJustify = (maxLineWidth: number) => (
   return result;
 };
 
-/**
- * Adjusts the values in the lines to match the current layout.
- */
-export const alignTextInLines = (
+const alignLines = (
   align: Align,
-  maxLineWidth: number,
-  lines: LineBounds[]
-): LineBounds[] => {
-  const output =
-    align === "left"
-      ? lines.map(alignLeft)
-      : align === "right"
-      ? lines.map(alignRight(maxLineWidth))
-      : align === "center"
-      ? lines.map(alignCenter(maxLineWidth))
-      : align === "justify"
-      ? lines.map(alignJustify(maxLineWidth))
-      : lines;
-  return output;
+  maxWidth: number,
+  lines: ParagraphToken
+): ParagraphToken => {
+  // do horizontal alignment.
+  // let alignFunction: (l: Bounds[]) => Bounds[];
+  // switch (align) {
+  //   case "left":
+  //     alignFunction = alignLeft;
+  //     break;
+  //   case "right":
+  //     alignFunction = alignRight(maxWidth);
+  //     break;
+  //   case "center":
+  //     alignFunction = alignCenter(maxWidth);
+  //     break;
+  //   case "justify":
+  //     // alignFunction = alignJustify(maxWidth);
+  //     alignFunction = alignCenter(maxWidth);
+  //     break;
+  //   default:
+  //     throw new Error(
+  //       `Unsupported alignment type ${align}! Use one of : "left", "right", "center", "justify"`
+  //     );
+  // }
+
+  // lines.map(
+  //   line =>
+  // )
+
+  // const alignedLines = lines.map(line => line.map(
+  //   word => word.map(
+  //     token
+  //   )
+  // )
+  //   );
+
+  // return lines.map(alignFunction);
+
+  return lines;
 };
 
 /**
@@ -515,6 +627,21 @@ const layout = (
     return token.style[IMG_DISPLAY_PROPERTY] === "block";
   }
 
+  function addTokenToWord(token: FinalToken): void {
+    // add the token to the current word buffer.
+    word.push(token);
+    wordWidth += token.bounds.width;
+  }
+
+  function finalizeWord() {
+    // add word to line
+    line.push(word);
+
+    // reset word buffer
+    word = [];
+    wordWidth = 0;
+  }
+
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     const isLastToken = i === tokens.length - 1;
@@ -535,19 +662,17 @@ const layout = (
       // move the word segments to the cursor location
       positionWordAtCursorAndAdvanceCursor();
 
-      // add word to line
-      line.push(word);
-
-      // reset word buffer
-      word = [];
-      wordWidth = 0;
+      finalizeWord();
     }
 
     setTallestHeight(token);
+    addTokenToWord(token);
 
     if (isWhitespace) {
       // position the whitespace.
       positionTokenAtCursorAndAdvanceCursor(token);
+
+      finalizeWord();
 
       // If the token is a newline character,
       // move the cursor to next line.
@@ -556,9 +681,6 @@ const layout = (
       }
     } else {
       // if non-whitespace...
-      // add the token to the current word buffer.
-      word.push(token);
-      wordWidth += token.bounds.width;
 
       if (isImage) {
         if (isBlockImage(token)) {
@@ -574,18 +696,19 @@ const layout = (
     }
   }
 
-  // do horizontal alignment.
-  align;
-  // lines = alignTextInLines(align, maxWidth, lines);
+  const alignedLines = alignLines(align, maxWidth, lines);
 
-  return lines;
+  return alignedLines;
 };
 
 const notEmptyString = (s: string) => s !== "";
 
 const SPLIT_MARKER = `_🔪_`;
-const splitAroundWhitespace = (s: string) =>
-  s.replace(/\s/g, `${SPLIT_MARKER}$&${SPLIT_MARKER}`).split(SPLIT_MARKER);
+export const splitAroundWhitespace = (s: string): string[] =>
+  s
+    .replace(/\s/g, `${SPLIT_MARKER}$&${SPLIT_MARKER}`)
+    .split(SPLIT_MARKER)
+    .filter((s) => s !== "");
 
 export const splitText = (s: string, splitStyle: SplitStyle): string[] => {
   if (splitStyle === "words") {
@@ -624,6 +747,7 @@ export const calculateFinalTokens = (
 
     if (typeof token === "string") {
       // split into pieces and convert into tokens.
+
       const textSegments = splitText(token, splitStyle);
 
       // console.log({ input: token, output: textSegments });
