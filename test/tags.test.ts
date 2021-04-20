@@ -143,6 +143,8 @@ describe("tags module", () => {
       });
       expect(tags.parseAttributes("foo=`bar`")).toMatchObject({});
     });
+
+    // fixme
     it.skip("Shouldn't handle mixed up quotes.", () => {
       expect(tags.parseAttributes(`foo='bar" bar="baz'`)).toMatchObject({
         foo: `bar" bar="baz`,

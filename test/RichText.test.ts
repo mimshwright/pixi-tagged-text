@@ -33,7 +33,7 @@ describe("RichText", () => {
     });
 
     describe("constructor takes a list of options.", () => {
-      describe.skip("debug", () => {
+      describe("debug", () => {
         const control = new RichText("Test <b><i>test</i></b>", style);
         const debug = new RichText("Test <b><i>test</i></b> test", style, {
           debug: true,
@@ -49,13 +49,13 @@ describe("RichText", () => {
 
         it("Should show debug information if you set debug to true.", () => {
           // one element for the graphics layer
-          // 3 elements for the text layers
-          expect(debug.debugContainer.children).toHaveLength(4);
+          // 5 elements for the text layers
+          expect(debug.debugContainer.children).toHaveLength(6);
 
           expect(debug.debugContainer.getBounds().width).toBeGreaterThan(100);
         });
         it("Should show the tag names for styled text.", () => {
-          expect(debug.debugContainer.getChildAt(2)).toHaveProperty(
+          expect(debug.debugContainer.getChildAt(3)).toHaveProperty(
             "text",
             "b,i"
           );
@@ -292,9 +292,10 @@ describe("RichText", () => {
         endTime = new Date().getTime();
         const timeSkipUpdates = endTime - startTime;
 
-        it.skip(`Default is slow AF! ${timeControl}ms`, () => {
-          expect(timeControl).toBeGreaterThanOrEqual(500);
-        });
+        // Skipping since actual results will vary.
+        // it(`Default is slow AF! ${timeControl}ms`, () => {
+        //   expect(timeControl).toBeGreaterThanOrEqual(500);
+        // });
         it(`skipDraw should be faster than default. ${timeSkipDraw}ms`, () => {
           expect(timeSkipDraw).toBeLessThan(timeControl);
         });
@@ -302,9 +303,10 @@ describe("RichText", () => {
           expect(timeSkipUpdates).toBeLessThan(timeControl);
           expect(timeSkipUpdates).toBeLessThan(timeSkipDraw);
         });
-        it.skip(`In fact, skipUpdates it's pretty fast! ${timeSkipUpdates}ms`, () => {
-          expect(timeSkipUpdates).toBeLessThan(50);
-        });
+        // Skipping since actual results will vary.
+        // it(`In fact, skipUpdates it's pretty fast! ${timeSkipUpdates}ms`, () => {
+        //   expect(timeSkipUpdates).toBeLessThan(50);
+        // });
 
         console.log({ timeControl, timeSkipDraw, timeSkipUpdates });
       });
@@ -325,7 +327,7 @@ Line 2`,
         tripleSpacedLines.text = "temp";
         expect(tripleSpacedLines.text).toBe("temp");
       });
-      it.skip(`setText() sets the text and allows you to override the update.`, () => {
+      it(`setText() sets the text and allows you to override the update.`, () => {
         tripleSpacedLines.setText(
           `<b>Line 1</b>
 
@@ -339,7 +341,7 @@ Line 2`,
         expect(heightAfterUpdate).toBeGreaterThan(heightBeforeUpdate);
       });
 
-      it.skip("Implicit getter should return the text of the component with tags intact.", () => {
+      it("Implicit getter should return the text of the component with tags intact.", () => {
         expect(singleLine.text).toBe("Line 1");
         expect(tripleSpacedLines.text).toBe(`<b>Line 1</b>
 
@@ -351,15 +353,15 @@ Line 2`,
     // setText() is the same as text but allows you to skipUpdate.
     // text always uses default value for skipUpdate.
 
-    describe.skip("multiple lines", () => {
+    describe("multiple lines", () => {
       it("Should support text with multiple lines.", () => {
-        const H = singleLine.getBounds().height;
-        const H2 = doubleLine.getBounds().height / H;
-        const H3 = tripleSpacedLines.getBounds().height / H;
+        const H = singleLine.getBounds().height / 12;
+        const H2 = doubleLine.getBounds().height / 12;
+        const H3 = tripleSpacedLines.getBounds().height / 12;
 
-        expect(H).toBe(15);
+        expect(H).toBe(1);
         expect(H2).toBeCloseTo(2, 0);
-        expect(H3).toBeCloseTo(3.5, 0);
+        expect(H3).toBeCloseTo(4, 0);
       });
     });
 
@@ -374,7 +376,7 @@ Line 2`,
           "Hello... Is it me you're looking for?"
         );
       });
-      it.skip("Should present multiline text correctly.", () => {
+      it("Should present multiline text correctly.", () => {
         expect(tripleSpacedLines.untaggedText).toBe(`Line 1
 
 
