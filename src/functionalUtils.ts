@@ -69,4 +69,7 @@ export const nestedMap = <T, U>(f: (t: T) => U) => (
 ): Nested<U> =>
   nested instanceof Array ? nested.map(nestedMap(f)) : f(nested);
 
+export const countIf = <T>(p: Predicate<T>) => (a: Array<T>): number =>
+  a.reduce((count, item) => (p(item) ? count + 1 : count), 0);
+
 export type Unary<Param, Return> = (p: Param) => Return;

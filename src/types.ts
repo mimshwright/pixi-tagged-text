@@ -164,11 +164,11 @@ export const _isTextToken = (t: FinalToken): t is TextFinalToken =>
 export const isTextToken = flatEvery(_isTextToken);
 
 export const _isWhitespaceToken = (t: FinalToken): t is WhitespaceFinalToken =>
-  _isTextToken(t) && isWhitespace(t.content);
+  t !== undefined && _isTextToken(t) && isWhitespace(t.content);
 export const isWhitespaceToken = flatEvery(_isWhitespaceToken);
 
 export const _isNewlineToken = (t: FinalToken): t is NewlineFinalToken =>
-  _isTextToken(t) && isNewline(t.content);
+  t !== undefined && _isTextToken(t) && isNewline(t.content);
 export const isNewlineToken = flatEvery(_isNewlineToken);
 
 export const isNotWhitespaceToken = complement(isWhitespaceToken);

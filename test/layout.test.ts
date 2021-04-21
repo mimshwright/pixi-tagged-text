@@ -1,4 +1,9 @@
-import { createEmptyFinalToken, StyledToken } from "./../src/types";
+import {
+  createEmptyFinalToken,
+  FinalToken,
+  ParagraphToken,
+  StyledToken,
+} from "./../src/types";
 import { splitText } from "./../src/layout";
 import * as PIXI from "pixi.js";
 import * as layout from "../src/layout";
@@ -9,8 +14,6 @@ import { SplitStyle } from "../src/types";
 const R = (...args: number[]) => new PIXI.Rectangle(...args);
 
 describe("layout module", () => {
-  // const W = 100;
-  // const H = 20;
   const maxLineWidth = 500;
 
   describe("updateOffsetForNewLine()", () => {
@@ -195,6 +198,13 @@ describe("layout module", () => {
         },
       ]);
     });
+
+    it("Should ignore elements that have width of zero.", () => {
+      const zeroWidth = R(350, 30, 0, 20);
+      expect(
+        layout.alignJustify(maxLineWidth)([...line, zeroWidth])
+      ).toMatchObject([...result, zeroWidth]);
+    });
     it("should create a new object rather than editing the original.", () => {
       expect(result[0]).not.toBe(line[0]);
       expect(line[2]).toHaveProperty("x", 175);
@@ -212,68 +222,6 @@ describe("layout module", () => {
       ]);
     });
   });
-
-  // describe.skip("alignTextInLines()", () => {
-  //   // This function really just combines the other align functions and runs them
-  //   // based on an `Align` string on multiple lines.
-
-  //   const lines = [
-  //     [R(0, 0, W, H), R(100, 0, W, H)],
-  //     [R(0, 30, W, H), R(100, 30, W, H), R(200, 30, W, H)],
-  //     [R(0, 60, W, H)],
-  //   ];
-
-  //   const right = layout.alignTextInLines("right", maxLineWidth, lines);
-  //   const center = layout.alignTextInLines("center", maxLineWidth, lines);
-  //   const left = layout.alignTextInLines("left", maxLineWidth, lines);
-  //   const justify = layout.alignTextInLines("justify", maxLineWidth, lines);
-
-  //   it("should reposition items from lines of text (MeasurementLines) based on the alignment and width of container.", () => {
-  //     expect(right).toMatchObject([
-  //       [{ x: maxLineWidth - W * 2 }, { x: maxLineWidth - W }],
-  //       [
-  //         { x: maxLineWidth - W * 3 },
-  //         { x: maxLineWidth - W * 2 },
-  //         { x: maxLineWidth - W },
-  //       ],
-  //       [{ x: maxLineWidth - W }],
-  //     ]);
-  //     expect(center).toMatchObject([
-  //       [
-  //         { x: (maxLineWidth - W * 2) / 2 },
-  //         { x: (maxLineWidth - W * 2) / 2 + W },
-  //       ],
-  //       [
-  //         { x: (maxLineWidth - W * 3) / 2 },
-  //         { x: (maxLineWidth - W * 3) / 2 + W },
-  //         { x: (maxLineWidth - W * 3) / 2 + W * 2 },
-  //       ],
-  //       [{ x: (maxLineWidth - W) / 2 }],
-  //     ]);
-  //     expect(left).toMatchObject([
-  //       [{ x: W * 0 }, { x: W * 1 }],
-  //       [{ x: W * 0 }, { x: W * 1 }, { x: W * 2 }],
-  //       [{ x: W * 0 }],
-  //     ]);
-
-  //     expect(justify).toMatchObject([
-  //       [{ x: 0 }, { x: maxLineWidth - W }],
-  //       [
-  //         { x: 0 },
-  //         { x: (maxLineWidth - 3 * W) / 2 + W },
-  //         { x: maxLineWidth - W },
-  //       ],
-  //       [{ x: 0 }],
-  //     ]);
-  //   });
-
-  //   it("should create a new object rather than editing the original.", () => {
-  //     expect(left[0]).not.toBe(lines[0]);
-  //     expect(right[0]).not.toBe(lines[0]);
-  //     expect(center[0]).not.toBe(lines[0]);
-  //     expect(justify[0]).not.toBe(lines[0]);
-  //   });
-  // });
 
   describe("splitAroundWhitespace()", () => {
     it("Should split at every whitespace but not delete the whitespace, keept it.", () => {
@@ -418,6 +366,61 @@ describe("calculateFinalTokens()", () => {
             { content: "!" },
           ],
         ],
+      ]);
+    });
+  });
+
+  describe("collapseWhitespacesOnEndOfLines()", () => {
+    it("Should collapse the width of any whitespace characters that appear at end of lines. (but not in middle)", () => {
+      const example: Partial<FinalToken>[][][] = [
+        [
+          [{ content: "a", bounds: R(0, 0, 10, 10) }],
+          [{ content: " ", bounds: R(10, 0, 10, 10) }],
+          [{ content: "b", bounds: R(20, 0, 10, 10) }],
+          [{ content: " ", bounds: R(30, 0, 10, 10) }],
+          [{ content: " ", bounds: R(40, 0, 10, 10) }],
+        ],
+      ];
+      const result = layout.collapseWhitespacesOnEndOfLines(
+        example as ParagraphToken
+      );
+      expect(result).toMatchObject([
+        [
+          [{ content: "a", bounds: R(0, 0, 10, 10) }],
+          [{ content: " ", bounds: R(10, 0, 10, 10) }],
+          [{ content: "b", bounds: R(20, 0, 10, 10) }],
+          [{ content: " ", bounds: R(30, 0, 0, 10) }],
+          [{ content: " ", bounds: R(40, 0, 0, 10) }],
+        ],
+      ]);
+    });
+    it("Should work the same with newlines", () => {
+      const example: Partial<FinalToken>[][][] = [
+        [
+          [{ content: "a", bounds: R(0, 0, 10, 10) }],
+          [{ content: "\n", bounds: R(10, 0, 10, 10) }],
+        ],
+        [
+          [{ content: "b", bounds: R(0, 10, 10, 10) }],
+          [{ content: " ", bounds: R(10, 10, 10, 10) }],
+          [{ content: "\n", bounds: R(20, 10, 10, 10) }],
+        ],
+        [[{ content: "c", bounds: R(0, 0, 20, 10) }]],
+      ];
+      const result = layout.collapseWhitespacesOnEndOfLines(
+        example as ParagraphToken
+      );
+      expect(result).toMatchObject([
+        [
+          [{ content: "a", bounds: R(0, 0, 10, 10) }],
+          [{ content: "\n", bounds: R(10, 0, 0, 10) }],
+        ],
+        [
+          [{ content: "b", bounds: R(0, 10, 10, 10) }],
+          [{ content: " ", bounds: R(10, 10, 0, 10) }],
+          [{ content: "\n", bounds: R(20, 10, 0, 10) }],
+        ],
+        [[{ content: "c", bounds: R(0, 0, 20, 10) }]],
       ]);
     });
   });
