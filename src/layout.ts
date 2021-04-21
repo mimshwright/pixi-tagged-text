@@ -111,6 +111,7 @@ const positionWordX = (x: number) => (word: WordToken): WordToken => {
       prevBounds = token.bounds;
     } else {
       token.bounds.x = prevBounds.x + prevBounds.width;
+      prevBounds = token.bounds;
     }
     return token;
   });
@@ -256,14 +257,9 @@ export const alignLines = (
   for (const line of lines) {
     const wordBoundsForLine: Bounds[] = [];
     for (const word of line) {
-      if (word.length === 0) {
-        console.log("EMPTY WORD ☠️");
-        console.log(line);
-      }
       const wordBounds = getBoundsNested(word);
       wordBoundsForLine.push(wordBounds);
       if (isNaN(wordBounds.x)) {
-        console.log(word);
         throw new Error("wordBounds not correct");
       }
     }
@@ -427,9 +423,7 @@ const layout = (
       }
     }
   }
-
   const collapsedWhitespace = collapseWhitespacesOnEndOfLines(lines);
-
   const alignedLines = alignLines(align, maxWidth, collapsedWhitespace);
 
   return alignedLines;

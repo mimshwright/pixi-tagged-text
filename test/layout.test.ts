@@ -285,6 +285,7 @@ describe("layout module", () => {
         "!",
       ]);
     });
+
     it("Should treat every whitespace as a separate piece.", () => {
       expect(layout.splitText("Hello,   world!", "words")).toMatchObject([
         "Hello,",

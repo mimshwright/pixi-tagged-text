@@ -159,6 +159,16 @@ describe("RichText", () => {
           expect(chars.textFields).toHaveLength(charLength);
         });
 
+        it("Check that the letters aren't clumping together.", () => {
+          const lines = chars.tokens;
+          const tokens = lines[0][0];
+          const bounds1 = tokens[1].bounds;
+          const bounds2 = tokens[2].bounds;
+          const bounds3 = tokens[3].bounds;
+          expect(bounds1.x).not.toEqual(bounds2.x);
+          expect(bounds2.x).not.toEqual(bounds3.x);
+        });
+
         it("Should throw if the style is not supported. It will offer suggestions if you're close!", () => {
           expect(() => {
             new RichText(text, style, { splitStyle: "chars" as SplitStyle });
