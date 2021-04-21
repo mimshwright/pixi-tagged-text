@@ -541,16 +541,11 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               const amplitude = 5;
               const frequency = 0.1;
               const phaseOffsetPerLetter = 1;
-              const frequencyChangePerLetter = 0.05;
-              const amplitudeChangePerLetter = -0.2;
 
               text.y =
                 originalYPositions[i] +
-                Math.sin(
-                  time * frequency * (1 + i * frequencyChangePerLetter) +
-                    i * phaseOffsetPerLetter
-                ) *
-                  (amplitude + amplitudeChangePerLetter * i);
+                Math.sin(time * frequency + i * phaseOffsetPerLetter) *
+                  amplitude;
             };
 
             const animationStep = (delta) => {
