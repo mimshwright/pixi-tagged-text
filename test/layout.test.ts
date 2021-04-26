@@ -372,14 +372,15 @@ describe("calculateFinalTokens()", () => {
   });
 
   describe("collapseWhitespacesOnEndOfLines()", () => {
+    const fontProperties = { ascent: 10, descent: 2, fontSize: 12 };
     it("Should collapse the width of any whitespace characters that appear at end of lines. (but not in middle)", () => {
       const example: Partial<FinalToken>[][][] = [
         [
-          [{ content: "a", bounds: R(0, 0, 10, 10) }],
-          [{ content: " ", bounds: R(10, 0, 10, 10) }],
-          [{ content: "b", bounds: R(20, 0, 10, 10) }],
-          [{ content: " ", bounds: R(30, 0, 10, 10) }],
-          [{ content: " ", bounds: R(40, 0, 10, 10) }],
+          [{ content: "a", fontProperties, bounds: R(0, 0, 10, 10) }],
+          [{ content: " ", fontProperties, bounds: R(10, 0, 10, 10) }],
+          [{ content: "b", fontProperties, bounds: R(20, 0, 10, 10) }],
+          [{ content: " ", fontProperties, bounds: R(30, 0, 10, 10) }],
+          [{ content: " ", fontProperties, bounds: R(40, 0, 10, 10) }],
         ],
       ];
       const result = layout.collapseWhitespacesOnEndOfLines(
@@ -395,18 +396,18 @@ describe("calculateFinalTokens()", () => {
         ],
       ]);
     });
-    it("Should work the same with newlines", () => {
+    it("Should collapse width and height of newlines.", () => {
       const example: Partial<FinalToken>[][][] = [
         [
-          [{ content: "a", bounds: R(0, 0, 10, 10) }],
-          [{ content: "\n", bounds: R(10, 0, 10, 10) }],
+          [{ content: "a", fontProperties, bounds: R(0, 0, 10, 10) }],
+          [{ content: "\n", fontProperties, bounds: R(10, 0, 10, 20) }],
         ],
         [
-          [{ content: "b", bounds: R(0, 10, 10, 10) }],
-          [{ content: " ", bounds: R(10, 10, 10, 10) }],
-          [{ content: "\n", bounds: R(20, 10, 10, 10) }],
+          [{ content: "b", fontProperties, bounds: R(0, 10, 10, 10) }],
+          [{ content: " ", fontProperties, bounds: R(10, 10, 10, 10) }],
+          [{ content: "\n", fontProperties, bounds: R(20, 10, 10, 20) }],
         ],
-        [[{ content: "c", bounds: R(0, 0, 20, 10) }]],
+        [[{ content: "c", fontProperties, bounds: R(0, 0, 20, 10) }]],
       ];
       const result = layout.collapseWhitespacesOnEndOfLines(
         example as ParagraphToken
@@ -414,12 +415,12 @@ describe("calculateFinalTokens()", () => {
       expect(result).toMatchObject([
         [
           [{ content: "a", bounds: R(0, 0, 10, 10) }],
-          [{ content: "\n", bounds: R(10, 0, 0, 10) }],
+          [{ content: "\n", bounds: R(10, 0, 0, 12) }],
         ],
         [
           [{ content: "b", bounds: R(0, 10, 10, 10) }],
           [{ content: " ", bounds: R(10, 10, 0, 10) }],
-          [{ content: "\n", bounds: R(20, 10, 0, 10) }],
+          [{ content: "\n", bounds: R(20, 10, 0, 12) }],
         ],
         [[{ content: "c", bounds: R(0, 0, 20, 10) }]],
       ]);
@@ -611,39 +612,122 @@ describe("calculateFinalTokens()", () => {
   });
 });
 
-// describe.skip("verticalAlignInLines()", () => {
-//   const lines = [
-//     [R(0, 0, W, 20), R(100, 0, W, 40)],
-//     [R(0, 30, W, 30), R(100, 30, W, 40), R(200, 30, W, 10)],
-//     [R(0, 60, W, 20)],
-//   ];
+describe("verticalAlignInLines()", () => {
+  const fontProperties = { ascent: 20, descent: 10, fontSize: 30 };
+  const lines = [
+    // Line 0
+    [
+      // Word 0
+      [
+        // Segment 0
+        {
+          ...createEmptyFinalToken(),
+          fontProperties,
+          bounds: R(0, 0, 100, 20),
+        },
+      ],
+      // Word 1
+      [
+        // Segment 0
+        {
+          ...createEmptyFinalToken(),
+          fontProperties,
+          bounds: R(100, 0, 100, 40),
+        },
+      ],
+    ],
+    // Line 1
+    [
+      // Word 0
+      [
+        // Segment 0
+        {
+          ...createEmptyFinalToken(),
+          fontProperties,
+          bounds: R(0, 40, 100, 30),
+        },
+      ],
+      // Word 1
+      [
+        // Segment 0
+        {
+          ...createEmptyFinalToken(),
+          fontProperties,
+          bounds: R(100, 40, 100, 20),
+        },
+      ],
+      // Word 2
+      [
+        // Segment 0
+        {
+          ...createEmptyFinalToken(),
+          fontProperties,
+          bounds: R(200, 40, 100, 10),
+        },
+      ],
+    ],
+    // Line 2
+    [
+      // Word 0
+      [
+        // Segment 0
+        {
+          ...createEmptyFinalToken(),
+          fontProperties,
+          bounds: R(0, 70, 100, 20),
+        },
+      ],
+    ],
+  ];
 
-//   const top = layout.verticalAlignInLines(lines, 0);
-//   const bottom = layout.verticalAlignInLines(lines, 0);
-//   const middle = layout.verticalAlignInLines(lines, 0);
-//   it("should position text vertically in a line so that it fits correctly.", () => {
-//     expect(top).toMatchObject([
-//       [{ y: 0 }, { y: 0 }],
-//       [{ y: 0 }, { y: 0 }, { y: 0 }],
-//       [{ y: 0 }],
-//     ]);
-//     expect(bottom).toMatchObject([
-//       [{ y: 20 }, { y: 0 }],
-//       [{ y: 10 }, { y: 0 }, { y: 30 }],
-//       [{ y: 0 }],
-//     ]);
-//     expect(middle).toMatchObject([
-//       [{ y: 10 }, { y: 0 }],
-//       [{ y: 5 }, { y: 0 }, { y: 15 }],
-//       [{ y: 0 }],
-//     ]);
-//   });
-//   it("should create a new object rather than editing the original.", () => {
-//     expect(top[0]).not.toBe(lines[0]);
-//     expect(top[0][0]).not.toBe(lines[0][0]);
-//     expect(middle[0]).not.toBe(lines[0]);
-//     expect(middle[0][0]).not.toBe(lines[0][0]);
-//     expect(bottom[0]).not.toBe(lines[0]);
-//     expect(bottom[0][0]).not.toBe(lines[0][0]);
-//   });
-// });
+  const top = layout.verticalAlignInLines(lines, 0, "top");
+  const lineSpacing = layout.verticalAlignInLines(lines, 100, "top");
+  const bottom = layout.verticalAlignInLines(lines, 0, "bottom");
+  const middle = layout.verticalAlignInLines(lines, 0, "middle");
+  it("should position text vertically in a line so that it fits correctly.", () => {
+    expect(top).toMatchObject([
+      [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
+      [
+        [{ bounds: { y: 40 } }],
+        [{ bounds: { y: 40 } }],
+        [{ bounds: { y: 40 } }],
+      ],
+      [[{ bounds: { y: 70 } }]],
+    ]);
+    expect(lineSpacing).toMatchObject([
+      [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
+      [
+        [{ bounds: { y: 140 } }],
+        [{ bounds: { y: 140 } }],
+        [{ bounds: { y: 140 } }],
+      ],
+      [[{ bounds: { y: 270 } }]],
+    ]);
+    expect(bottom).toMatchObject([
+      [[{ bounds: { y: 20 } }], [{ bounds: { y: 0 } }]],
+      [
+        [{ bounds: { y: 40 } }],
+        [{ bounds: { y: 50 } }],
+        [{ bounds: { y: 60 } }],
+      ],
+      [[{ bounds: { y: 70 } }]],
+    ]);
+    expect(middle).toMatchObject([
+      [[{ bounds: { y: 10 } }], [{ bounds: { y: 0 } }]],
+      [
+        [{ bounds: { y: 40 } }],
+        [{ bounds: { y: 45 } }],
+        [{ bounds: { y: 50 } }],
+      ],
+      [[{ bounds: { y: 70 } }]],
+    ]);
+  });
+  it("should create a new object rather than editing the original.", () => {
+    expect(top[0]).not.toBe(lines[0]);
+    expect(top[0][0]).not.toBe(lines[0][0]);
+    expect(middle[0]).not.toBe(lines[0]);
+    expect(middle[0][0]).not.toBe(lines[0][0]);
+    expect(bottom[0]).not.toBe(lines[0]);
+    expect(bottom[0][0]).not.toBe(lines[0][0]);
+  });
+});

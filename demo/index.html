@@ -81,12 +81,7 @@ and <ms>multistyle</ms> text for
               },
             };
 
-            const basic = new RichText(
-              basicText,
-              basicStyle
-
-              // { debug: true, debugConsole: true }
-            );
+            const basic = new RichText(basicText, basicStyle);
 
             createDemo("basic", basic);
           </script>
@@ -123,7 +118,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
 
             const imgRichText = new RichText(imgText, imgStyle, {
               debug: true,
-              debugConsole: true,
+              // debugConsole: true,
               imgMap: { thinking, doot },
             });
 
@@ -228,7 +223,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
             // Vertical Alignment
             const valignText = `<top><code>Top</code> <small>Vertical</small> <img/> Alignment.</top>
 
-<middle><code>Middle</code> <small>Vertical</small> <img/> Alignment.</middle>
+<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>
 
 <bottom><code>Bottom</code> <small>Vertical</small> <img/> Alignment.</bottom>
 
@@ -240,7 +235,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 fontSize: "24px",
                 fill: "#cccccc",
                 align: "left",
-                valign: "baseline",
+                // valign: "baseline",
               },
               code: {
                 fontFamily: "Courier",
@@ -259,7 +254,6 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
 
             let valign = new RichText(valignText, valignStyle, {
               imgMap: { valignImg },
-              debug: true,
             });
             createDemo("valign", valign);
           </script>

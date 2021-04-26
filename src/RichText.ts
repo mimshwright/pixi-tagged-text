@@ -19,7 +19,7 @@ import {
   Point,
   ParagraphToken,
 } from "./types";
-import { calculateFinalTokens } from "./layout";
+import { calculateFinalTokens, getBoundsNested } from "./layout";
 import {
   combineAllStyles,
   getStyleForTag as getStyleForTagExt,
@@ -32,6 +32,7 @@ const DEFAULT_STYLE: TextStyleExtended = {
   [IMG_DISPLAY_PROPERTY]: "inline",
   wordWrap: true,
   wordWrapWidth: 500,
+  lineSpacing: 0,
 };
 
 const DEFAULT_OPTIONS: RichTextOptions = {
@@ -560,20 +561,12 @@ export default class RichText extends PIXI.Sprite {
     // for (const line of tokens) {
     for (let lineNumber = 0; lineNumber < paragraph.length; lineNumber++) {
       const line = paragraph[lineNumber];
-      const [lineY, lineHeight] = line
-        .flat(2)
-        .reduce(
-          ([highestTop, lowestBottom], { bounds }) => [
-            Math.min(bounds.y, highestTop),
-            Math.max(lowestBottom, bounds.height),
-          ],
-          [Number.POSITIVE_INFINITY, 0]
-        );
+      const lineBounds = getBoundsNested(line);
 
       if (this.defaultStyle.wordWrap) {
         const w = this.defaultStyle.wordWrapWidth ?? this.width;
         g.lineStyle(0.5, DEBUG.LINE_COLOR, 0.2);
-        g.drawRect(0, lineY, w, lineHeight);
+        g.drawRect(0, lineBounds.y, w, lineBounds.height);
         g.endFill();
       }
 
