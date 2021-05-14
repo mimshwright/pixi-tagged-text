@@ -5,15 +5,11 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
 
-    <script src="./pixi.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.8/pixi.js"></script> -->
-    <script src="./highlight.min.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.8/pixi.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
 
     <!-- RichText -->
     <script src="../dist/pixi-rich-text.umd.js"></script>
-    <!-- Old MultiStyleText -->
-    <script src="./pixi-multistyle-text.umd.js"></script>
     <script>
       hljs.initHighlightingOnLoad();
     </script>
@@ -38,11 +34,7 @@
           return app;
         }
 
-        function createDemo(
-          id,
-          richTextExample,
-          multiStyleTextExample = undefined
-        ) {
+        function createDemo(id, richTextExample) {
           const app = createPixiApp(id);
 
           if (richTextExample !== undefined) {
@@ -51,24 +43,7 @@
             app.stage.addChild(richTextExample);
           }
 
-          if (multiStyleTextExample !== undefined) {
-            multiStyleTextExample.x = 30;
-            multiStyleTextExample.y = 30;
-            multiStyleTextExample.alpha = 0.5;
-            multiStyleTextExample.visible = false;
-            app.stage.addChild(multiStyleTextExample);
-          }
-
           return app;
-        }
-
-        // For testing purposes, temporarily replace the code that creates
-        // text fields to create two of them to compare against each other.
-        function createComparisonText(text, styles, overrideOptions) {
-          return [
-            new RichText(text, styles, overrideOptions || opt),
-            new MultiStyleText(text, styles),
-          ];
         }
       </script>
 
@@ -81,34 +56,34 @@
         <div class="pixi" id="basic">
           <script>
             // Basics
-            const basic = createComparisonText(
-              `Let's make some
+            const basicText = `Let's make some
 <ml>multiline</ml>
 and <ms>multistyle</ms> text for
-<pixi>Pixi.js!</pixi>`,
-              {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                  align: "center",
-                },
-                ml: {
-                  fontStyle: "italic",
-                  fill: "#ff8888",
-                },
-                ms: {
-                  fontWeight: "bold",
-                  fill: "#4488ff",
-                },
-                pixi: {
-                  fontSize: "64px",
-                  fill: "#efefef",
-                },
-              }
-            );
+<pixi>Pixi.js!</pixi>`;
+            const basicStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                align: "center",
+              },
+              ml: {
+                fontStyle: "italic",
+                fill: "#ff8888",
+              },
+              ms: {
+                fontWeight: "bold",
+                fill: "#4488ff",
+              },
+              pixi: {
+                fontSize: "64px",
+                fill: "#efefef",
+              },
+            };
 
-            createDemo("basic", ...basic, { debug: true });
+            const basic = new RichText(basicText, basicStyle);
+
+            createDemo("basic", basic);
           </script>
         </div>
       </div>
@@ -122,12 +97,18 @@ and <ms>multistyle</ms> text for
             const thinking = PIXI.Sprite.from("./icon.png");
             const doot = PIXI.Sprite.from("./doot.png");
 
+            const imgText = `<h2>Inline Images!</h2>
+Add an image.
+<img imgSrc="doot" imgDisplay="inline" /> or <img imgSrc="thinking" imgDisplay="inline" />
+Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
             const imgStyle = {
               default: {
                 fontFamily: "Arial",
                 fontSize: "24px",
                 fill: "#FFFFCC",
                 align: "center",
+                lineSpacing: 0,
+                valign: "baseline",
               },
               h2: {
                 fontSize: 36,
@@ -137,21 +118,13 @@ and <ms>multistyle</ms> text for
               icon: {},
             };
 
-            const [imgRichText, imgMultiText] = createComparisonText(
-              `<h2>Inline Images!</h2>
-Add an image.
-<img imgSrc="doot" imgDisplay="inline" />
-Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
-`,
-              imgStyle,
-              {
-                debug: true,
-                imgMap: { thinking, doot },
-              }
-            );
-            imgMultiText.text = "Images not supported in multiText";
+            const imgRichText = new RichText(imgText, imgStyle, {
+              debug: true,
+              // debugConsole: true,
+              imgMap: { thinking, doot },
+            });
 
-            const imgApp = createDemo("img", imgRichText, imgMultiText);
+            const imgApp = createDemo("img", imgRichText);
           </script>
         </div>
       </div>
@@ -164,11 +137,9 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
         <div class="pixi" id="align">
           <script>
             // Alignment.
-            const str = `You can align left, right, center or justify.\nEt veniam nemo sunt ab facilis voluptatem voluptas est debitis.`;
-            const style = {
+            const alignText = `You can align left, right, center or justify.\nEt veniam nemo sunt ab facilis voluptatem voluptas est debitis.`;
+            const alignStyle = {
               default: {
-                align: "left",
-                fill: "teal",
                 wordWrapWidth: 250,
               },
               b: {
@@ -176,59 +147,67 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
                 fill: "white",
               },
             };
+            const alignOptions = { debug: true };
 
-            let [leftRich, leftMulti] = createComparisonText(
-              str.replace("left", "<b>left</b>"),
-              style,
-              opt
+            let left = new RichText(
+              alignText.replace("left", "<b>left</b>"),
+              {
+                ...alignStyle,
+                default: {
+                  ...alignStyle.default,
+                  align: "left",
+                  fill: "teal",
+                },
+              },
+              alignOptions
             );
 
             let right = new RichText(
-              str.replace("right", "<b>right</b>"),
+              alignText.replace("right", "<b>right</b>"),
               {
-                ...style,
+                ...alignStyle,
                 default: {
+                  ...alignStyle.default,
                   align: "right",
                   fill: "orange",
-                  wordWrapWidth: 250,
                 },
               },
-              opt
+              alignOptions
             );
             right.x = 330;
             right.y = 30;
 
             let center = new RichText(
-              str.replace("center", "<b>center</b>"),
+              alignText.replace("center", "<b>center</b>"),
               {
-                ...style,
+                ...alignStyle,
                 default: {
+                  ...alignStyle.default,
                   align: "center",
                   fill: "yellow",
-                  wordWrapWidth: 250,
                 },
               },
-              opt
+              alignOptions
             );
             center.x = 30;
             center.y = 330;
 
             let justify = new RichText(
-              str.replace("justify", "<b>justify</b>"),
+              alignText.replace("justify", "<b>justify</b>"),
               {
-                ...style,
+                ...alignStyle,
                 default: {
+                  ...alignStyle.default,
                   align: "justify",
                   fill: "pink",
-                  wordWrapWidth: 250,
                 },
               },
-              opt
+              alignOptions
             );
             justify.x = 330;
             justify.y = 330;
 
-            const alignApp = createDemo("align", leftRich, leftMulti);
+            const alignApp = createDemo("align", left);
             alignApp.stage.addChild(right);
             alignApp.stage.addChild(center);
             alignApp.stage.addChild(justify);
@@ -244,13 +223,21 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
         <div class="pixi" id="valign">
           <script>
             // Vertical Alignment
+            const valignText = `<top><code>Top</code> <small>Vertical</small> <img/> Alignment.</top>
+
+<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>
+
+<bottom><code>Bottom</code> <small>Vertical</small> <img/> Alignment.</bottom>
+
+<baseline><code>Baseline</code> <small>Vertical</small> <img/> Alignment.</baseline>`;
+
             const valignStyle = {
               default: {
                 fontFamily: "Arial",
                 fontSize: "24px",
                 fill: "#cccccc",
                 align: "left",
-                valign: "baseline",
+                // valign: "baseline",
               },
               code: {
                 fontFamily: "Courier",
@@ -264,19 +251,13 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
               baseline: { valign: "baseline" },
               img: { imgSrc: "valignImg", imgDisplay: "icon" },
             };
+
             const valignImg = PIXI.Sprite.from("./icon.png");
-            let valign = createComparisonText(
-              `<top><code>Top</code> <small>Vertical</small> <img/> Alignment.</top>
 
-<middle><code>Middle</code> <small>Vertical</small> <img/> Alignment.</middle>
-
-<bottom><code>Bottom</code> <small>Vertical</small> <img/> Alignment.</bottom>
-
-<baseline><code>Baseline</code> <small>Vertical</small> <img/> Alignment.</baseline>`,
-              valignStyle,
-              { imgMap: { valignImg }, debug: true }
-            );
-            createDemo("valign", ...valign);
+            let valign = new RichText(valignText, valignStyle, {
+              imgMap: { valignImg },
+            });
+            createDemo("valign", valign);
           </script>
         </div>
       </div>
@@ -290,23 +271,22 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
         <div class="pixi" id="attributes">
           <script>
             // Basics
-            let attributes = createComparisonText(
-              `You can add <em>attributes</em> to your tags!\nThey will <em fontStyle="italic">overwrite</em> the <em fill="#FF8822">values</em><br></br>for any existing <em fontFamily="Courier" fill="#FFFF00" fontWeight="400">tag styles</em>.`,
-              {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                  align: "left",
-                },
-                em: {
-                  fill: "#4488FF",
-                  fontWeight: 700,
-                },
-              }
-            );
+            const attributesText = `You can add <em>attributes</em> to your tags!\nThey will <em fontStyle="italic">overwrite</em> the <em fill="#FF8822">values</em> for any existing <em fontFamily="Courier" fill="#FFFF00" fontWeight="400">tag styles</em>.`;
+            const attributesStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                align: "left",
+              },
+              em: {
+                fill: "#4488FF",
+                fontWeight: 700,
+              },
+            };
+            let attributes = new RichText(attributesText, attributesStyle);
 
-            createDemo("attributes", ...attributes);
+            createDemo("attributes", attributes);
           </script>
         </div>
       </div>
@@ -319,27 +299,26 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
         <div class="pixi" id="nested">
           <script>
             // Nesting Tags
-            let nested = createComparisonText(
-              "You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like, dawg!</large></shadow></thicker></i></red></b></outline>",
-              {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                  wordWrapWidth: 500,
-                  wordWrap: true,
-                  valign: "baseline",
-                },
-                outline: { stroke: "black", strokeThickness: 2 },
-                b: { fontWeight: 700 },
-                red: { fill: "#ff8888" },
-                i: { fontStyle: "italic" },
-                thicker: { strokeThickness: 6 },
-                shadow: { dropShadow: true, dropShadowColor: "#888888" },
-                large: { fontSize: "36px" },
-              }
-            );
-            createDemo("nested", ...nested);
+            const nestedText = `You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like, dawg!</large></shadow></thicker></i></red></b></outline>`;
+            const nestedStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                wordWrapWidth: 500,
+                wordWrap: true,
+                valign: "baseline",
+              },
+              outline: { stroke: "black", strokeThickness: 2 },
+              b: { fontWeight: 700 },
+              red: { fill: "#ff8888" },
+              i: { fontStyle: "italic" },
+              thicker: { strokeThickness: 6 },
+              shadow: { dropShadow: true, dropShadowColor: "#888888" },
+              large: { fontSize: "36px" },
+            };
+            let nested = new RichText(nestedText, nestedStyle);
+            createDemo("nested", nested);
           </script>
         </div>
       </div>
@@ -352,22 +331,30 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
         <div class="pixi" id="spacing">
           <script>
             // Spacing
-            let spacing = createComparisonText(
-              "You can set line and letter spacing to give your text some drama. Note that lineSpacing can only be set on the default style.",
-              {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                  lineSpacing: 10,
-                  letterSpacing: 10,
-                  wordWrap: true,
-                  wordWrapWidth: 500,
-                },
-              }
-            );
+            const spacingText =
+              "You can <narrow>set line and letter spacing</narrow> to <wide>give your text some drama.</wide>\nNote that lineSpacing can only be set on the default style.";
+            const spacingStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                lineSpacing: 30,
+                letterSpacing: 0,
+                wordWrap: true,
+                wordWrapWidth: 500,
+              },
+              narrow: {
+                fill: "#FFCC00",
+                letterSpacing: -2,
+              },
+              wide: {
+                fill: "#CCFF00",
+                letterSpacing: 10,
+              },
+            };
+            let spacing = new RichText(spacingText, spacingStyle);
 
-            createDemo("spacing", ...spacing);
+            createDemo("spacing", spacing);
           </script>
         </div>
       </div>
@@ -379,49 +366,55 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
         <div class="pixi" id="wrapping">
           <script>
             // Wrapping and Alignment
-            let wrapping = createComparisonText(
-              'Global word wrap and alignment properties are controlled by the "default" style, and can\'t be overridden by other styles.',
-              {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                  wordWrap: true,
-                  wordWrapWidth: 150,
-                  align: "right",
-                },
-              }
-            );
-            createDemo("wrapping", ...wrapping);
+            const wrappingText =
+              'Global word wrap and alignment properties are controlled by the "default" style, and can\'t be overridden by other styles.';
+            const wrappingStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                wordWrap: true,
+                wordWrapWidth: 150,
+                align: "right",
+              },
+            };
+            let wrapping = new RichText(wrappingText, wrappingStyle);
+            createDemo("wrapping", wrapping);
           </script>
         </div>
       </div>
       <div class="example">
         <div class="code">
-          <h2>Wrapping and Alignment II</h2>
+          <h2>Wrapping and Alignment II - splitStyle = "characters"</h2>
           <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="wrapping2">
           <script>
             // Wrapping and Alignment II
-            let [richTextWrapping2, multiStyleWrapping2] = createComparisonText(
-              "全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。",
+            const wrappingText2 = `Use splitStyle:"character" to allow line breaks between characters. Can be useful for languages such as chinese.
+全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。`;
+            const wrappingStyle2 = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "16px",
+                fill: "#cccccc",
+                wordWrap: true,
+                wordWrapWidth: 250,
+              },
+              blue: { fill: 0x4488ff, stroke: 0x2244cc, fontSize: "24px" },
+              red: { fill: 0xff8888, stroke: 0xcc4444 },
+              big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
+            };
+
+            let richTextWrapping2 = new RichText(
+              wrappingText2,
+              wrappingStyle2,
               {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "16px",
-                  fill: "#cccccc",
-                  wordWrap: true,
-                  wordWrapWidth: 250,
-                  breakWords: true,
-                },
-                blue: { fill: 0x4488ff, stroke: 0x2244cc, fontSize: "24px" },
-                red: { fill: 0xff8888, stroke: 0xcc4444 },
-                big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
+                splitStyle: "characters",
+                debug: true,
               }
             );
-            richTextWrapping2.text = "breakWords is not currently supported.";
-            createDemo("wrapping2", richTextWrapping2, multiStyleWrapping2);
+            createDemo("wrapping2", richTextWrapping2);
           </script>
         </div>
       </div>
@@ -433,43 +426,37 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
         <div class="pixi" id="debug">
           <script>
             // Debug Mode
-            let debug = createComparisonText(
-              "You can use <blue>debug mode</blue> to help you figure out what your text is doing. Include <code>{debug: true} </code> in the options when you create your text.",
-              {
-                default: {
-                  fontFamily: "Arial",
-                  fontSize: "24px",
-                  fill: "#cccccc",
-                  wordWrap: true,
-                  wordWrapWidth: 500,
-                },
-                blue: {
-                  fill: "#4488ff",
-                  stroke: "#2244cc",
-                  strokeThickness: 4,
-                },
-                code: {
-                  fontFamily: "Courier",
-                  fontSize: "36px",
-                  fill: "#ff8888",
-                  stroke: "#660000",
-                  strokeThickness: 8,
-                },
+            const debugText =
+              "You can use <blue>debug mode</blue> to help you figure out what your text is doing. Include <code>{debug: true} </code> in the options when you create your text.";
+            const debugStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                wordWrap: true,
+                wordWrapWidth: 500,
               },
-              { debug: false }
-            );
+              blue: {
+                fill: "#4488ff",
+                stroke: "#2244cc",
+                strokeThickness: 4,
+              },
+              code: {
+                fontFamily: "Courier",
+                fontSize: "36px",
+                fill: "#ff8888",
+                stroke: "#660000",
+                strokeThickness: 8,
+              },
+            };
 
-            MultiStyleText.debugOptions.spans.enabled = true;
-            MultiStyleText.debugOptions.objects.enabled = true;
+            let debug = new RichText(debugText, debugStyle, { debug: false });
 
-            createDemo("debug", ...debug);
-
-            MultiStyleText.debugOptions.spans.enabled = false;
-            MultiStyleText.debugOptions.objects.enabled = false;
+            createDemo("debug", debug);
           </script>
         </div>
       </div>
-      <div class="example">
+      <!--div class="example">
         <div class="code">
           <h2>Interaction Events</h2>
           <pre><code class="js"></code></pre>
@@ -477,7 +464,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
         <div class="pixi" id="interaction">
           <script>
             // Interaction Events
-            let [interactionRich, interactionMulti] = createComparisonText(
+            let interactionRich = new RichText(
               `If you enable <link name="interaction">interaction</link>, you can get <link name="information">information</link> about which <link name="tag">tag</link> corresponded to the <link name="event">event</link>.`,
               {
                 default: {
@@ -495,9 +482,8 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
             );
 
             interactionRich.text = "Interactivity is not currently supported.";
-
-            interactionMulti.interactive = true;
-            interactionMulti.on("pointerdown", (e) => {
+            interactionRich.interactive = true;
+            interactionRich.on("pointerdown", (e) => {
               if (e.targetTag !== undefined && e.targetTag.name === "link") {
                 alert(
                   `You clicked on the link for "${e.targetTag.properties.name}"!`
@@ -505,19 +491,21 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
               }
             });
 
-            createDemo("interaction", interactionRich, interactionMulti);
+            createDemo("interaction", interactionRich);
           </script>
         </div>
-      </div>
+      </div-->
       <div class="example">
         <div class="code">
-          <h2>Have Fun</h2>
+          <h2>Animation</h2>
           <pre><code class="js"></code></pre>
         </div>
         <div class="pixi" id="animated">
           <script>
-            // Have Fun
-            let funStyles = {
+            // Animation
+            const animatedText =
+              "Now have fun making some\n<blue>B E A U T I F U L</blue>\n<red>multistyle</red>\ntext!";
+            let animatedStyles = {
               default: {
                 fontFamily: "Recursive, Arial",
                 fontSize: "48px",
@@ -541,24 +529,35 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!
               red: { fill: 0xff8888, stroke: 0xcc4444 },
             };
 
-            let [animatedRich, animatedMulti] = createComparisonText(
-              "Now have fun making some\n<blue>B E A U T I F U L</blue>\n<red>multistyle</red>\ntext!",
-              funStyles
-            );
+            let animated = new RichText(animatedText, animatedStyles, {
+              splitStyle: "characters",
+            });
 
-            const app = createDemo("animated", animatedRich, animatedMulti);
-
-            const originalY = animatedRich.textFields.map((t) => t.y);
-            let time = 0;
+            const app = createDemo("animated", animated);
 
             // Animate
-            const animate = (delta) => {
-              time += delta;
-              animatedRich.textFields.map((t, i) => {
-                t.y = originalY[i] + Math.sin(time / 10 + i) * 10;
-              });
+            const originalYPositions = animated.textFields.map((t) => t.y);
+            let time = 0;
+
+            const applySineWaveToYPositionOfText = (text, i, time) => {
+              const amplitude = 5;
+              const frequency = 0.1;
+              const phaseOffsetPerLetter = 1;
+
+              text.y =
+                originalYPositions[i] +
+                Math.sin(time * frequency + i * phaseOffsetPerLetter) *
+                  amplitude;
             };
-            app.ticker.add(animate);
+
+            const animationStep = (delta) => {
+              time += delta;
+              for (let i = 0; i < animated.textFields.length; i++) {
+                const text = animated.textFields[i];
+                applySineWaveToYPositionOfText(text, i, time);
+              }
+            };
+            app.ticker.add(animationStep);
           </script>
         </div>
       </div>

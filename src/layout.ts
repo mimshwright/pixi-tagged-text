@@ -1,17 +1,38 @@
-import { getFontPropertiesOfText } from "./pixiUtils";
+import {
+  last,
+  first,
+  assoc,
+  mapProp,
+  flatReduce,
+  Unary,
+} from "./functionalUtils";
+import { getFontPropertiesOfText, INITIAL_FONT_PROPS } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import {
   Align,
-  Measurement,
-  MeasurementLine,
-  MeasurementLines,
+  Bounds,
   Point,
-  TaggedTextToken,
-  TaggedTextTokenPartial,
-  VAlign,
-  LINE_BREAK_TAG_NAME,
+  StyledTokens,
+  FinalToken,
+  StyledToken,
+  TextToken,
+  SpriteToken,
+  SplitStyle,
+  TextStyleExtended,
+  isNewlineToken,
+  isWhitespaceToken,
   IMG_DISPLAY_PROPERTY,
+  isSpriteToken,
+  ParagraphToken,
+  LineToken,
+  WordToken,
+  Nested,
+  isNotWhitespaceToken,
+  VAlign,
+  createEmptyFinalToken,
 } from "./types";
+
+const ICON_SCALE_BASE = 0.8;
 
 /**
  * Translates the current location point to the beginning of the next line.
@@ -29,7 +50,7 @@ export const updateOffsetForNewLine = (
 const rectFromContainer = (
   container: PIXI.Container,
   offset: Point = { x: 0, y: 0 }
-): PIXI.Rectangle => {
+): Bounds => {
   const w = container.width;
   const h = container.height;
   const x = offset.x + container.x;
@@ -44,7 +65,9 @@ const rectFromContainer = (
  * @param offset Amount to translate the target.
  * @param point Target to translate.
  */
-export const translatePoint = (offset: Point) => (point: Point): Point => ({
+export const translatePoint = <P extends Point>(offset: Point) => (
+  point: P
+): P => ({
   ...point,
   x: point.x + offset.x,
   y: point.y + offset.y,
@@ -53,13 +76,23 @@ export const translatePoint = (offset: Point) => (point: Point): Point => ({
 /**
  * Same as translatePoint but for all the points in an array.
  */
-export const translateLine = (offset: Point) => (
-  line: MeasurementLine
-): MeasurementLine => line.map(translatePoint(offset)) as MeasurementLine;
+export const translateLine = (offset: Point) => (line: Bounds[]): Bounds[] =>
+  line.map(translatePoint(offset));
 
-export const lineWidth = (line: MeasurementLine): number => {
-  const firstWord = line[0];
-  const lastWord = line[line.length - 1];
+export const translateWordPosition = (offset: Point) => (
+  word: WordToken
+): WordToken =>
+  word.map((token) =>
+    mapProp<Bounds, FinalToken>("bounds")(translatePoint(offset))(token)
+  );
+
+export const translateTokenLine = (offset: Point) => (
+  line: LineToken
+): LineToken => line.map(translateWordPosition(offset));
+
+export const lineWidth = (wordsInLine: Bounds[]): number => {
+  const firstWord = first(wordsInLine);
+  const lastWord = last(wordsInLine);
 
   if (firstWord === undefined) {
     return 0;
@@ -67,57 +100,219 @@ export const lineWidth = (line: MeasurementLine): number => {
   if (lastWord === firstWord) {
     return firstWord.width;
   }
-  return lastWord.right - firstWord.left;
+  return lastWord.x + lastWord.width - firstWord.x;
 };
 
 export const center = (x: number, context: number): number => (context - x) / 2;
 
-const getTallestToken = (line: TaggedTextToken[]): TaggedTextToken =>
-  line.reduce(
-    (tallest, current) => {
-      if (
-        (current.measurement?.height ?? 0) > (tallest?.measurement?.height ?? 0)
-      ) {
-        return current;
-      }
-      return tallest;
-    },
-    {
-      text: "No Tokens on this line with height > 0.",
-      tags: [],
-      measurement: new PIXI.Rectangle(0, 0, 0, 0),
-      style: {},
-      fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
+const setBoundsX = assoc<Bounds, number>("x");
+
+const positionWordX = (x: number) => (word: WordToken): WordToken => {
+  let prevBounds: Bounds;
+  return word.map((token) => {
+    if (prevBounds === undefined) {
+      token.bounds.x = x;
+      prevBounds = token.bounds;
+    } else {
+      token.bounds.x = prevBounds.x + prevBounds.width;
+      prevBounds = token.bounds;
     }
+    return token;
+  });
+};
+
+export const concatBounds = (
+  originalBounds: Bounds = { x: NaN, y: NaN, width: NaN, height: NaN },
+  bounds: Bounds = { x: NaN, y: NaN, width: NaN, height: NaN }
+): Bounds => {
+  if (isNaN(originalBounds.x)) {
+    return bounds;
+  }
+
+  const x = Math.min(originalBounds.x, bounds.x);
+  const y = Math.min(originalBounds.y, bounds.y);
+  const right = Math.max(
+    originalBounds.x + originalBounds.width,
+    bounds.x + bounds.width
+  );
+  const bottom = Math.max(
+    originalBounds.y + originalBounds.height,
+    bounds.y + bounds.height
+  );
+  const width = right - x;
+  const height = bottom - y;
+
+  return { x, y, width, height };
+};
+
+const getCombinedBounds = (bounds: Bounds[]): Bounds =>
+  bounds.reduce(concatBounds);
+
+export const getBoundsNested: Unary<Nested<FinalToken>, Bounds> = flatReduce<
+  FinalToken,
+  Bounds
+>((acc: Bounds, t: FinalToken) => concatBounds(acc, t.bounds), {
+  x: NaN,
+  y: NaN,
+  width: NaN,
+  height: NaN,
+});
+
+export const alignLeft = (line: Bounds[]): Bounds[] =>
+  line.reduce(
+    (newLine: Bounds[], bounds: Bounds, i: number): Bounds[] =>
+      // is first word?
+      i === 0
+        ? [setBoundsX(0)(bounds)]
+        : newLine.concat([
+            setBoundsX(newLine[i - 1].x + newLine[i - 1].width)(bounds),
+          ]),
+    []
   );
 
-export const verticalAlignInLines = (
-  lines: TaggedTextToken[][],
-  lineSpacing: number,
-  overrideValign?: VAlign
-): TaggedTextToken[][] => {
-  let previousTallestToken: TaggedTextToken = {
-    text: "previousTallestToken",
-    tags: [],
-    measurement: new PIXI.Rectangle(0, 0, 0, 0),
-    fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
-    style: {},
-  };
+export const alignRight = (maxWidth: number) => (line: Bounds[]): Bounds[] =>
+  translateLine({
+    x: maxWidth - lineWidth(line),
+    y: 0,
+  })(alignLeft(line));
 
-  let previousY = 0;
-  const newLines = [];
+export const alignCenter = (maxWidth: number) => (line: Bounds[]): Bounds[] =>
+  translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(
+    alignLeft(line)
+  );
+
+export const alignJustify = (maxLineWidth: number) => (
+  line: Bounds[]
+): Bounds[] => {
+  const count = line.length;
+  if (count === 0) {
+    return [];
+  }
+
+  const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
+  const countNonZeroWidthWords = nonZeroWidthWords.length;
+
+  if (countNonZeroWidthWords === 1) {
+    const [first, ...rest] = line;
+    first.x = 0;
+    return [first, ...rest];
+  }
+
+  const result: Bounds[] = [];
+  const combinedBounds = getCombinedBounds(nonZeroWidthWords);
+  const w = combinedBounds.width;
+  const totalSpace = maxLineWidth - w;
+  const spacerWidth = totalSpace / (countNonZeroWidthWords - 1);
+
+  let previousWord;
+  for (let i = 0; i < line.length; i++) {
+    const bounds = line[i];
+    if (bounds.width === 0) {
+      result[i] = { ...bounds };
+      continue;
+    }
+    let x;
+    if (previousWord === undefined) {
+      x = 0;
+    } else {
+      x = previousWord.x + previousWord.width + spacerWidth;
+    }
+    if (isNaN(x)) {
+      throw new Error(
+        `Something went wrong with the justified layout calculation. x is NaN.`
+      );
+    }
+    const newWord: Bounds = setBoundsX(x)(bounds);
+    previousWord = newWord;
+    result[i] = newWord;
+  }
+  return result;
+};
+
+export const alignLines = (
+  align: Align,
+  maxWidth: number,
+  lines: ParagraphToken
+): ParagraphToken => {
+  // do horizontal alignment.
+  let alignFunction: (l: Bounds[]) => Bounds[];
+  switch (align) {
+    case "left":
+      alignFunction = alignLeft;
+      break;
+    case "right":
+      alignFunction = alignRight(maxWidth);
+      break;
+    case "center":
+      alignFunction = alignCenter(maxWidth);
+      break;
+    case "justify":
+      alignFunction = alignJustify(maxWidth);
+      break;
+    default:
+      throw new Error(
+        `Unsupported alignment type ${align}! Use one of : "left", "right", "center", "justify"`
+      );
+  }
 
   for (const line of lines) {
-    const newLine: TaggedTextToken[] = [];
-    let tallestToken = getTallestToken(line);
-    let tallestHeight;
-
-    const previousTallestHeight = previousTallestToken.measurement.height;
-    tallestHeight = tallestToken.measurement?.height ?? 0;
-
-    if (line.length === 1 && line[0].text === "") {
-      tallestHeight = previousTallestHeight;
+    const wordBoundsForLine: Bounds[] = [];
+    for (const word of line) {
+      const wordBounds = getBoundsNested(word);
+      wordBoundsForLine.push(wordBounds);
+      if (isNaN(wordBounds.x)) {
+        throw new Error("wordBounds not correct");
+      }
     }
+    const alignedLine = alignFunction(wordBoundsForLine);
+    for (let i = 0; i < line.length; i++) {
+      const bounds = alignedLine[i];
+      const word = line[i];
+      line[i] = positionWordX(bounds.x)(word);
+    }
+  }
+  return lines;
+};
+
+const getTallestToken = (line: LineToken): FinalToken =>
+  flatReduce<FinalToken, FinalToken>((tallest, current) => {
+    let h = current.bounds.height ?? 0;
+    if (isSpriteToken(current)) {
+      h += current.fontProperties.descent;
+    }
+    if (h > (tallest?.bounds.height ?? 0)) {
+      return current;
+    }
+    return tallest;
+  }, createEmptyFinalToken())(line);
+
+export const verticalAlignInLines = (
+  lines: ParagraphToken,
+  lineSpacing: number,
+  overrideValign?: VAlign
+): ParagraphToken => {
+  let previousTallestToken: FinalToken = createEmptyFinalToken();
+
+  let previousLineBottom = 0;
+  const newLines: ParagraphToken = [];
+
+  for (const line of lines) {
+    const newLine: LineToken = [];
+    // const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
+
+    let tallestToken: FinalToken = getTallestToken(line);
+    let tallestHeight = tallestToken.bounds?.height ?? 0;
+    let tallestAscent = tallestToken.fontProperties?.ascent ?? 0;
+    if (isSpriteToken(tallestToken)) {
+      tallestHeight += tallestToken.fontProperties.descent;
+      tallestAscent = tallestToken.bounds.height;
+    }
+
+    // const previousTallestHeight = previousTallestToken.bounds.height;
+
+    // if (line.length === 1 && isWhitespaceToken(line[0])) {
+    //   tallestHeight = previousTallestHeight;
+    // }
 
     if (tallestHeight === 0) {
       tallestToken = previousTallestToken;
@@ -126,296 +321,363 @@ export const verticalAlignInLines = (
     }
 
     for (const word of line) {
-      const {
-        measurement: { x, y, width, height },
-        fontProperties,
-        style,
-        sprite,
-      } = word;
+      const newWord: WordToken = [];
+      for (const segment of word) {
+        if (isNewlineToken(segment)) {
+          const newToken = {
+            ...segment,
+          };
+          newWord.push(newToken);
+          continue;
+        }
+        const { bounds, fontProperties, style } = segment;
+        const height = bounds.height;
 
-      const newMeasurement: Measurement = new PIXI.Rectangle(
-        x,
-        y,
-        width,
-        height
-      );
-      const valign = overrideValign ?? style.valign;
+        const newBounds: Bounds = { ...bounds };
+        const valign = overrideValign ?? style.valign;
 
-      const elementAscent =
-        sprite !== undefined ? height : fontProperties?.ascent ?? 0;
-      const elementHeight =
-        sprite !== undefined ? height : fontProperties.fontSize;
+        let { ascent } = fontProperties;
+        if (isSpriteToken(segment)) {
+          ascent = segment.bounds.height;
+        }
 
-      let newY = 0;
-      switch (valign) {
-        case "bottom":
-          newY = previousY + tallestHeight - elementHeight;
-          break;
-        case "middle":
-          newY = previousY + (tallestHeight - elementHeight) / 2;
-          break;
-        case "top":
-          newY = previousY;
-          break;
-        case "baseline":
-        default:
-          newY = previousY + tallestHeight - elementAscent;
+        let newY = 0;
+        switch (valign) {
+          case "bottom":
+            newY = previousLineBottom + tallestHeight - height;
+            break;
+          case "middle":
+            newY = previousLineBottom + (tallestHeight - height) / 2;
+            break;
+          case "top":
+            newY = previousLineBottom;
+            break;
+          case "baseline":
+          default:
+            newY = previousLineBottom + tallestAscent - ascent;
+        }
+
+        newBounds.y = newY;
+
+        const newToken = {
+          ...segment,
+          bounds: newBounds,
+        };
+        newWord.push(newToken);
       }
-
-      newMeasurement.y = newY;
-
-      const newWord = {
-        ...word,
-        measurement: newMeasurement,
-      };
       newLine.push(newWord);
     }
 
-    previousY += tallestHeight + lineSpacing;
+    previousLineBottom += tallestHeight + lineSpacing;
     newLines.push(newLine);
   }
 
   return newLines;
+
+  // ? lines.map(valignTop)
+  //   : valign === "middle"
+  //   ? lines.map(valignMiddle)
+  //   : valign === "bottom"
+  //   ? lines.map(valignBottom)
+  //   : lines;
 };
-// ? lines.map(valignTop)
-//   : valign === "middle"
-//   ? lines.map(valignMiddle)
-//   : valign === "bottom"
-//   ? lines.map(valignBottom)
-//   : lines;
 
-export const alignLeft = (line: MeasurementLine): MeasurementLine =>
-  line.reduce(
-    (allWords: MeasurementLine, { y, width, height }, i) =>
-      i === 0
-        ? [new PIXI.Rectangle(0, y, width, height)]
-        : [
-            ...allWords,
-            new PIXI.Rectangle(
-              allWords[i - 1].x + allWords[i - 1].width,
-              y,
-              width,
-              height
-            ),
-          ],
-    []
-  );
-
-export const alignRight = (maxWidth: number) => (
-  line: MeasurementLine
-): MeasurementLine =>
-  translateLine({
-    x: maxWidth - lineWidth(line),
-    y: 0,
-  })(line);
-
-export const alignCenter = (maxWidth: number) => (
-  line: MeasurementLine
-): MeasurementLine =>
-  translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(line);
-
-export const alignJustify = (maxLineWidth: number) => (
-  line: MeasurementLine
-): MeasurementLine => {
-  if (line.length === 0) {
-    return [];
-  }
-
-  if (line.length === 1) {
-    const { y, width, height } = line[0];
-    return [new PIXI.Rectangle(0, y, width, height)];
-  }
-
-  const result: MeasurementLine = [];
-  const w = lineWidth(line);
-  const totalSpace = maxLineWidth - w;
-  const spacerWidth = totalSpace / (line.length - 1);
-
-  let previousWord;
-  for (let i = 0; i < line.length; i++) {
-    const { y, width, height } = line[i];
-    let x;
-    if (previousWord === undefined) {
-      x = 0;
-    } else {
-      x = previousWord.right + spacerWidth;
+export const collapseWhitespacesOnEndOfLines = (
+  lines: ParagraphToken
+): ParagraphToken => {
+  for (const line of lines) {
+    const l = line.length;
+    let i = l;
+    while (i >= 0) {
+      i -= 1;
+      const word = line[i];
+      if (isNotWhitespaceToken(word)) {
+        break;
+      } else {
+        for (const token of word) {
+          token.bounds.width = 0;
+          token.bounds.height = Math.min(
+            token.bounds.height,
+            token.fontProperties.fontSize
+          );
+        }
+      }
     }
-    const newWord: PIXI.Rectangle = new PIXI.Rectangle(x, y, width, height);
-    previousWord = newWord;
-    result[i] = newWord;
   }
-  return result;
+  return lines;
 };
 
-/**
- * Adjusts the values in the lines to match the current layout.
- */
-export const alignTextInLines = (
-  align: Align,
-  maxLineWidth: number,
-  lines: MeasurementLines
-): MeasurementLines => {
-  const output =
-    align === "left"
-      ? lines.map(alignLeft)
-      : align === "right"
-      ? lines.map(alignRight(maxLineWidth))
-      : align === "center"
-      ? lines.map(alignCenter(maxLineWidth))
-      : align === "justify"
-      ? lines.map(alignJustify(maxLineWidth))
-      : lines;
-  return output;
+const layout = (
+  tokens: FinalToken[],
+  maxWidth: number,
+  lineSpacing: number,
+  align: Align
+): ParagraphToken => {
+  const cursor = { x: 0, y: 0 };
+  let wordWidth = 0;
+  let word: WordToken = [];
+  let line: LineToken = [];
+  const lines: ParagraphToken = [];
+  let tallestHeight = 0;
+
+  function finalizeLineAndMoveCursorToNextLine() {
+    // finalize Line
+    lines.push(line);
+    line = [];
+
+    // move cursor to next line
+    cursor.x = 0;
+    cursor.y = cursor.y + tallestHeight;
+
+    // reset tallestHeight
+    tallestHeight = 0;
+  }
+
+  function setTallestHeight(token: FinalToken): void {
+    tallestHeight = Math.max(
+      tallestHeight,
+      token.fontProperties.fontSize,
+      lineSpacing
+    );
+    // Don't try to measure the height of newline tokens
+    if (isNewlineToken(token) === false) {
+      tallestHeight = Math.max(tallestHeight, token.bounds.height);
+    }
+  }
+
+  function positionTokenAtCursorAndAdvanceCursor(token: FinalToken): void {
+    // position token at cursor
+    setTallestHeight(token);
+    token.bounds.x = cursor.x;
+    token.bounds.y = cursor.y;
+    // advance cursor
+    cursor.x += token.bounds.width;
+  }
+
+  function positionWordAtCursorAndAdvanceCursor(): void {
+    word.forEach(positionTokenAtCursorAndAdvanceCursor);
+  }
+
+  function wordShouldWrap(): boolean {
+    return cursor.x + wordWidth > maxWidth;
+  }
+
+  function isBlockImage(token: FinalToken): boolean {
+    return token.style[IMG_DISPLAY_PROPERTY] === "block";
+  }
+
+  function addTokenToWord(token: FinalToken): void {
+    // add the token to the current word buffer.
+    word.push(token);
+    wordWidth += token.bounds.width;
+  }
+
+  function finalizeWord() {
+    if (word !== undefined && word.length > 0) {
+      // add word to line
+      line.push(word);
+    }
+
+    // reset word buffer
+    word = [];
+    wordWidth = 0;
+  }
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const isLastToken = i === tokens.length - 1;
+    const isWhitespace = isWhitespaceToken(token);
+    const isImage = isSpriteToken(token);
+    const isEndOfWord = isWhitespace || isImage;
+
+    setTallestHeight(token);
+
+    // the current word is finished, position the segments in the word buffer.
+    if (isEndOfWord) {
+      // if it exceeds the wrap width, wrap it to next line.
+      // Note, the word will only move to the next line once when it encounters an end of word token like a space or image.
+      if (wordShouldWrap()) {
+        finalizeLineAndMoveCursorToNextLine();
+      }
+
+      // move the word segments to the cursor location
+      positionWordAtCursorAndAdvanceCursor();
+
+      finalizeWord();
+    }
+
+    setTallestHeight(token);
+    addTokenToWord(token);
+
+    if (isWhitespace) {
+      // position the whitespace.
+      positionTokenAtCursorAndAdvanceCursor(token);
+
+      finalizeWord();
+
+      // If the token is a newline character,
+      // move the cursor to next line.
+      if (isNewlineToken(token)) {
+        finalizeLineAndMoveCursorToNextLine();
+      }
+    } else {
+      // if non-whitespace...
+
+      if (isImage) {
+        if (isBlockImage(token)) {
+          finalizeLineAndMoveCursorToNextLine();
+          positionWordAtCursorAndAdvanceCursor();
+        }
+      }
+      if (isLastToken) {
+        positionWordAtCursorAndAdvanceCursor();
+        line.push(word);
+        lines.push(line);
+      }
+    }
+  }
+  const collapsedWhitespace = collapseWhitespacesOnEndOfLines(lines);
+  const alignedLines = alignLines(align, maxWidth, collapsedWhitespace);
+  const valignedLines = verticalAlignInLines(alignedLines, lineSpacing);
+
+  return valignedLines;
 };
 
-/**
- *
- * @param tokens List of TaggedTextTokens to use for separating text based on tags
- * @param maxLineWidth The maximum width of one line of text.
- * @param tagStyles List of tagStyles to use for calculating text size.
- * @param align Alignment of text.
- * @param lineSpacing Number of pixels between each line of text.
- * @returns Array of Rectangle objects pertaining to each piece of text.
- */
-export const calculateMeasurements = (
-  tokens: TaggedTextTokenPartial[],
-  maxLineWidth: number = Number.POSITIVE_INFINITY,
-  align: Align = "left",
-  lineSpacing = 0
-): TaggedTextToken[][] => {
+const notEmptyString = (s: string) => s !== "";
+
+const SPLIT_MARKER = `_🔪_`;
+export const splitAroundWhitespace = (s: string): string[] =>
+  s
+    .replace(/\s/g, `${SPLIT_MARKER}$&${SPLIT_MARKER}`)
+    .split(SPLIT_MARKER)
+    .filter((s) => s !== "");
+
+export const splitText = (s: string, splitStyle: SplitStyle): string[] => {
+  if (splitStyle === "words") {
+    return [s].flatMap(splitAroundWhitespace).filter(notEmptyString);
+  } else if (splitStyle === "characters") {
+    return s.split("");
+  } else {
+    // unsupported splitStyle.
+    let suggestion = ` Supported styles are "words" and "characters"`;
+    const badStyle = (splitStyle as string).toLowerCase();
+    if (badStyle.indexOf("char") === 0) {
+      suggestion = `Did you mean "characters"?`;
+    } else if (badStyle.indexOf("wor") === 0) {
+      suggestion = `Did you mean "words"?`;
+    }
+    throw new Error(`Unsupported split style "${splitStyle}". ${suggestion}`);
+  }
+};
+
+export const calculateFinalTokens = (
+  styledTokens: StyledTokens,
+  splitStyle: SplitStyle = "words"
+): ParagraphToken => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
+  const defaultStyle = styledTokens.style;
 
-  const lines: MeasurementLines = [[]];
-  let previousMeasurement = new PIXI.Rectangle(0, 0, 0, 0);
-  let previousToken = undefined;
-  let previousSpaceWidth = 0;
-  let largestLineHeight = 0;
-  let offset = { x: 0, y: 0 };
-  let currentLine = 0;
-  let size;
+  let fontProperties: PIXI.IFontMetrics = INITIAL_FONT_PROPS;
 
-  function goToNextLine() {
-    offset = updateOffsetForNewLine(offset, largestLineHeight, lineSpacing);
-    currentLine += 1;
-    if (lines[currentLine] === undefined) {
-      lines[currentLine] = [];
-    }
-  }
+  const generateFinalTokenFromStyledToken = (
+    style: TextStyleExtended,
+    tags: string
+  ) => (token: StyledToken | TextToken | SpriteToken): FinalToken[] => {
+    let output: FinalToken[] = [];
 
-  function isNewline(token: TaggedTextTokenPartial): boolean {
-    return token.tags[0]?.tagName === LINE_BREAK_TAG_NAME;
-  }
+    if (typeof token === "string") {
+      // split into pieces and convert into tokens.
 
-  // TODO: group measurements by line
-  for (const token of tokens) {
-    const sprite = token.sprite;
-    const isImage = sprite !== undefined;
-    const imgDisplay = token.style?.[IMG_DISPLAY_PROPERTY];
-    const isBlockImage = imgDisplay === "block";
-    const isIcon = imgDisplay === "icon";
+      const textSegments = splitText(token, splitStyle);
 
-    if (isNewline(token) || isBlockImage) {
-      goToNextLine();
-      token.text = " ";
-    } else if (previousToken && isNewline(previousToken)) {
-      // only create a tag out of this if it's the only thing on the line.
-      previousMeasurement.width = 0;
-    }
-    if (isImage === false && token.text === "") {
-      continue;
-    }
+      sizer.style = {
+        ...style,
+        // Override some styles for the purposes of sizing text.
+        wordWrap: false,
+        dropShadowBlur: 0,
+        dropShadowDistance: 0,
+        dropShadowAngle: 0,
+        dropShadow: false,
+      };
+      fontProperties = getFontPropertiesOfText(sizer, true);
 
-    sizer.style = {
-      ...token.style,
-      // Override some styles for the purposes of sizing text.
-      wordWrap: false,
-      dropShadowBlur: 0,
-      dropShadowDistance: 0,
-      dropShadowAngle: 0,
-      dropShadow: false,
-    };
+      const textTokens = textSegments.map(
+        (str): FinalToken => {
+          sizer.text = str;
+          const bounds = rectFromContainer(sizer);
+          return {
+            content: str,
+            style,
+            tags,
+            bounds,
+            fontProperties,
+          };
+        }
+      );
 
-    // Measure a space character in this font style.
-    sizer.text = " ";
-    const spaceWidth = sizer.width;
+      output = output.concat(textTokens);
+    } else if (token instanceof PIXI.Sprite) {
+      const sprite = token;
+      const imgDisplay = style[IMG_DISPLAY_PROPERTY];
+      // const isBlockImage = imgDisplay === "block";
+      const isIcon = imgDisplay === "icon";
 
-    sizer.text = token.text;
-
-    const fontProperties = getFontPropertiesOfText(sizer, true);
-    token.fontProperties = fontProperties;
-
-    largestLineHeight = Math.max(previousMeasurement.height, largestLineHeight);
-
-    if (sprite) {
       if (isIcon) {
-        const h = sprite?.height ?? -1;
-
+        // Set to minimum of 1 to avoid devide by zero.
         // if it's height is zero or one it probably hasn't loaded yet.
-        if (h > 1 && sprite.scale.y === 1) {
-          const ratio = fontProperties.ascent / h;
-          // console.log(
-          //   `Setting scale to ${fontProperties.ascent}/${h}=${ratio}`
-          // );
+        // It will get refreshed after it loads.
+        const h = Math.max(sprite.height, 1);
 
-          sprite?.scale.set(ratio);
+        if (h > 1 && sprite.scale.y === 1) {
+          const ratio = (fontProperties.ascent / h) * ICON_SCALE_BASE;
+          sprite.scale.set(ratio);
         }
       }
 
-      size = rectFromContainer(sprite, offset);
+      // handle images
+      const bounds = rectFromContainer(sprite);
+      output.push({
+        content: sprite,
+        style,
+        tags,
+        bounds,
+        fontProperties,
+      });
     } else {
-      size = rectFromContainer(sizer, offset);
-      size.height = Math.max(size.height, fontProperties.fontSize);
-    }
+      // token is a composite
+      const styledToken = token as StyledToken;
+      const { children } = styledToken;
+      // set tags and styles for children of this composite token.
+      const newStyle = styledToken.style;
+      const newTags = styledToken.tags;
 
-    // if new size would exceed the max line width...
-    if (size.right > maxLineWidth) {
-      goToNextLine();
-
-      size = rectFromContainer(sizer, offset);
-      if (previousToken?.text.endsWith(" ")) {
-        previousMeasurement.width -= previousSpaceWidth;
+      if (newStyle === undefined) {
+        throw new Error(
+          `Expected to find a 'style' property on ${styledToken}`
+        );
       }
+
+      output = output.concat(
+        children.flatMap(generateFinalTokenFromStyledToken(newStyle, newTags))
+      );
     }
+    return output;
+  };
 
-    lines[currentLine].push(size);
+  // when starting out, use the default style
+  const tags = "";
+  const style: TextStyleExtended = defaultStyle;
 
-    offset.x = size.right;
+  const finalTokens = styledTokens.children.flatMap(
+    generateFinalTokenFromStyledToken(style, tags)
+  );
 
-    previousMeasurement = size;
-    previousSpaceWidth = spaceWidth;
-    previousToken = token;
-  }
+  const maxWidth = defaultStyle.wordWrapWidth ?? Number.POSITIVE_INFINITY;
+  const lineSpacing = defaultStyle.lineSpacing ?? 0;
+  const align = defaultStyle.align ?? "left";
 
-  const measurements = alignTextInLines(align, maxLineWidth, lines);
-  // const valigned = verticalAlignInLines("bottom", aligned);
-  // const finalMeasurements = valigned.flat();
+  const lines = layout(finalTokens, maxWidth, lineSpacing, align);
 
-  const filteredTokens = tokens.filter(({ text }) => text !== "");
-  const measuredTokens: TaggedTextToken[][] = [];
-
-  let i = 0;
-  for (let line = 0; line < measurements.length; line++) {
-    measuredTokens[line] = [];
-    const measurementLine = measurements[line];
-
-    if (measurementLine && measurementLine.length > 0) {
-      for (let word = 0; word < measurementLine.length; word++) {
-        const measurement = measurementLine[word];
-        measuredTokens[line][word] = {
-          ...filteredTokens[i],
-          measurement,
-        } as TaggedTextToken;
-        i++;
-      }
-    }
-  }
-  // console.log(measuredTokens);
-
-  if (measuredTokens.length === 0) {
-    return measuredTokens;
-  }
-  const vAligned = verticalAlignInLines(measuredTokens, lineSpacing);
-
-  return vAligned;
+  return lines;
 };

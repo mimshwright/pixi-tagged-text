@@ -58,7 +58,7 @@
     "typescript": "^4.2.4"
   },
   "scripts": {
-    "demo": "npm run build && http-server . --port 8080 & opener http://localhost:8080/demo/index.html",
+    "demo": "npm run build && http-server . --port 8080 && opener http://localhost:8080/demo/index.html",
     "dev": "microbundle watch --name RichText --globals 'pixi.js'=PIXI",
     "build": "microbundle --name RichText --globals 'pixi.js'=PIXI",
     "prepublishOnly": "npm run build",
