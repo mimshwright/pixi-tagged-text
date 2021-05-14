@@ -565,6 +565,7 @@ export default class RichText extends PIXI.Sprite {
 
       if (this.defaultStyle.wordWrap) {
         const w = this.defaultStyle.wordWrapWidth ?? this.width;
+        g.endFill();
         g.lineStyle(0.5, DEBUG.LINE_COLOR, 0.2);
         g.drawRect(0, lineBounds.y, w, lineBounds.height);
         g.endFill();
@@ -573,8 +574,16 @@ export default class RichText extends PIXI.Sprite {
       for (let wordNumber = 0; wordNumber < line.length; wordNumber++) {
         const word = line[wordNumber];
         for (const token of word) {
-          const { ascent } = token.fontProperties;
-          const { x, y, width, height } = token.bounds;
+          const isSprite = isSpriteToken(token);
+          const ascent = isSprite
+            ? token.bounds.height
+            : token.fontProperties.ascent;
+
+          const { x, y, width } = token.bounds;
+          let { height } = token.bounds;
+          if (isSprite) {
+            height += token.fontProperties.descent;
+          }
 
           if (
             isWhitespaceToken(token) &&
@@ -588,8 +597,11 @@ export default class RichText extends PIXI.Sprite {
           }
 
           if (isNewlineToken(token)) {
-            this.debugContainer.addChild(createInfoText("↩︎", { x, y }));
+            this.debugContainer.addChild(
+              createInfoText("↩︎", { x, y: y + 10 })
+            );
           } else {
+            g.lineStyle(0.5, DEBUG.LINE_COLOR, 0.2);
             g.drawRect(x, y, width, height);
             g.endFill();
 
@@ -599,9 +611,14 @@ export default class RichText extends PIXI.Sprite {
             g.endFill();
           }
 
+          let info;
+          // info = `${token.bounds.width}⨉${token.bounds.height}`;
           if (isTextToken(token)) {
-            this.debugContainer.addChild(createInfoText(token.tags, { x, y }));
+            // info += ` ${token.tags}`;
+            info = ` ${token.tags}`;
+            this.debugContainer.addChild(createInfoText(info, { x, y }));
           }
+          // this.debugContainer.addChild(createInfoText(info, { x, y }));
         }
       }
     }

@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
+import { getBoundsNested } from "../src/layout";
 import RichText from "../src/RichText";
 import { Align, SplitStyle, VAlign, ImageDisplayMode } from "./../src/types";
 import iconSrc from "./icon.base64";
@@ -349,8 +350,6 @@ describe("RichText", () => {
 
         const valign = new RichText(valignText, valignStyle, {
           imgMap: { valignImg },
-          debug: true,
-          debugConsole: true,
         });
 
         const tokens = valign.tokens[0];

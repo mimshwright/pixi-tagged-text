@@ -99,7 +99,7 @@ and <ms>multistyle</ms> text for
 
             const imgText = `<h2>Inline Images!</h2>
 Add an image.
-<img imgSrc="doot" imgDisplay="inline" />
+<img imgSrc="doot" imgDisplay="inline" /> or <img imgSrc="thinking" imgDisplay="inline" />
 Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
             const imgStyle = {
               default: {
@@ -107,6 +107,8 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 fontSize: "24px",
                 fill: "#FFFFCC",
                 align: "center",
+                lineSpacing: 0,
+                valign: "baseline",
               },
               h2: {
                 fontSize: 36,
@@ -330,16 +332,24 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
           <script>
             // Spacing
             const spacingText =
-              "You can set line and letter spacing to give your text some drama. Note that lineSpacing can only be set on the default style.";
+              "You can <narrow>set line and letter spacing</narrow> to <wide>give your text some drama.</wide>\nNote that lineSpacing can only be set on the default style.";
             const spacingStyle = {
               default: {
                 fontFamily: "Arial",
                 fontSize: "24px",
                 fill: "#cccccc",
-                lineSpacing: 10,
-                letterSpacing: 10,
+                lineSpacing: 30,
+                letterSpacing: 0,
                 wordWrap: true,
                 wordWrapWidth: 500,
+              },
+              narrow: {
+                fill: "#FFCC00",
+                letterSpacing: -2,
+              },
+              wide: {
+                fill: "#CCFF00",
+                letterSpacing: 10,
               },
             };
             let spacing = new RichText(spacingText, spacingStyle);

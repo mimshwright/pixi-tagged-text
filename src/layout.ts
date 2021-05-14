@@ -32,6 +32,8 @@ import {
   createEmptyFinalToken,
 } from "./types";
 
+const ICON_SCALE_BASE = 0.8;
+
 /**
  * Translates the current location point to the beginning of the next line.
  *
@@ -274,7 +276,11 @@ export const alignLines = (
 
 const getTallestToken = (line: LineToken): FinalToken =>
   flatReduce<FinalToken, FinalToken>((tallest, current) => {
-    if ((current.bounds.height ?? 0) > (tallest?.bounds.height ?? 0)) {
+    let h = current.bounds.height ?? 0;
+    if (isSpriteToken(current)) {
+      h += current.fontProperties.descent;
+    }
+    if (h > (tallest?.bounds.height ?? 0)) {
       return current;
     }
     return tallest;
@@ -287,7 +293,7 @@ export const verticalAlignInLines = (
 ): ParagraphToken => {
   let previousTallestToken: FinalToken = createEmptyFinalToken();
 
-  let previousY = 0;
+  let previousLineBottom = 0;
   const newLines: ParagraphToken = [];
 
   for (const line of lines) {
@@ -295,7 +301,13 @@ export const verticalAlignInLines = (
     // const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
 
     let tallestToken: FinalToken = getTallestToken(line);
-    const tallestHeight = tallestToken.bounds?.height ?? 0;
+    let tallestHeight = tallestToken.bounds?.height ?? 0;
+    let tallestAscent = tallestToken.fontProperties?.ascent ?? 0;
+    if (isSpriteToken(tallestToken)) {
+      tallestHeight += tallestToken.fontProperties.descent;
+      tallestAscent = tallestToken.bounds.height;
+    }
+
     // const previousTallestHeight = previousTallestToken.bounds.height;
 
     // if (line.length === 1 && isWhitespaceToken(line[0])) {
@@ -324,20 +336,25 @@ export const verticalAlignInLines = (
         const newBounds: Bounds = { ...bounds };
         const valign = overrideValign ?? style.valign;
 
+        let { ascent } = fontProperties;
+        if (isSpriteToken(segment)) {
+          ascent = segment.bounds.height;
+        }
+
         let newY = 0;
         switch (valign) {
           case "bottom":
-            newY = previousY + tallestHeight - height;
+            newY = previousLineBottom + tallestHeight - height;
             break;
           case "middle":
-            newY = previousY + (tallestHeight - height) / 2;
+            newY = previousLineBottom + (tallestHeight - height) / 2;
             break;
           case "top":
-            newY = previousY;
+            newY = previousLineBottom;
             break;
           case "baseline":
           default:
-            newY = previousY + tallestHeight - fontProperties.ascent;
+            newY = previousLineBottom + tallestAscent - ascent;
         }
 
         newBounds.y = newY;
@@ -351,7 +368,7 @@ export const verticalAlignInLines = (
       newLine.push(newWord);
     }
 
-    previousY += tallestHeight + lineSpacing;
+    previousLineBottom += tallestHeight + lineSpacing;
     newLines.push(newLine);
   }
 
@@ -613,7 +630,7 @@ export const calculateFinalTokens = (
         const h = Math.max(sprite.height, 1);
 
         if (h > 1 && sprite.scale.y === 1) {
-          const ratio = fontProperties.ascent / h;
+          const ratio = (fontProperties.ascent / h) * ICON_SCALE_BASE;
           sprite.scale.set(ratio);
         }
       }
