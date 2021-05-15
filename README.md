@@ -74,7 +74,8 @@ t.textContainer.length; // This will now contain all the PIXI.Text objects creat
 
 The third parameter in the RichText constructor is a set of options.
 
-- `debug` - If `true`, generates debug information which is overlaid on the text and logged to the console during `draw()`. default is `false`.
+- `debug` - If `true`, generates debug information which is overlaid on the text during `draw()`. default is `false`.
+- `debugConsole` - If `true`, logs debug information to the console during `draw()`. default is `false`.
 <!-- - `splitStyle` - Allows you to specify how the text should be split into PIXI.Text objects. Optional values are "words" (default) and "characters". -->
 - `imgMap` - An object that maps string names like `"myImage"` to Sprite objects like `PIXI.Sprite.from("./myImage.png")`. When a style contains `imgSrc="myImage"`, the matching sprite is used. By default, each of the keys you provide here will automatically be added as a style in the `tagStyles` (equivalent to `{ myImage: { imgSrc: "myImage"}}`) so you can add a tag `<myImage />`. default is `{}`.
 - `skipUpdates` - When `true`, `update()` will not be called when text or styles are changed; it must be called explicitly or overridden using the skipUpdate parameter in functions such as `setText()`. default is `false`.

@@ -1,5 +1,8 @@
 import * as PIXI from "pixi.js";
+import { pluck } from "../src/functionalUtils";
+import { getBoundsNested } from "../src/layout";
 import RichText from "../src/RichText";
+import { Align, SplitStyle, VAlign, ImageDisplayMode } from "./../src/types";
 import iconSrc from "./icon.base64";
 
 describe("RichText", () => {
@@ -32,14 +35,31 @@ describe("RichText", () => {
 
     describe("constructor takes a list of options.", () => {
       describe("debug", () => {
-        const control = new RichText("Test <b>test</b>", style);
-        const debug = new RichText("Test <b>test</b> test", style, {
+        const control = new RichText("Test <b><i>test</i></b>", style);
+        const debug = new RichText("Test <b><i>test</i></b> test", style, {
           debug: true,
         });
+        const blank = new RichText("", style, { debug: true });
 
-        it("Should show debug information if you set debug to true. It should log debug info to console.", () => {
-          expect(debug.debugContainer.children).toHaveLength(5);
+        it("Draws all shapes into one graphics layer.", () => {
+          expect(blank.debugContainer.children).toHaveLength(1);
+          expect(blank.debugContainer.getChildAt(0)).toBeInstanceOf(
+            PIXI.Graphics
+          );
+        });
+
+        it("Should show debug information if you set debug to true.", () => {
+          // one element for the graphics layer
+          // 5 elements for the text layers
+          expect(debug.debugContainer.children).toHaveLength(6);
+
           expect(debug.debugContainer.getBounds().width).toBeGreaterThan(100);
+        });
+        it("Should show the tag names for styled text.", () => {
+          expect(debug.debugContainer.getChildAt(3)).toHaveProperty(
+            "text",
+            "b,i"
+          );
         });
 
         it("Should have debug set to false by default.", () => {
@@ -47,6 +67,25 @@ describe("RichText", () => {
           expect(control.debugContainer.getBounds()).toMatchObject(
             emptySpriteBounds
           );
+        });
+      });
+
+      describe("debugConsole", () => {
+        const control = new RichText("Test <b>test</b>", style);
+        const debug = new RichText(
+          "This <b>should appear</b> in console!",
+          style,
+          {
+            debugConsole: true,
+          }
+        );
+
+        it("It should log debug info to console. Can't automate this test so just look in the console.", () => {
+          expect(debug).toBeDefined();
+        });
+
+        it("Should have debug set to false by default.", () => {
+          expect(control.options.debugConsole).toBeFalsy();
         });
       });
 
@@ -68,6 +107,73 @@ describe("RichText", () => {
         it("Should not clobber the existing styles if any were already defined.", () => {
           expect(iconStyle?.imgDisplay).toBe("icon");
           expect(iconStyle?.fontSize).toBe(48);
+        });
+      });
+
+      describe("drawWhitespace", () => {
+        const noDrawWhitespace = new RichText("a b\nc", {});
+        const drawWhitespace = new RichText(
+          "a b\nc",
+          {},
+          { drawWhitespace: true }
+        );
+
+        it("Should be false by default.", () => {
+          expect(noDrawWhitespace.options.drawWhitespace).toBeFalsy();
+          expect(drawWhitespace.options.drawWhitespace).toBeTruthy();
+        });
+
+        it("When false, whitespace is not drawn as a text field.", () => {
+          const { textFields } = noDrawWhitespace;
+          expect(pluck("text")(textFields)).toMatchObject(["a", "b", "c"]);
+        });
+
+        it("When true, whitespace is drawn as a text field.", () => {
+          const { textFields } = drawWhitespace;
+          expect(pluck("text")(textFields)).toMatchObject([
+            "a",
+            " ",
+            "b",
+            "\n",
+            "c",
+          ]);
+        });
+      });
+
+      describe("splitStyle", () => {
+        const text = "Hello, world!";
+        // don't count the space
+        const charLength = text.length - " ".length;
+        const style = {};
+
+        const control = new RichText(text, style);
+        const words = new RichText(text, style, { splitStyle: "words" });
+        const chars = new RichText(text, style, { splitStyle: "characters" });
+
+        it('Should be "words" by default.', () => {
+          expect(control.options.splitStyle).toBe("words");
+        });
+
+        it("Should inform how the text is split into multiple text fields.", () => {
+          expect(control.textFields).toHaveLength(2);
+          expect(words.textFields).toHaveLength(2);
+          expect(chars.textFields).toHaveLength(charLength);
+        });
+
+        it("Check that the letters aren't clumping together.", () => {
+          const lines = chars.tokens;
+          const tokens = lines[0][0];
+          const bounds1 = tokens[1].bounds;
+          const bounds2 = tokens[2].bounds;
+          const bounds3 = tokens[3].bounds;
+          expect(bounds1.x).not.toEqual(bounds2.x);
+          expect(bounds2.x).not.toEqual(bounds3.x);
+        });
+
+        it("Should throw if the style is not supported. It will offer suggestions if you're close!", () => {
+          expect(() => {
+            new RichText(text, style, { splitStyle: "chars" as SplitStyle });
+          }).toThrow(/.*(Did you mean "characters"?)/g);
         });
       });
 
@@ -93,8 +199,14 @@ describe("RichText", () => {
           skipDraw.update();
           expect(skipDraw.textContainer.children).toHaveLength(0);
           skipDraw.draw();
-          expect(skipDraw.tokens).toHaveLength(1);
-          expect(skipDraw.tokens[0]).toHaveLength(2);
+          expect(skipDraw.textFields).toHaveLength(2);
+          expect(skipDraw.tokens).toMatchObject([
+            [
+              [{ content: "Test" }],
+              [{ content: " " }],
+              [{ content: "test", tags: "b" }],
+            ],
+          ]);
           expect(skipDraw.getBounds()).toMatchObject(control.getBounds());
         });
         it("Default should be to automatically call update.", () => {
@@ -119,10 +231,18 @@ describe("RichText", () => {
           expect(control.textFields).toHaveLength(0);
           control.setText("abc def ghi", true);
           expect(control.textFields).toHaveLength(0);
-          expect(control.tokens[0]).toHaveLength(0);
+          expect(control.tokens).toHaveLength(0);
           control.update(true);
           expect(control.textFields).toHaveLength(0);
-          expect(control.tokens[0]).toHaveLength(3);
+          expect(control.tokens).toMatchObject([
+            [
+              [{ content: "abc" }],
+              [{ content: " " }],
+              [{ content: "def" }],
+              [{ content: " " }],
+              [{ content: "ghi" }],
+            ],
+          ]);
           control.update(false);
           expect(control.textFields).toHaveLength(3);
         });
@@ -183,9 +303,10 @@ describe("RichText", () => {
         endTime = new Date().getTime();
         const timeSkipUpdates = endTime - startTime;
 
-        it(`Default is slow AF! ${timeControl}ms`, () => {
-          expect(timeControl).toBeGreaterThanOrEqual(500);
-        });
+        // Skipping since actual results will vary.
+        // it(`Default is slow AF! ${timeControl}ms`, () => {
+        //   expect(timeControl).toBeGreaterThanOrEqual(500);
+        // });
         it(`skipDraw should be faster than default. ${timeSkipDraw}ms`, () => {
           expect(timeSkipDraw).toBeLessThan(timeControl);
         });
@@ -193,14 +314,68 @@ describe("RichText", () => {
           expect(timeSkipUpdates).toBeLessThan(timeControl);
           expect(timeSkipUpdates).toBeLessThan(timeSkipDraw);
         });
-        it(`In fact, skipUpdates it's pretty fast! ${timeSkipUpdates}ms`, () => {
-          expect(timeSkipUpdates).toBeLessThan(50);
-        });
+        // Skipping since actual results will vary.
+        // it(`In fact, skipUpdates it's pretty fast! ${timeSkipUpdates}ms`, () => {
+        //   expect(timeSkipUpdates).toBeLessThan(50);
+        // });
 
         console.log({ timeControl, timeSkipDraw, timeSkipUpdates });
       });
     });
   });
+
+  describe.only("valign", () => {
+    describe("Specific issue with vertical text align", () => {
+      describe("Should apply styles across the entire text field correctly.", () => {
+        const valignText = `<top>1<code>Top</code>2 <small>Vertical</small> <img/> Alignment.</top>`;
+
+        const valignStyle = {
+          default: {
+            fontFamily: "Arial",
+            fontSize: "24px",
+            fill: "#cccccc",
+            align: "left" as Align,
+          },
+          code: {
+            fontFamily: "Courier",
+            fontSize: "36px",
+            fill: "#ff8888",
+          },
+          small: { fontSize: "14px" },
+          top: { valign: "top" as VAlign },
+          img: { imgSrc: "valignImg", imgDisplay: "icon" as ImageDisplayMode },
+        };
+
+        const valignImg = PIXI.Sprite.from(iconSrc);
+
+        const valign = new RichText(valignText, valignStyle, {
+          imgMap: { valignImg },
+        });
+
+        const tokens = valign.tokens[0];
+        test("Top code tag", () => {
+          expect(tokens[0][0].tags).toBe("top");
+          expect(tokens[0][1].tags).toBe("top,code");
+          expect(tokens[0][2].tags).toBe("top");
+        });
+        test("Top small tag", () => {
+          expect(tokens[2][0].tags).toBe("top,small");
+        });
+        test("img tag", () => {
+          expect(tokens[4][0].tags).toBe("top,img");
+        });
+        test("plain (top) tag", () => {
+          expect(tokens[6][0].tags).toBe("top");
+        });
+        test("Top spaces", () => {
+          expect(tokens[1][0].tags).toBe("top");
+          expect(tokens[3][0].tags).toBe("top");
+          expect(tokens[5][0].tags).toBe("top");
+        });
+      });
+    });
+  });
+
   describe("text", () => {
     const singleLine = new RichText("Line 1", style);
     const doubleLine = new RichText(
@@ -243,13 +418,14 @@ Line 2`,
 
     describe("multiple lines", () => {
       it("Should support text with multiple lines.", () => {
-        const H = singleLine.getBounds().height;
-        const H2 = doubleLine.getBounds().height / H;
-        const H3 = tripleSpacedLines.getBounds().height / H;
+        const fontSize = 12;
+        const H = singleLine.getBounds().height / fontSize;
+        const H2 = doubleLine.getBounds().height / fontSize;
+        const H3 = tripleSpacedLines.getBounds().height / fontSize;
 
-        expect(H).toBe(15);
+        expect(H).toBe(1);
         expect(H2).toBeCloseTo(2, 0);
-        expect(H3).toBeCloseTo(3.5, 0);
+        expect(H3).toBeCloseTo(4, 0);
       });
     });
 
@@ -303,12 +479,23 @@ Line 4`);
   describe("update()", () => {
     const t = new RichText(`<b>Test</b>`, style);
     it("Should render the text as pixi text elements.", () => {
-      const tokens = t.update();
-      expect(tokens).toHaveLength(1);
-      expect(tokens[0]).toHaveLength(1);
-      expect(tokens[0][0].text).toBe("Test");
-      expect(tokens[0][0].tags).toHaveLength(1);
-      expect(tokens[0][0].tags[0]).toHaveProperty("tagName", "b");
+      const lines = t.update();
+      const [line] = lines;
+      const [word] = line;
+      const [segment] = word;
+      const { content: chars } = segment;
+
+      // lines
+      expect(lines).toHaveLength(1);
+      // words
+      expect(line).toHaveLength(1);
+      // segments
+      expect(word).toHaveLength(1);
+      // chars
+      expect(segment).toHaveProperty("content");
+      expect(chars).toHaveLength(4);
+      expect(chars).toBe("Test");
+      expect(segment.tags).toBe("b");
     });
   });
 

@@ -4,7 +4,7 @@ export const measureFont = (
   context: CanvasRenderingContext2D
 ): PIXI.IFontMetrics => PIXI.TextMetrics.measureFont(context.font);
 
-const initialFontProps = {
+export const INITIAL_FONT_PROPS = {
   ascent: 10,
   descent: 3,
   fontSize: 13,
@@ -21,9 +21,9 @@ export const getFontPropertiesOfText = (
   } else {
     const props = measureFont(textField.context);
     if (
-      props.ascent === initialFontProps.ascent &&
-      props.descent === initialFontProps.descent &&
-      (textField.style.fontSize > initialFontProps.fontSize ||
+      props.ascent === INITIAL_FONT_PROPS.ascent &&
+      props.descent === INITIAL_FONT_PROPS.descent &&
+      (textField.style.fontSize > INITIAL_FONT_PROPS.fontSize ||
         isNaN(textField.style.fontSize))
     ) {
       throw new Error(
