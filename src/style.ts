@@ -1,22 +1,29 @@
-import { combineRecords, isEmptyObject } from "./functionalUtils";
+import { combineRecords, isDefined, pluck } from "./functionalUtils";
 import {
   AttributesList,
-  TaggedTextTokenPartial,
   TagWithAttributes,
   TextStyleExtended,
   TextStyleSet,
   IMG_SRC_PROPERTY,
   ImageMap,
+  TextToken,
+  TagToken,
+  TagTokens,
+  StyledTokens,
+  StyledToken,
+  SpriteToken,
+  isEmptyObject,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
+import * as PIXI from "pixi.js";
 
 /**
  * Combine 2 styles into one.
  */
-export const combineStyles = (
+export const combineStyles: (
   a: TextStyleExtended,
   b: TextStyleExtended
-): TextStyleExtended => combineRecords(a, b);
+) => TextStyleExtended = combineRecords;
 
 /**
  * Combines multiple styles into one.
@@ -25,10 +32,7 @@ export const combineStyles = (
 export const combineAllStyles = (
   styles: (TextStyleExtended | undefined)[]
 ): TextStyleExtended =>
-  (styles.filter((s) => s !== undefined) as TextStyleExtended[]).reduce(
-    combineStyles,
-    {}
-  );
+  (styles.filter(isDefined) as TextStyleExtended[]).reduce(combineStyles, {});
 
 export const convertAttributeValues = (
   attributes: AttributesList
@@ -88,57 +92,92 @@ export const tagWithAttributesToStyle = (
 
 /**
  * Gets styles for several tags and returns a single combined style object.
+ * Results are cached for future requests.
  * @param tags Tags (with attribues) to look up.
  * @param tagStyles Set of tag styles to search.
+ * @param styleCache An object that holds the cached values for the combined styles.
  * @returns
  */
 export const getStyleForTags = (
   tags: TagWithAttributes[],
-  tagStyles: TextStyleSet
-): TextStyleExtended =>
-  // TODO: Memoize
-  combineAllStyles(tags.map((tag) => tagWithAttributesToStyle(tag, tagStyles)));
-
-/**
- * Gets style associated with the stacked tags for the token.
- */
-export const getStyleForToken = (
-  token: TaggedTextTokenPartial,
-  tagStyles: TextStyleSet
-): TextStyleExtended =>
-  combineStyles(tagStyles.default, getStyleForTags(token.tags, tagStyles));
-
-/**
- * Returns true if the tag has an imgSrc property in one of its styles.
- */
-export const isTokenImage = (token: TaggedTextTokenPartial): boolean =>
-  token.style?.[IMG_SRC_PROPERTY] !== undefined ||
-  token.tags.filter(
-    ({ attributes }) => attributes[IMG_SRC_PROPERTY] !== undefined
-  ).length > 0;
-
-export const attachSpritesToToken = (
-  token: TaggedTextTokenPartial,
-  imgMap: ImageMap
-): TaggedTextTokenPartial => {
-  if (isTokenImage(token) === false) return token;
-
-  const imgSrc = token.style?.[IMG_SRC_PROPERTY] as string;
-  const sprite = cloneSprite(imgMap[imgSrc]);
-
-  if (sprite === undefined) {
-    throw new Error(
-      `An image tag with ${IMG_SRC_PROPERTY}="${imgSrc}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
-    );
+  tagStyles: TextStyleSet,
+  styleCache: TextStyleSet
+): TextStyleExtended => {
+  const tagHash = JSON.stringify(tags);
+  if (styleCache[tagHash] === undefined) {
+    const defaultStyle = tagStyles.default;
+    const styles = tags.map((tag) => tagWithAttributesToStyle(tag, tagStyles));
+    const stylesWithDefault = [defaultStyle, ...styles];
+    styleCache[tagHash] = combineAllStyles(stylesWithDefault);
   }
+  return styleCache[tagHash];
+};
 
-  if (token.text !== "" && token.text !== " ") {
-    console.error(
-      `Encountered an image tag with ${IMG_SRC_PROPERTY}="${imgSrc}" but also contains the text "${token.text}". Text inside of image tags is not currently supported and has been removed.`
-    );
-  }
-  token.text = " ";
-  token.sprite = sprite;
+export const mapTagsToStyles = (
+  tokens: TagTokens,
+  styles: TextStyleSet,
+  imgMap?: ImageMap
+): StyledTokens => {
+  const defaultStyle: TextStyleExtended = styles.default ?? {};
+  const tagStack: TagWithAttributes[] = [];
+  const styleCache = {};
 
-  return token;
+  const convertTagTokenToStyledToken = (
+    token: TagToken | TextToken
+  ): StyledToken | TextToken => {
+    if (typeof token === "string") {
+      return token as TextToken;
+    }
+
+    const { tag, attributes = {} } = token;
+    let style: TextStyleExtended = defaultStyle;
+    let tags = "";
+
+    if (tag) {
+      // Put the current tag on the stack.
+      tagStack.push({ tagName: tag, attributes });
+      // Get tag names as comma separates string
+      tags = pluck("tagName")(tagStack).join(",");
+      // Merge all tags into a style object.
+      style = getStyleForTags(tagStack, styles, styleCache);
+    }
+
+    const styledToken: StyledToken = {
+      style,
+      tags,
+      children: token.children.map(convertTagTokenToStyledToken),
+    };
+
+    // If a matching sprite exits in the imgMap...
+    const imgKey = style[IMG_SRC_PROPERTY] ?? "";
+    if (imgKey) {
+      if (imgMap === undefined) {
+        throw new Error(
+          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but no imgMap was provided. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
+        );
+      }
+      const sprite: SpriteToken | undefined = imgMap[imgKey];
+      if (sprite === undefined) {
+        throw new Error(
+          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
+        );
+      }
+      if (sprite instanceof PIXI.Sprite === false) {
+        throw new Error(
+          `The image reference you provided for "${imgKey}" is not a Sprite. The imgMap can only accept PIXI.Sprite instances.`
+        );
+      }
+
+      // insert sprite as first token.
+      const cloneOfSprite = cloneSprite(sprite);
+      styledToken.children = [cloneOfSprite, ...styledToken.children];
+    }
+
+    // Remove the last tag from the stack
+    tagStack.pop();
+
+    return styledToken;
+  };
+
+  return convertTagTokenToStyledToken(tokens) as StyledTokens;
 };

@@ -1,7 +1,19 @@
-import { IMG_SRC_PROPERTY, TaggedTextTokenPartial } from "./../src/types";
+import * as PIXI from "pixi.js";
+import {
+  TagTokens,
+  TextStyleSet,
+  StyledToken,
+  TextStyleExtended,
+} from "./../src/types";
 import * as style from "../src/style";
+import iconSrc from "./icon.base64";
 
 describe("style module", () => {
+  const iconImage = new Image();
+  iconImage.src = `data:image/png;base64,${iconSrc}`;
+  const texture = PIXI.Texture.from(iconImage);
+  const icon = PIXI.Sprite.from(texture);
+
   describe("combineStyles()", () => {
     it("should combine 2 styles into one.", () => {
       expect(
@@ -81,7 +93,12 @@ describe("style module", () => {
 
   describe("getStyleForTags()", () => {
     it("should combine several styles with attributes to create one style.", () => {
+      const styleCache = {};
       const tagStyles = {
+        default: {
+          stroke: "#FF3399",
+          strokeThickness: 2,
+        },
         strong: {
           fontWeight: "700",
         },
@@ -99,8 +116,13 @@ describe("style module", () => {
       const blueTag = { tagName: "blue", attributes: {} };
 
       expect(
-        style.getStyleForTags([emTag, strongTag, blueTag], tagStyles)
+        style.getStyleForTags(
+          [emTag, strongTag, blueTag],
+          tagStyles,
+          styleCache
+        )
       ).toMatchObject({
+        ...tagStyles.default,
         ...tagStyles.em,
         ...emTag.attributes,
         ...tagStyles.strong,
@@ -108,35 +130,403 @@ describe("style module", () => {
       });
     });
   });
-  describe("isTokenImage", () => {
-    it("should return true if a token contains src field.", () => {
-      const plainToken: TaggedTextTokenPartial = {
-        text: "Hello",
-        tags: [{ tagName: "b", attributes: {} }],
+
+  describe("mapTagsToStyles()", () => {
+    const defaultStyle: TextStyleExtended = {
+      fontSize: 18,
+      fontFamily: "Courier",
+      wordWrapWidth: 400,
+    };
+
+    it("Should not affect text only tokens", () => {
+      expect(
+        style.mapTagsToStyles({ children: ["foo\nbar"] }, {})
+      ).toMatchObject({
+        children: ["foo\nbar"],
+      });
+    });
+
+    it("Should apply the default styles if there are no other tags.", () => {
+      expect(
+        style.mapTagsToStyles(
+          {
+            children: ["Hello"],
+          },
+          { default: defaultStyle }
+        )
+      ).toMatchObject({
+        style: defaultStyle,
+        tags: "",
+        children: ["Hello"],
+      });
+    });
+
+    it("Should convert TagTokens into StyledTokens", () => {
+      const styles = {
+        default: defaultStyle,
+        a: { fontSize: 12 },
       };
-      const imgToken: TaggedTextTokenPartial = {
-        text: "",
-        tags: [{ tagName: "img", attributes: { [IMG_SRC_PROPERTY]: "icon" } }],
+      const aPlusDefault = { ...styles.default, ...styles.a };
+
+      expect(
+        style.mapTagsToStyles(
+          {
+            tag: "a",
+            children: ["b"],
+          },
+          styles
+        )
+      ).toMatchObject({
+        style: aPlusDefault,
+        tags: "a",
+        children: ["b"],
+      });
+
+      expect(
+        style.mapTagsToStyles(
+          {
+            children: ["1", { tag: "a", children: ["2"] }, "3"],
+          },
+          styles
+        )
+      ).toMatchObject({
+        style: defaultStyle,
+        tags: "",
+        children: ["1", { style: aPlusDefault, children: ["2"] }, "3"],
+      });
+    });
+
+    it("Should handle attributes", () => {
+      const input = {
+        children: [
+          {
+            tag: "b",
+            attributes: { fontSize: 123 },
+            children: [
+              "Bing",
+              {
+                tag: "i",
+                children: ["Bong"],
+              },
+            ],
+          },
+        ],
       };
-      const imgTokenWithoutAttributes: TaggedTextTokenPartial = {
-        text: "",
-        tags: [{ tagName: "img", attributes: {} }],
-        style: { [IMG_SRC_PROPERTY]: "icon" },
+      const styles = {
+        b: { fontSize: 24, fontWeight: "700" },
+        i: { fontStyle: "italic" },
+        default: defaultStyle,
       };
-      const srcOnlyToken: TaggedTextTokenPartial = {
-        text: "",
-        tags: [{ tagName: "span", attributes: { [IMG_SRC_PROPERTY]: "icon" } }],
-      };
-      const trickyToken: TaggedTextTokenPartial = {
-        text: "",
-        tags: [{ tagName: "picture", attributes: { link: "icon" } }],
+      const expected = {
+        children: [
+          {
+            tags: "b",
+            style: {
+              fontFamily: "Courier",
+              wordWrapWidth: 400,
+              fontSize: 123,
+              fontWeight: "700",
+            },
+            children: [
+              "Bing",
+              {
+                tags: "b,i",
+                style: {
+                  fontFamily: "Courier",
+                  wordWrapWidth: 400,
+                  fontStyle: "italic",
+                  fontWeight: "700",
+                  fontSize: 123,
+                },
+                children: ["Bong"],
+              },
+            ],
+          },
+        ],
       };
 
-      expect(style.isTokenImage(plainToken)).toBeFalsy();
-      expect(style.isTokenImage(imgToken)).toBeTruthy();
-      expect(style.isTokenImage(imgTokenWithoutAttributes)).toBeTruthy();
-      expect(style.isTokenImage(srcOnlyToken)).toBeTruthy();
-      expect(style.isTokenImage(trickyToken)).toBeFalsy();
+      expect(style.mapTagsToStyles(input, styles)).toMatchObject(expected);
+    });
+
+    it("Should convert deeply nested Tokens", () => {
+      const italic = { fontStyle: "italic" };
+      const styles = {
+        default: italic,
+        a: { fontSize: 12 },
+        b: { fontSize: 24 },
+        c: { fontSize: 36 },
+        d: { fontSize: 48 },
+      };
+
+      const deeplyNested: TagTokens = {
+        children: [
+          {
+            tag: "a",
+            children: [
+              {
+                tag: "b",
+                children: [
+                  {
+                    tag: "c",
+                    children: [
+                      {
+                        tag: "d",
+                        children: ["e"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      expect(style.mapTagsToStyles(deeplyNested, styles)).toMatchObject({
+        style: styles.default,
+        children: [
+          {
+            style: { ...styles.default, ...styles.a },
+            tags: "a",
+            children: [
+              {
+                style: { ...styles.default, ...styles.a, ...styles.b },
+                tags: "a,b",
+                children: [
+                  {
+                    style: {
+                      ...styles.default,
+                      ...styles.a,
+                      ...styles.b,
+                      ...styles.c,
+                    },
+                    tags: "a,b,c",
+                    children: [
+                      {
+                        tags: "a,b,c,d",
+                        style: {
+                          ...styles.default,
+                          ...styles.a,
+                          ...styles.b,
+                          ...styles.c,
+                          ...styles.d,
+                        },
+                        children: ["e"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    describe("imgMap", () => {
+      const styles = {
+        img: { fontSize: 48, imgSrc: "img" },
+      };
+      const imageMap = { img: icon };
+
+      it("Should attach images to tokens that have image references.", () => {
+        const input = {
+          children: [
+            "foo ",
+            {
+              tag: "img",
+              children: [],
+            },
+          ],
+        };
+        const result = {
+          children: [
+            "foo ",
+            {
+              style: styles.img,
+              tags: "img",
+              children: [icon],
+            },
+          ],
+        };
+
+        expect(style.mapTagsToStyles(input, styles, imageMap)).toMatchObject(
+          result
+        );
+      });
+      it("Should place text inside an image tag to the right of the image.", () => {
+        const input = {
+          children: [
+            {
+              tag: "img",
+              children: ["text inside img tag"],
+            },
+          ],
+        };
+        const result = {
+          children: [
+            {
+              style: styles.img,
+              tags: "img",
+              children: [icon, "text inside img tag"],
+            },
+          ],
+        };
+
+        expect(style.mapTagsToStyles(input, styles, imageMap)).toMatchObject(
+          result
+        );
+      });
+    });
+
+    describe("Memoized style hash", () => {
+      const styles: TextStyleSet = {
+        i: { fontStyle: "italic", fontFamily: "Arial" },
+        b: { fontWeight: "700", fontFamily: "Times" },
+      };
+      const input = {
+        children: [
+          "none ",
+          {
+            tag: "i",
+            children: ["Italic"],
+          },
+          " ",
+          {
+            tag: "b",
+            children: ["Bold"],
+          },
+          " ",
+          {
+            tag: "b",
+            children: ["Bold Again"],
+          },
+          " ",
+          {
+            tag: "i",
+            children: [
+              {
+                tag: "b",
+                children: ["Italic Bold"],
+              },
+            ],
+          },
+          " ",
+          {
+            tag: "b",
+            children: [
+              {
+                tag: "i",
+                children: ["Bold Italic"],
+              },
+            ],
+          },
+          " ",
+          {
+            tag: "b",
+            children: [
+              {
+                tag: "i",
+                children: ["Bold Italic Again"],
+              },
+            ],
+          },
+        ],
+      };
+
+      const expected = {
+        children: [
+          "none ",
+
+          {
+            style: styles.i,
+            tags: "i",
+            children: ["Italic"],
+          },
+          " ",
+          {
+            style: styles.b,
+            tags: "b",
+            children: ["Bold"],
+          },
+          " ",
+          {
+            style: styles.b,
+            tags: "b",
+            children: ["Bold Again"],
+          },
+          " ",
+          {
+            style: styles.i,
+            tags: "i",
+            children: [
+              {
+                style: { ...styles.i, ...styles.b },
+                tags: "i,b",
+                children: ["Italic Bold"],
+              },
+            ],
+          },
+          " ",
+          {
+            style: styles.b,
+            tags: "b",
+            children: [
+              {
+                style: { ...styles.b, ...styles.i },
+                tags: "b,i",
+                children: ["Bold Italic"],
+              },
+            ],
+          },
+          " ",
+          {
+            style: styles.b,
+            tags: "b",
+            children: [
+              {
+                style: { ...styles.b, ...styles.i },
+                tags: "b,i",
+                children: ["Bold Italic Again"],
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = style.mapTagsToStyles(input, styles);
+
+      const bold = result.children[3] as StyledToken;
+      const boldAgain = result.children[5] as StyledToken;
+      const italicBold = (result.children[7] as StyledToken)
+        .children[0] as StyledToken;
+      const boldItalic = (result.children[9] as StyledToken)
+        .children[0] as StyledToken;
+      const boldItalicAgain = (result.children[11] as StyledToken)
+        .children[0] as StyledToken;
+
+      it("Verifying that the indexes are as expected", () => {
+        expect(bold.children[0]).toBe("Bold");
+        expect(boldAgain.children[0]).toBe("Bold Again");
+        expect(italicBold.children[0]).toBe("Italic Bold");
+        expect(boldItalic.children[0]).toBe("Bold Italic");
+        expect(boldItalicAgain.children[0]).toBe("Bold Italic Again");
+      });
+
+      it("Verifying the entire tree", () => {
+        expect(result).toMatchObject(expected);
+      });
+      it("Should reuse styles with identical tags", () => {
+        expect(bold.style).toBe(boldAgain.style);
+        expect(boldItalic.style).toBe(boldItalicAgain.style);
+      });
+      it("Should NOT treat nested tags the same if they're in a different order.", () => {
+        expect(italicBold.style).not.toBe(boldItalic.style);
+        expect(italicBold.tags).not.toBe(boldItalic.tags);
+        expect(italicBold.tags).toBe("i,b");
+        expect(boldItalic.tags).toBe("b,i");
+        expect(italicBold.style.fontFamily).toBe("Times");
+        expect(boldItalic.style.fontFamily).toBe("Arial");
+      });
     });
   });
 });

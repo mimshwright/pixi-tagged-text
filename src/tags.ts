@@ -1,11 +1,12 @@
+import { last } from "./functionalUtils";
 import {
   TagMatchData,
-  TextStyleSet,
   AttributesList,
   TagWithAttributes,
-  TaggedTextTokenPartial,
-  TagStack,
-  LINE_BREAK_TAG_NAME,
+  CompositeToken,
+  TagToken,
+  TextToken,
+  isEmptyObject,
 } from "./types";
 
 // TODO: this can probably be just a static value without all the options and parameters.
@@ -17,8 +18,7 @@ import {
  * @param tagNamesToMatch List of tag-names that will be matched by the RegExp
  */
 export const getTagRegex = (tagNamesToMatch: string[] = ["\\w+"]): RegExp => {
-  const matchingTagNames =
-    tagNamesToMatch.join("|") + "|" + LINE_BREAK_TAG_NAME;
+  const matchingTagNames = tagNamesToMatch.join("|");
 
   const captureGroup = (a: string) => `(${a})`;
   const noCaptureGroup = (a: string) => `(?:${a})`;
@@ -67,11 +67,10 @@ export const parseAttributes = (attributesString = ""): AttributesList => {
 
   return attributes.reduce((obj: AttributesList, attribute: string) => {
     const attributePair = attribute.split("=");
-    const name = attributePair[0];
-    const valueStr: string = attributePair[1].substr(
-      1,
-      attributePair[1].length - 2
-    );
+    const name = attributePair[0].trim();
+    const valueStr: string = attributePair[1]
+      .substr(1, attributePair[1].length - 2)
+      .trim();
 
     obj[name] = valueStr;
     return obj;
@@ -105,63 +104,6 @@ export const tagMatchDataToTagWithAttributes = (
   tagName: tag.tagName,
   attributes: tag.attributes,
 });
-
-export const Token = (
-  text = "",
-  tags: TagWithAttributes[] = []
-): TaggedTextTokenPartial => ({
-  text,
-  tags,
-});
-
-const splitWords = (input: string): string[] =>
-  input.split(" ").map((s, i, { length }) => s + (i < length - 1 ? " " : ""));
-
-const splitTokensIntoWords = (
-  tokens: TaggedTextTokenPartial[]
-): TaggedTextTokenPartial[] =>
-  tokens.flatMap(({ text, tags }) =>
-    splitWords(text).map((word) => Token(word, tags))
-  );
-
-export const createTokens = (
-  segments: string[],
-  tags: TagMatchData[]
-): TaggedTextTokenPartial[] => {
-  // Add the entire text with no tag as a default value in case there are no tags.
-  const firstSegmentWithoutTags: TaggedTextTokenPartial = Token(segments[0]);
-  const tokens: TaggedTextTokenPartial[] = [firstSegmentWithoutTags];
-
-  // Track which tags are opened and closed and add them to the list.
-  const activeTags: TagStack = [];
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i];
-    const segment = segments[i + 1] ?? "";
-    if (tag.isOpening) {
-      activeTags.push(tag);
-    } else {
-      const poppedTag = activeTags.pop();
-      if (poppedTag === undefined || poppedTag.tagName !== tag.tagName) {
-        throw new Error(
-          `Unexpected tag nesting. Found a closing tag "${tag.tag}" that doesn't match the previously open tag "${poppedTag?.tag}"`
-        );
-      }
-    }
-
-    tokens.push(
-      Token(segment, activeTags.map(tagMatchDataToTagWithAttributes))
-    );
-  }
-  if (activeTags.length > 0) {
-    console.warn(
-      `Found ${activeTags.length} unclosed tags in\n${activeTags
-        .map((tag) => tag.tagName)
-        .join("-")}`
-    );
-  }
-
-  return splitTokensIntoWords(tokens);
-};
 
 /**
  * Splits original text into an untagged list of string segments.
@@ -224,28 +166,86 @@ export const replaceSelfClosingTags = (input: string): string =>
     return output;
   });
 
-/**
- * Replaces \n with special tags that will be recognized by the parser.
- */
-export const replaceLineBreaks = (input: string): string =>
-  input.replace(/\n/g, `<${LINE_BREAK_TAG_NAME}></${LINE_BREAK_TAG_NAME}>`);
+export const removeTags = (input: string): string =>
+  input.replace(getTagRegex(), "");
+
+// export const isTextToken = (token: Token): boolean => typeof token === "string";
+// export const isNewlineToken = (token: Token): boolean =>
+//   isWhitespaceToken(token) && token === "\n";
+// export const isCompositeToken = (token: Token): boolean =>
+//   isTextToken(token) === false && "children" in (token as CompositeToken);
+
+// export const makeSpacesSeparateWords = (segment: string): string[] =>
+//   segment.replace(" ", "__SPACE__ __SPACE__").split("__SPACE__");
+
+export const tagMatchToTagToken = (tag: TagMatchData): TagToken => {
+  return {
+    tag: tag.tagName,
+    children: [],
+
+    // Add attributes unless undefined
+    ...(isEmptyObject(tag.attributes) ? {} : { attributes: tag.attributes }),
+  };
+};
+
+export const createTokensNew = (
+  segments: string[],
+  tags: TagMatchData[]
+): (TagToken | TextToken)[] => {
+  const rootTokens: CompositeToken<TagToken | TextToken> = { children: [] };
+  if (segments[0] !== "") {
+    rootTokens.children.push(segments[0]);
+  }
+  // Track which tags are opened and closed and add them to the list.
+  const tokenStack: TagToken[] = [rootTokens];
+
+  for (let i = 0; i < tags.length; i++) {
+    const tag = tags[i];
+    const segment = segments[i + 1] ?? "";
+    if (tag.isOpening) {
+      const token = tagMatchToTagToken(tag);
+      if (segment !== "") {
+        token.children.push(segment);
+      }
+      last(tokenStack).children.push(token);
+      tokenStack.push(token as CompositeToken<TagToken | TextToken>);
+    } else {
+      const poppedToken = tokenStack.pop();
+      if (poppedToken === undefined || poppedToken.tag !== tag.tagName) {
+        throw new Error(
+          `Unexpected tag nesting. Found a closing tag "${tag.tagName}" that doesn't match the previously open tag "${poppedToken?.tag}"`
+        );
+      }
+      if (segment !== "") {
+        last(tokenStack).children.push(segment);
+      }
+    }
+  }
+  if (tokenStack.length > 1) {
+    console.warn(
+      `Found ${tokenStack.length - 1} unclosed tags in\n${tokenStack
+        .map((token) => token.tag)
+        .join("-")}`
+    );
+  }
+
+  return rootTokens.children;
+};
 
 /**
  * Converts a string into a list of tokens that match segments of text with styles.
  *
  * @param input Input string with XML-style tags.
- * @param tagStyles Used to only tokenize tags that have styles defined for them.
+ * @param tagNamesToMatch Used to only tokenize tags that have styles defined for them.
  */
-export const parseTags = (
+export const parseTagsNew = (
   input: string,
-  tagStyles?: TextStyleSet
-): TaggedTextTokenPartial[] => {
+  tagNamesToMatch?: string[]
+): CompositeToken<TagToken | TextToken> => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
-  const tagNames = tagStyles ? Object.keys(tagStyles) : undefined;
 
   input = replaceSelfClosingTags(input);
-  input = replaceLineBreaks(input);
-  const re = getTagRegex(tagNames);
+  const re = getTagRegex(tagNamesToMatch);
   const matchesRaw: RegExpExecArray[] = [];
   const tagMatches: TagMatchData[] = [];
   let match;
@@ -258,10 +258,7 @@ export const parseTags = (
 
   const segments = extractSegments(input, tagMatches);
 
-  const tokens = createTokens(segments, tagMatches);
+  const tokens = createTokensNew(segments, tagMatches);
 
-  return tokens;
+  return { children: tokens };
 };
-
-export const removeTags = (input: string): string =>
-  input.replace(getTagRegex(), "");
