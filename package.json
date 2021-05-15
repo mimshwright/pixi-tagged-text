@@ -37,8 +37,8 @@
     "pixi.js": "^5.3.8"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.22.1",
     "@types/jest": "^26.0.23",
+    "@typescript-eslint/eslint-plugin": "^4.23.0",
     "@typescript-eslint/parser": "^4.22.1",
     "argos-cli": "0.3.3",
     "canvas": "^2.7.0",
