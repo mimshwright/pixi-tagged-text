@@ -1,6 +1,6 @@
 {
   "name": "pixi-tagged-text",
-  "version": "2.0.0-beta.7",
+  "version": "2.0.0",
   "description": "TaggedText for pixi.js",
   "author": "Mims Wright, JT Smith, tleunen",
   "license": "MIT",
@@ -43,8 +43,8 @@
     "argos-cli": "0.3.3",
     "canvas": "^2.7.0",
     "eslint": "^7.26.0",
-    "eslint-plugin-prettier": "^3.4.0",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
     "fs-extra": "^10.0.0",
     "http-server": "^0.12.3",
     "husky": "^6.0.0",
