@@ -1,3 +1,3 @@
-import RichText from "./RichText";
+import TaggedText from "./TaggedText";
 
-export default RichText;
+export default TaggedText;

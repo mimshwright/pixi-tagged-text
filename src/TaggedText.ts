@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 import { parseTagsNew, removeTags } from "./tags";
 import {
-  RichTextOptions,
+  TaggedTextOptions,
   TextStyleSet,
   TextStyleExtended,
   TagWithAttributes,
@@ -35,7 +35,7 @@ const DEFAULT_STYLE: TextStyleExtended = {
   lineSpacing: 0,
 };
 
-const DEFAULT_OPTIONS: RichTextOptions = {
+const DEFAULT_OPTIONS: TaggedTextOptions = {
   debug: false,
   debugConsole: false,
   splitStyle: "words",
@@ -64,11 +64,11 @@ const DEBUG = {
   },
 };
 
-export default class RichText extends PIXI.Sprite {
+export default class TaggedText extends PIXI.Sprite {
   // todo: allow setting options after the constructor is called. Make sure to call update()
-  /** Settings for the RichText component. */
-  private _options: RichTextOptions;
-  public get options(): RichTextOptions {
+  /** Settings for the TaggedText component. */
+  private _options: TaggedTextOptions;
+  public get options(): TaggedTextOptions {
     return this._options;
   }
 
@@ -280,7 +280,7 @@ export default class RichText extends PIXI.Sprite {
   constructor(
     text = "",
     tagStyles: TextStyleSet = {},
-    options: RichTextOptions = {},
+    options: TaggedTextOptions = {},
     texture?: PIXI.Texture
   ) {
     super(texture);

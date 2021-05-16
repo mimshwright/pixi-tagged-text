@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Pixi MultiStyle Text Demo</title>
+    <title>pixi-tagged-text Demo</title>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.8/pixi.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
 
-    <!-- RichText -->
-    <script src="../dist/pixi-rich-text.umd.js"></script>
+    <!-- TaggedText -->
+    <script src="../dist/pixi-tagged-text.umd.js"></script>
     <script>
       hljs.initHighlightingOnLoad();
     </script>
   </head>
 
   <body>
-    <h1>Pixi Multistyle Text Demo</h1>
+    <h1>pixi-tagged-text Demo</h1>
     <main>
       <script>
         const opt = { debug: false };
@@ -34,13 +34,13 @@
           return app;
         }
 
-        function createDemo(id, richTextExample) {
+        function createDemo(id, TaggedTextExample) {
           const app = createPixiApp(id);
 
-          if (richTextExample !== undefined) {
-            richTextExample.x = 30;
-            richTextExample.y = 30;
-            app.stage.addChild(richTextExample);
+          if (TaggedTextExample !== undefined) {
+            TaggedTextExample.x = 30;
+            TaggedTextExample.y = 30;
+            app.stage.addChild(TaggedTextExample);
           }
 
           return app;
@@ -81,7 +81,7 @@ and <ms>multistyle</ms> text for
               },
             };
 
-            const basic = new RichText(basicText, basicStyle);
+            const basic = new TaggedText(basicText, basicStyle);
 
             createDemo("basic", basic);
           </script>
@@ -99,8 +99,8 @@ and <ms>multistyle</ms> text for
 
             const imgText = `<h2>Inline Images!</h2>
 Add an image.
-<img imgSrc="doot" imgDisplay="inline" /> or <img imgSrc="thinking" imgDisplay="inline" />
-Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
+<img imgSrc="doot" imgDisplay="inline" /> <img imgSrc="thinking" imgDisplay="inline" /> Or...
+put an icon <thinking imgDisplay="icon" /> in there, bro!`;
             const imgStyle = {
               default: {
                 fontFamily: "Arial",
@@ -118,13 +118,13 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               icon: {},
             };
 
-            const imgRichText = new RichText(imgText, imgStyle, {
-              debug: true,
+            const imgTaggedText = new TaggedText(imgText, imgStyle, {
+              // debug: true,
               // debugConsole: true,
               imgMap: { thinking, doot },
             });
 
-            const imgApp = createDemo("img", imgRichText);
+            const imgApp = createDemo("img", imgTaggedText);
           </script>
         </div>
       </div>
@@ -147,9 +147,9 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 fill: "white",
               },
             };
-            const alignOptions = { debug: true };
+            const alignOptions = {};
 
-            let left = new RichText(
+            let left = new TaggedText(
               alignText.replace("left", "<b>left</b>"),
               {
                 ...alignStyle,
@@ -162,7 +162,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               alignOptions
             );
 
-            let right = new RichText(
+            let right = new TaggedText(
               alignText.replace("right", "<b>right</b>"),
               {
                 ...alignStyle,
@@ -177,7 +177,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
             right.x = 330;
             right.y = 30;
 
-            let center = new RichText(
+            let center = new TaggedText(
               alignText.replace("center", "<b>center</b>"),
               {
                 ...alignStyle,
@@ -192,7 +192,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
             center.x = 30;
             center.y = 330;
 
-            let justify = new RichText(
+            let justify = new TaggedText(
               alignText.replace("justify", "<b>justify</b>"),
               {
                 ...alignStyle,
@@ -254,7 +254,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
 
             const valignImg = PIXI.Sprite.from("./icon.png");
 
-            let valign = new RichText(valignText, valignStyle, {
+            let valign = new TaggedText(valignText, valignStyle, {
               imgMap: { valignImg },
             });
             createDemo("valign", valign);
@@ -284,7 +284,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 fontWeight: 700,
               },
             };
-            let attributes = new RichText(attributesText, attributesStyle);
+            let attributes = new TaggedText(attributesText, attributesStyle);
 
             createDemo("attributes", attributes);
           </script>
@@ -299,7 +299,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         <div class="pixi" id="nested">
           <script>
             // Nesting Tags
-            const nestedText = `You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like, dawg!</large></shadow></thicker></i></red></b></outline>`;
+            const nestedText = `You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like, <blue>dude!</blue></large></shadow></thicker></i></red></b></outline>`;
             const nestedStyle = {
               default: {
                 fontFamily: "Arial",
@@ -312,12 +312,13 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               outline: { stroke: "black", strokeThickness: 2 },
               b: { fontWeight: 700 },
               red: { fill: "#ff8888" },
+              blue: { fill: "#8888FF" },
               i: { fontStyle: "italic" },
               thicker: { strokeThickness: 6 },
               shadow: { dropShadow: true, dropShadowColor: "#888888" },
               large: { fontSize: "36px" },
             };
-            let nested = new RichText(nestedText, nestedStyle);
+            let nested = new TaggedText(nestedText, nestedStyle);
             createDemo("nested", nested);
           </script>
         </div>
@@ -352,7 +353,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 letterSpacing: 10,
               },
             };
-            let spacing = new RichText(spacingText, spacingStyle);
+            let spacing = new TaggedText(spacingText, spacingStyle);
 
             createDemo("spacing", spacing);
           </script>
@@ -378,12 +379,12 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 align: "right",
               },
             };
-            let wrapping = new RichText(wrappingText, wrappingStyle);
+            let wrapping = new TaggedText(wrappingText, wrappingStyle);
             createDemo("wrapping", wrapping);
           </script>
         </div>
       </div>
-      <div class="example">
+      <!--div class="example">
         <div class="code">
           <h2>Wrapping and Alignment II - splitStyle = "characters"</h2>
           <pre><code class="js"></code></pre>
@@ -391,7 +392,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         <div class="pixi" id="wrapping2">
           <script>
             // Wrapping and Alignment II
-            const wrappingText2 = `Use splitStyle:"character" to allow line breaks between characters. Can be useful for languages such as chinese.
+            const wrappingText2 = `Use splitStyle:"characters" to allow line breaks between characters. Can be useful for languages such as chinese.
 全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。`;
             const wrappingStyle2 = {
               default: {
@@ -406,7 +407,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
             };
 
-            let richTextWrapping2 = new RichText(
+            let TaggedTextWrapping2 = new TaggedText(
               wrappingText2,
               wrappingStyle2,
               {
@@ -414,10 +415,10 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 debug: true,
               }
             );
-            createDemo("wrapping2", richTextWrapping2);
+            createDemo("wrapping2", TaggedTextWrapping2);
           </script>
         </div>
-      </div>
+      </div-->
       <div class="example">
         <div class="code">
           <h2>Debug Mode</h2>
@@ -426,8 +427,8 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         <div class="pixi" id="debug">
           <script>
             // Debug Mode
-            const debugText =
-              "You can use <blue>debug mode</blue> to help you figure out what your text is doing. Include <code>{debug: true} </code> in the options when you create your text.";
+            const debugText = `You can use <blue>debug mode</blue> to help you figure out what your text is doing. Include <code>{debug: true} </code> in the options when you create your text.
+You can also set <code>debugConsole: true</code> if you want to log information about the text field to the console.`;
             const debugStyle = {
               default: {
                 fontFamily: "Arial",
@@ -435,6 +436,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 fill: "#cccccc",
                 wordWrap: true,
                 wordWrapWidth: 500,
+                valign: "baseline",
               },
               blue: {
                 fill: "#4488ff",
@@ -450,7 +452,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               },
             };
 
-            let debug = new RichText(debugText, debugStyle, { debug: false });
+            let debug = new TaggedText(debugText, debugStyle, { debug: true });
 
             createDemo("debug", debug);
           </script>
@@ -464,7 +466,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         <div class="pixi" id="interaction">
           <script>
             // Interaction Events
-            let interactionRich = new RichText(
+            let interactionTagged = new TaggedText(
               `If you enable <link name="interaction">interaction</link>, you can get <link name="information">information</link> about which <link name="tag">tag</link> corresponded to the <link name="event">event</link>.`,
               {
                 default: {
@@ -481,9 +483,9 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               }
             );
 
-            interactionRich.text = "Interactivity is not currently supported.";
-            interactionRich.interactive = true;
-            interactionRich.on("pointerdown", (e) => {
+            interactionTagged.text = "Interactivity is not currently supported.";
+            interactionTagged.interactive = true;
+            interactionTagged.on("pointerdown", (e) => {
               if (e.targetTag !== undefined && e.targetTag.name === "link") {
                 alert(
                   `You clicked on the link for "${e.targetTag.properties.name}"!`
@@ -491,7 +493,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               }
             });
 
-            createDemo("interaction", interactionRich);
+            createDemo("interaction", interactionTagged);
           </script>
         </div>
       </div-->
@@ -529,7 +531,7 @@ Or, put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               red: { fill: 0xff8888, stroke: 0xcc4444 },
             };
 
-            let animated = new RichText(animatedText, animatedStyles, {
+            let animated = new TaggedText(animatedText, animatedStyles, {
               splitStyle: "characters",
             });
 

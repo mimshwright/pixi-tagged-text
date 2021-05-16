@@ -153,13 +153,13 @@ export const mapTagsToStyles = (
     if (imgKey) {
       if (imgMap === undefined) {
         throw new Error(
-          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but no imgMap was provided. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
+          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but no imgMap was provided. Please include a valid Sprite in the imgMap property in the options in your TaggedText constructor.`
         );
       }
       const sprite: SpriteToken | undefined = imgMap[imgKey];
       if (sprite === undefined) {
         throw new Error(
-          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your RichText constructor.`
+          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your TaggedText constructor.`
         );
       }
       if (sprite instanceof PIXI.Sprite === false) {

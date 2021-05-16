@@ -1,22 +1,22 @@
 {
-  "name": "pixi-rich-text",
+  "name": "pixi-tagged-text",
   "version": "2.0.0-beta.7",
-  "description": "RichText for pixi.js",
+  "description": "TaggedText for pixi.js",
   "author": "Mims Wright, JT Smith, tleunen",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/mimshwright/pixi-richt-text.git"
+    "url": "git://github.com/mimshwright/pixi-tagged-text.git"
   },
   "bugs": {
-    "url": "https://github.com/mimshwright/pixi-rich-text/issues"
+    "url": "https://github.com/mimshwright/pixi-tagged-text/issues"
   },
-  "homepage": "https://github.com/mimshwright/pixi-rich-text",
+  "homepage": "https://github.com/mimshwright/pixi-tagged-text",
   "source": "src/index.ts",
-  "main": "dist/pixi-rich-text.js",
-  "umd:main": "dist/pixi-rich-text.umd.js",
-  "module": "dist/pixi-rich-text.m.js",
-  "types": "dist/pixi-rich-text.d.ts",
+  "main": "dist/pixi-tagged-text.js",
+  "umd:main": "dist/pixi-tagged-text.umd.js",
+  "module": "dist/pixi-tagged-text.m.js",
+  "types": "dist/pixi-tagged-text.d.ts",
   "files": [
     "dist"
   ],
@@ -59,8 +59,8 @@
   },
   "scripts": {
     "demo": "npm run build && http-server . --port 8080 && opener http://localhost:8080/demo/index.html",
-    "dev": "microbundle watch --name RichText --globals 'pixi.js'=PIXI",
-    "build": "microbundle --name RichText --globals 'pixi.js'=PIXI",
+    "dev": "microbundle watch --name TaggedText --globals 'pixi.js'=PIXI",
+    "build": "microbundle --name TaggedText --globals 'pixi.js'=PIXI",
     "prepublishOnly": "npm run build",
     "release": "standard-version",
     "test": "jest",
