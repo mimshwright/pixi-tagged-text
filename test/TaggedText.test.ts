@@ -1,11 +1,10 @@
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
-import { getBoundsNested } from "../src/layout";
-import RichText from "../src/RichText";
-import { Align, SplitStyle, VAlign, ImageDisplayMode } from "./../src/types";
+import TaggedText from "../src/TaggedText";
+import { Align, SplitStyle, VAlign, ImageDisplayMode } from "../src/types";
 import iconSrc from "./icon.base64";
 
-describe("RichText", () => {
+describe("TaggedText", () => {
   const iconImage = new Image();
   iconImage.src = `data:image/png;base64,${iconSrc}`;
   const texture = PIXI.Texture.from(iconImage);
@@ -25,21 +24,21 @@ describe("RichText", () => {
 
   describe("constructor", () => {
     it("Takes a string for the text content. Strings can be multi-line. Strings don't need to contain any tags to work.", () => {
-      const t = new RichText("Hello,\nworld!");
+      const t = new TaggedText("Hello,\nworld!");
       expect(t.text).toBe("Hello,\nworld!");
     });
     it("Takes an optional list of styles.", () => {
-      const t = new RichText("Hello!", { b: { fontWeight: "700" } });
+      const t = new TaggedText("Hello!", { b: { fontWeight: "700" } });
       expect(t.tagStyles).toHaveProperty("b");
     });
 
     describe("constructor takes a list of options.", () => {
       describe("debug", () => {
-        const control = new RichText("Test <b><i>test</i></b>", style);
-        const debug = new RichText("Test <b><i>test</i></b> test", style, {
+        const control = new TaggedText("Test <b><i>test</i></b>", style);
+        const debug = new TaggedText("Test <b><i>test</i></b> test", style, {
           debug: true,
         });
-        const blank = new RichText("", style, { debug: true });
+        const blank = new TaggedText("", style, { debug: true });
 
         it("Draws all shapes into one graphics layer.", () => {
           expect(blank.debugContainer.children).toHaveLength(1);
@@ -71,8 +70,8 @@ describe("RichText", () => {
       });
 
       describe("debugConsole", () => {
-        const control = new RichText("Test <b>test</b>", style);
-        const debug = new RichText(
+        const control = new TaggedText("Test <b>test</b>", style);
+        const debug = new TaggedText(
           "This <b>should appear</b> in console!",
           style,
           {
@@ -90,7 +89,7 @@ describe("RichText", () => {
       });
 
       describe("imageMap", () => {
-        const t = new RichText(
+        const t = new TaggedText(
           "a b c <icon/>",
           { icon: { imgDisplay: "icon", fontSize: 48 } },
           { imgMap: { icon }, debug: true }
@@ -111,8 +110,8 @@ describe("RichText", () => {
       });
 
       describe("drawWhitespace", () => {
-        const noDrawWhitespace = new RichText("a b\nc", {});
-        const drawWhitespace = new RichText(
+        const noDrawWhitespace = new TaggedText("a b\nc", {});
+        const drawWhitespace = new TaggedText(
           "a b\nc",
           {},
           { drawWhitespace: true }
@@ -146,9 +145,9 @@ describe("RichText", () => {
         const charLength = text.length - " ".length;
         const style = {};
 
-        const control = new RichText(text, style);
-        const words = new RichText(text, style, { splitStyle: "words" });
-        const chars = new RichText(text, style, { splitStyle: "characters" });
+        const control = new TaggedText(text, style);
+        const words = new TaggedText(text, style, { splitStyle: "words" });
+        const chars = new TaggedText(text, style, { splitStyle: "characters" });
 
         it('Should be "words" by default.', () => {
           expect(control.options.splitStyle).toBe("words");
@@ -172,18 +171,18 @@ describe("RichText", () => {
 
         it("Should throw if the style is not supported. It will offer suggestions if you're close!", () => {
           expect(() => {
-            new RichText(text, style, { splitStyle: "chars" as SplitStyle });
+            new TaggedText(text, style, { splitStyle: "chars" as SplitStyle });
           }).toThrow(/.*(Did you mean "characters"?)/g);
         });
       });
 
       describe("skipUpdates & skipDraw", () => {
         const text = "Test <b>test</b>";
-        const control = new RichText(text, style);
-        const skipUpdates = new RichText(text, style, {
+        const control = new TaggedText(text, style);
+        const skipUpdates = new TaggedText(text, style, {
           skipUpdates: true,
         });
-        const skipDraw = new RichText(text, style, {
+        const skipDraw = new TaggedText(text, style, {
           skipDraw: true,
         });
 
@@ -249,7 +248,7 @@ describe("RichText", () => {
       });
       describe("needsUpdate and needsDraw", () => {
         it("When your code skips an update, the needsUpdate flag will be set to true.", () => {
-          const t = new RichText("test", style);
+          const t = new TaggedText("test", style);
           expect(t.needsUpdate).toBeFalsy();
           t.setText("new!", true);
           expect(t.needsUpdate).toBeTruthy();
@@ -257,13 +256,13 @@ describe("RichText", () => {
           expect(t.needsUpdate).toBeFalsy();
         });
         it("Setting text to the same value won't require an update.", () => {
-          const t = new RichText("test", style);
+          const t = new TaggedText("test", style);
           expect(t.needsUpdate).toBeFalsy();
           t.setText("test", true);
           expect(t.needsUpdate).toBeFalsy();
         });
         it("When your code skips a draw, the needsUpdate flag will be set to true.", () => {
-          const t = new RichText("test", style);
+          const t = new TaggedText("test", style);
           expect(t.needsDraw).toBeFalsy();
           t.update(true);
           expect(t.needsDraw).toBeTruthy();
@@ -275,16 +274,16 @@ describe("RichText", () => {
       const REPS = 50;
       describe(`performace of skipping draw and updates. Updating string ${REPS} times.`, () => {
         // Performance
-        const editText = (textField: RichText) => {
+        const editText = (textField: TaggedText) => {
           textField.text = "";
           for (let i = 0; i < REPS; i++) {
             textField.text += `${i} `;
           }
         };
 
-        const control = new RichText();
-        const skipDraw = new RichText("", {}, { skipDraw: true });
-        const skipUpdates = new RichText("", {}, { skipUpdates: true });
+        const control = new TaggedText();
+        const skipDraw = new TaggedText("", {}, { skipDraw: true });
+        const skipUpdates = new TaggedText("", {}, { skipUpdates: true });
 
         let startTime = new Date().getTime();
         editText(control);
@@ -348,7 +347,7 @@ describe("RichText", () => {
 
         const valignImg = PIXI.Sprite.from(iconSrc);
 
-        const valign = new RichText(valignText, valignStyle, {
+        const valign = new TaggedText(valignText, valignStyle, {
           imgMap: { valignImg },
         });
 
@@ -377,13 +376,13 @@ describe("RichText", () => {
   });
 
   describe("text", () => {
-    const singleLine = new RichText("Line 1", style);
-    const doubleLine = new RichText(
+    const singleLine = new TaggedText("Line 1", style);
+    const doubleLine = new TaggedText(
       `Line 1
 Line 2`,
       style
     );
-    const tripleSpacedLines = new RichText("", style);
+    const tripleSpacedLines = new TaggedText("", style);
 
     describe("setText(), get text, & set text", () => {
       it("Implicit setter should set the text. Does not allow you to override the skipUpdate", () => {
@@ -431,7 +430,7 @@ Line 2`,
 
     describe("untaggedText", () => {
       it("Returns the text with tags stripped out.", () => {
-        const t = new RichText(
+        const t = new TaggedText(
           "<b>Hello</b>... Is it <i>me</i> you're looking for?",
           { b: {}, i: {} }
         );
@@ -450,7 +449,7 @@ Line 4`);
   });
 
   describe("styles", () => {
-    const t = new RichText(`<b>Test</b>`, style);
+    const t = new TaggedText(`<b>Test</b>`, style);
     describe("getStyleForTag()", () => {
       it("Should return a style object for the tag.", () => {
         expect(t.getStyleForTag("b")).toHaveProperty("fontWeight", "bold");
@@ -471,13 +470,13 @@ Line 4`);
   describe("parsing", () => {
     it("Should allow nested self-closing tags.", () => {
       expect(() => {
-        new RichText(`<b>Nested <i /> self-closing tag</b>`, style);
+        new TaggedText(`<b>Nested <i /> self-closing tag</b>`, style);
       }).not.toThrow();
     });
   });
 
   describe("update()", () => {
-    const t = new RichText(`<b>Test</b>`, style);
+    const t = new TaggedText(`<b>Test</b>`, style);
     it("Should render the text as pixi text elements.", () => {
       const lines = t.update();
       const [line] = lines;
@@ -500,7 +499,7 @@ Line 4`);
   });
 
   describe("Children", () => {
-    const t = new RichText(
+    const t = new TaggedText(
       "a b c <icon/>",
       {},
       { imgMap: { icon }, debug: true }

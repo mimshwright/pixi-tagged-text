@@ -21,7 +21,7 @@ export type Nested<T> = T | Array<Nested<T>>;
 export type SplitStyle = "words" | "characters";
 export type SpriteReference = PIXI.Sprite;
 export type ImageMap = Record<string, SpriteReference>;
-export interface RichTextOptions {
+export interface TaggedTextOptions {
   debug?: boolean;
   debugConsole?: boolean;
   splitStyle?: SplitStyle;

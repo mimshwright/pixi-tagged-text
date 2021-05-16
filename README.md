@@ -1,18 +1,18 @@
-# pixi-rich-text
+# pixi-tagged-text
 
-[![NPM](https://nodei.co/npm/pixi-rich-text.png)](https://nodei.co/npm/pixi-rich-text/)
+[![NPM](https://nodei.co/npm/pixi-tagged-text.png)](https://nodei.co/npm/pixi-tagged-text/)
 
-Add a `RichText` object inside [pixi.js](https://github.com/GoodBoyDigital/pixi.js) to easily create text using different styles.
+Add a `TaggedText` object inside [pixi.js](https://github.com/GoodBoyDigital/pixi.js) to easily create text with multiple styles and embedded images (sprites).
 
 Inspired by the original [pixi-multistyle-text](https://github.com/tleunen/pixi-multistyle-text)
 
 ## Architecture
 
-RichText allows you to control text with multiple styles and embedded images as though it were a single Pixi component. It was inspired by [pixi-multistyle-text](https://github.com/tleunen/pixi-multistyle-text) but is structurally rather different. Pixi-rich-text creates a separate PIXI.Text object for each separately positioned element (word) in its text. This allows developers to have control over individual words or even characters for the purposes of animation or other effects. It also makes embedding sprites into the layout easier. In contrast, pixi-multistyle-text creates a single bitmap drawing based on the contents of text. Cosmetically, they're very similar, however, the overhead of creating multiple Text objects is much larger making RichText a potentially very heavy component. **If you require maximum performance, consider using [pixi-multistyle-text](https://github.com/tleunen/pixi-multistyle-text)**.
+TaggedText allows you to control text with multiple styles and embedded images as though it were a single Pixi component. It was inspired by [pixi-multistyle-text](https://github.com/tleunen/pixi-multistyle-text) but is structurally rather different. pixi-tagged-text creates a separate PIXI.Text object for each separately positioned element (word) in its text. This allows developers to have control over individual words or even characters for the purposes of animation or other effects. It also makes embedding sprites into the layout easier. In contrast, pixi-multistyle-text creates a single bitmap drawing based on the contents of text. Cosmetically, they're very similar, however, the overhead of creating multiple Text objects is much larger making TaggedText a potentially very heavy component. **If you require maximum performance, consider using [pixi-multistyle-text](https://github.com/tleunen/pixi-multistyle-text)**.
 
 ### Life-cycle
 
-In order to maximize performance of RichText, it helps to understand how it renders the input.
+In order to maximize performance of TaggedText, it helps to understand how it renders the input.
 
 1. Constructor - creating the component is the first step. You can set text, styles, and options in the constructor.
 2. `update()` - Update generates a list of plain JS object tokens that hold information on what type of text to create and where to position it. The tokens contain all the information you need to draw the text and are saved as the instance member `tokens` but also returned by the `update()` method. By default, this is called every time the text or style definitions are changed (e.g. `setTagStyles()`, `setText()`). This is a fairly expensive process but usually faster than `draw()`.
@@ -34,7 +34,7 @@ The methods that normally trigger a draw:
 **Please note that direct changes to styles or other objects will not trigger an automatic update.** For example:
 
 ```typescript
-const t = new RichtText("<big>Big text</big>", { big: { fontSize: 25 } }); // renders "Big text" at 25px
+const t = new TaggedText("<big>Big text</big>", { big: { fontSize: 25 } }); // renders "Big text" at 25px
 
 t.getStyleForTag("big").fontSize = 100; // The change to the style wasn't detected. It still renders "Big text" at 25px
 
@@ -47,13 +47,13 @@ t.draw(); // recreates the text fields restoring "Big"
 
 #### `skipUpdates` & `skipDraw`
 
-If performance is becoming an issue, you can use the `skipUpdates` and `skipDraw` flags in the options object with `new RichText()` to disable automatic updates and automatic drawing (more on that below). This gives you control over when the update() or draw() function will be called. However, the component can become out of sync with what you see on your screen so use this with caution.
+If performance is becoming an issue, you can use the `skipUpdates` and `skipDraw` flags in the options object with `new TaggedText()` to disable automatic updates and automatic drawing (more on that below). This gives you control over when the update() or draw() function will be called. However, the component can become out of sync with what you see on your screen so use this with caution.
 
 Several other individual functions, such as `setText()` also give you the option to `skipUpdate` on an as needed basis.
 
 ```typescript
-// Create a new RichText but disable automatic updates and draws.
-const t = new RichText("", {}, {skipUpdate: true, skipDraw: true});
+// Create a new TaggedText but disable automatic updates and draws.
+const t = new TaggedText("", {}, {skipUpdate: true, skipDraw: true});
 const words = ["lorem", "ipsum", ... ];
 // add words until the length of text is > 500 characters.
 while (t.untaggedText.length <= 500) {
@@ -72,18 +72,18 @@ t.textContainer.length; // This will now contain all the PIXI.Text objects creat
 
 ## Options
 
-The third parameter in the RichText constructor is a set of options.
+The third parameter in the TaggedText constructor is a set of options.
 
 - `debug` - If `true`, generates debug information which is overlaid on the text during `draw()`. default is `false`.
 - `debugConsole` - If `true`, logs debug information to the console during `draw()`. default is `false`.
 <!-- - `splitStyle` - Allows you to specify how the text should be split into PIXI.Text objects. Optional values are "words" (default) and "characters". -->
 - `imgMap` - An object that maps string names like `"myImage"` to Sprite objects like `PIXI.Sprite.from("./myImage.png")`. When a style contains `imgSrc="myImage"`, the matching sprite is used. By default, each of the keys you provide here will automatically be added as a style in the `tagStyles` (equivalent to `{ myImage: { imgSrc: "myImage"}}`) so you can add a tag `<myImage />`. default is `{}`.
 - `skipUpdates` - When `true`, `update()` will not be called when text or styles are changed; it must be called explicitly or overridden using the skipUpdate parameter in functions such as `setText()`. default is `false`.
-- `skipDraw` - When `true`, `draw()` will not be called by `update()` it must be called explicitly or overridden using the `skipDraw` parameter, e.g. `myRichText.update(false)`. default is `false`.
+- `skipDraw` - When `true`, `draw()` will not be called by `update()` it must be called explicitly or overridden using the `skipDraw` parameter, e.g. `myTaggedText.update(false)`. default is `false`.
 
 ## Child DisplayObjects
 
-RichText generates multiple display objects when it renders the text with `draw()`. Developers can access these children if desired for example to add additional interactivity or to animated individual elements.
+TaggedText generates multiple display objects when it renders the text with `draw()`. Developers can access these children if desired for example to add additional interactivity or to animated individual elements.
 
 **Please note that by default, these are recreated every time text or style properties change (technically, whenever `draw()` is called).** Manipulating the children directly may cause your view to become out of sync with the text and styles.
 
