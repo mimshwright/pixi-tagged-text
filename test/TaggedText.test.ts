@@ -323,7 +323,7 @@ describe("TaggedText", () => {
     });
   });
 
-  describe.only("valign", () => {
+  describe("valign", () => {
     describe("Specific issue with vertical text align", () => {
       describe("Should apply styles across the entire text field correctly.", () => {
         const valignText = `<top>1<code>Top</code>2 <small>Vertical</small> <img/> Alignment.</top>`;

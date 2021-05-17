@@ -615,7 +615,7 @@ export default class TaggedText extends PIXI.Sprite {
           // info = `${token.bounds.width}⨉${token.bounds.height}`;
           if (isTextToken(token)) {
             // info += ` ${token.tags}`;
-            info = ` ${token.tags}`;
+            info = `${token.tags}`;
             this.debugContainer.addChild(createInfoText(info, { x, y }));
           }
           // this.debugContainer.addChild(createInfoText(info, { x, y }));
