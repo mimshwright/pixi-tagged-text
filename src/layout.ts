@@ -286,6 +286,9 @@ const getTallestToken = (line: LineToken): FinalToken =>
     return tallest;
   }, createEmptyFinalToken())(line);
 
+/**
+ * @param If you want to override the valign from the styles object, set it here.
+ */
 export const verticalAlignInLines = (
   lines: ParagraphToken,
   lineSpacing: number,
@@ -600,12 +603,22 @@ export const calculateFinalTokens = (
         dropShadowAngle: 0,
         dropShadow: false,
       };
-      fontProperties = getFontPropertiesOfText(sizer, true);
 
       const textTokens = textSegments.map(
         (str): FinalToken => {
           sizer.text = str;
+          fontProperties = { ...getFontPropertiesOfText(sizer, true) };
           const bounds = rectFromContainer(sizer);
+
+          // Incorporate the size of the stroke into the size of the text.
+          const stroke = sizer.style.strokeThickness ?? 0;
+          if (stroke > 0) {
+            fontProperties.descent += stroke / 2;
+            fontProperties.ascent += stroke / 2;
+            fontProperties.fontSize =
+              fontProperties.ascent + fontProperties.descent;
+          }
+
           return {
             content: str,
             style,

@@ -3,6 +3,7 @@ import {
   FinalToken,
   ParagraphToken,
   StyledToken,
+  StyledTokens,
 } from "./../src/types";
 import { splitText } from "./../src/layout";
 import * as PIXI from "pixi.js";
@@ -313,6 +314,51 @@ describe("calculateFinalTokens()", () => {
       const fakeStyled = { children: ["No styles?"], tags: "" } as StyledToken;
       layout.calculateFinalTokens(fakeStyled);
     }).toThrow();
+  });
+
+  describe("Stroked text", () => {
+    const line: StyledTokens = {
+      children: [
+        "A ",
+        {
+          children: ["B C"],
+          style: { fontSize: 20, strokeThickness: 40 },
+          tags: "stroke",
+        },
+      ],
+      style: { fontSize: 20 },
+      tags: "",
+    };
+    const tokens = layout.calculateFinalTokens(line);
+
+    const [[[normal], , [stroked], , [alsoStroked]]] = tokens;
+
+    it("Shouldn't affect non-strked text. ", () => {
+      expect(normal.content).toBe("A");
+      expect(normal.style.strokeThickness ?? 0).toBe(0);
+      expect(normal.bounds.height).toBe(23);
+      expect(normal.fontProperties.ascent).toBe(18);
+      expect(normal.fontProperties.descent).toBe(5);
+      expect(normal.fontProperties.fontSize).toBe(23);
+    });
+
+    it("Should take the stroke into account when determining the size and the fontProperties (for baseline).", () => {
+      expect(stroked.content).toBe("B");
+      expect(stroked.style.strokeThickness).toBe(40);
+      expect(stroked.bounds.height).toBe(63);
+      expect(stroked.fontProperties.ascent).toBe(38);
+      expect(stroked.fontProperties.descent).toBe(25);
+      expect(stroked.fontProperties.fontSize).toBe(63);
+    });
+
+    it("Should not affect any other stroked text. Sometimes this happens when fontProperties are shared. ", () => {
+      expect(alsoStroked.content).toBe("C");
+      expect(alsoStroked.style.strokeThickness).toBe(40);
+      expect(alsoStroked.bounds.height).toBe(63);
+      expect(alsoStroked.fontProperties.ascent).toBe(38);
+      expect(alsoStroked.fontProperties.descent).toBe(25);
+      expect(alsoStroked.fontProperties.fontSize).toBe(63);
+    });
   });
 
   describe("splitStyle", () => {

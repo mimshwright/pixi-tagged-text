@@ -573,20 +573,22 @@ export default class TaggedText extends PIXI.Sprite {
 
       for (let wordNumber = 0; wordNumber < line.length; wordNumber++) {
         const word = line[wordNumber];
-        for (const token of word) {
-          const isSprite = isSpriteToken(token);
-          const ascent = isSprite
-            ? token.bounds.height
-            : token.fontProperties.ascent;
+        for (const segmentToken of word) {
+          const isSprite = isSpriteToken(segmentToken);
+          const { x, y, width } = segmentToken.bounds;
+          const baseline =
+            y +
+            (isSprite
+              ? segmentToken.bounds.height
+              : segmentToken.fontProperties.ascent);
 
-          const { x, y, width } = token.bounds;
-          let { height } = token.bounds;
+          let { height } = segmentToken.bounds;
           if (isSprite) {
-            height += token.fontProperties.descent;
+            height += segmentToken.fontProperties.descent;
           }
 
           if (
-            isWhitespaceToken(token) &&
+            isWhitespaceToken(segmentToken) &&
             this.options.drawWhitespace === false
           ) {
             g.lineStyle(1, DEBUG.WHITESPACE_STROKE_COLOR, 1);
@@ -596,7 +598,7 @@ export default class TaggedText extends PIXI.Sprite {
             g.beginFill(DEBUG.WORD_FILL_COLOR, 0.2);
           }
 
-          if (isNewlineToken(token)) {
+          if (isNewlineToken(segmentToken)) {
             this.debugContainer.addChild(
               createInfoText("↩︎", { x, y: y + 10 })
             );
@@ -607,15 +609,15 @@ export default class TaggedText extends PIXI.Sprite {
 
             g.lineStyle(1, DEBUG.BASELINE_COLOR, 1);
             g.beginFill();
-            g.drawRect(x, y + ascent, width, 1);
+            g.drawRect(x, baseline, width, 1);
             g.endFill();
           }
 
           let info;
           // info = `${token.bounds.width}⨉${token.bounds.height}`;
-          if (isTextToken(token)) {
+          if (isTextToken(segmentToken)) {
             // info += ` ${token.tags}`;
-            info = `${token.tags}`;
+            info = `${segmentToken.tags}`;
             this.debugContainer.addChild(createInfoText(info, { x, y }));
           }
           // this.debugContainer.addChild(createInfoText(info, { x, y }));

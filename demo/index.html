@@ -19,8 +19,6 @@
     <h1>pixi-tagged-text Demo</h1>
     <main>
       <script>
-        const opt = { debug: false };
-
         function createPixiApp(
           id,
           width = 600,
@@ -74,6 +72,7 @@ and <ms>multistyle</ms> text for
               ms: {
                 fontWeight: "bold",
                 fill: "#4488ff",
+                fontSize: "40px",
               },
               pixi: {
                 fontSize: "64px",
@@ -299,7 +298,7 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         <div class="pixi" id="nested">
           <script>
             // Nesting Tags
-            const nestedText = `You can <outline>nest <b>tags <red>as <i>deeply <thicker>as <shadow>you'd <large>like, <blue>dude!</blue></large></shadow></thicker></i></red></b></outline>`;
+            const nestedText = `You can <outline>nest <b>tags <red>as <i>deeply <thicker>as you'd <large>like, <blue>dude!</blue></large></thicker></i></red></b></outline>`;
             const nestedStyle = {
               default: {
                 fontFamily: "Arial",
@@ -307,15 +306,15 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 fill: "#cccccc",
                 wordWrapWidth: 500,
                 wordWrap: true,
+                align: "left",
                 valign: "baseline",
               },
-              outline: { stroke: "black", strokeThickness: 2 },
+              outline: { stroke: "#000000", strokeThickness: 2 },
               b: { fontWeight: 700 },
               red: { fill: "#ff8888" },
               blue: { fill: "#8888FF" },
               i: { fontStyle: "italic" },
-              thicker: { strokeThickness: 6 },
-              shadow: { dropShadow: true, dropShadowColor: "#888888" },
+              thicker: { stroke: "#002266", strokeThickness: 10 },
               large: { fontSize: "36px" },
             };
             let nested = new TaggedText(nestedText, nestedStyle);
