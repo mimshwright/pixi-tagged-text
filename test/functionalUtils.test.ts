@@ -101,7 +101,7 @@ describe("functional util", () => {
     it("Should set a property on a shallow clone of an object.", () => {
       const rect = new PIXI.Rectangle(10, 10, 20, 20);
       const rectWithArea = assoc("area")(400)(
-        (rect as unknown) as Record<string, unknown>
+        rect as unknown as Record<string, unknown>
       );
       expect(rect.right).toBe(30);
       expect(rect.clone).toBeInstanceOf(Function);

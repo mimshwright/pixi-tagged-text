@@ -141,8 +141,8 @@ const selfClosingTagSearch = (() => {
   const group = (s: string) => `(${s})`;
   const any = (s: string) => s + `*`;
   const not = (...s: string[]) => `[^${s.join("")}]`;
-  const WORD_START = `[A-Za-z]`;
-  const WORD = `[A-Za-z0-9]`;
+  const WORD_START = `[A-Za-z_]`;
+  const WORD = `[A-Za-z0-9_]`;
   const TAG_OPEN = `<`;
   const TAG_SLASH = `/`;
   const TAG_CLOSE = `>`;

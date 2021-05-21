@@ -65,30 +65,33 @@ const rectFromContainer = (
  * @param offset Amount to translate the target.
  * @param point Target to translate.
  */
-export const translatePoint = <P extends Point>(offset: Point) => (
-  point: P
-): P => ({
-  ...point,
-  x: point.x + offset.x,
-  y: point.y + offset.y,
-});
+export const translatePoint =
+  <P extends Point>(offset: Point) =>
+  (point: P): P => ({
+    ...point,
+    x: point.x + offset.x,
+    y: point.y + offset.y,
+  });
 
 /**
  * Same as translatePoint but for all the points in an array.
  */
-export const translateLine = (offset: Point) => (line: Bounds[]): Bounds[] =>
-  line.map(translatePoint(offset));
+export const translateLine =
+  (offset: Point) =>
+  (line: Bounds[]): Bounds[] =>
+    line.map(translatePoint(offset));
 
-export const translateWordPosition = (offset: Point) => (
-  word: WordToken
-): WordToken =>
-  word.map((token) =>
-    mapProp<Bounds, FinalToken>("bounds")(translatePoint(offset))(token)
-  );
+export const translateWordPosition =
+  (offset: Point) =>
+  (word: WordToken): WordToken =>
+    word.map((token) =>
+      mapProp<Bounds, FinalToken>("bounds")(translatePoint(offset))(token)
+    );
 
-export const translateTokenLine = (offset: Point) => (
-  line: LineToken
-): LineToken => line.map(translateWordPosition(offset));
+export const translateTokenLine =
+  (offset: Point) =>
+  (line: LineToken): LineToken =>
+    line.map(translateWordPosition(offset));
 
 export const lineWidth = (wordsInLine: Bounds[]): number => {
   const firstWord = first(wordsInLine);
@@ -107,19 +110,21 @@ export const center = (x: number, context: number): number => (context - x) / 2;
 
 const setBoundsX = assoc<Bounds, number>("x");
 
-const positionWordX = (x: number) => (word: WordToken): WordToken => {
-  let prevBounds: Bounds;
-  return word.map((token) => {
-    if (prevBounds === undefined) {
-      token.bounds.x = x;
-      prevBounds = token.bounds;
-    } else {
-      token.bounds.x = prevBounds.x + prevBounds.width;
-      prevBounds = token.bounds;
-    }
-    return token;
-  });
-};
+const positionWordX =
+  (x: number) =>
+  (word: WordToken): WordToken => {
+    let prevBounds: Bounds;
+    return word.map((token) => {
+      if (prevBounds === undefined) {
+        token.bounds.x = x;
+        prevBounds = token.bounds;
+      } else {
+        token.bounds.x = prevBounds.x + prevBounds.width;
+        prevBounds = token.bounds;
+      }
+      return token;
+    });
+  };
 
 export const concatBounds = (
   originalBounds: Bounds = { x: NaN, y: NaN, width: NaN, height: NaN },
@@ -170,64 +175,68 @@ export const alignLeft = (line: Bounds[]): Bounds[] =>
     []
   );
 
-export const alignRight = (maxWidth: number) => (line: Bounds[]): Bounds[] =>
-  translateLine({
-    x: maxWidth - lineWidth(line),
-    y: 0,
-  })(alignLeft(line));
+export const alignRight =
+  (maxWidth: number) =>
+  (line: Bounds[]): Bounds[] =>
+    translateLine({
+      x: maxWidth - lineWidth(line),
+      y: 0,
+    })(alignLeft(line));
 
-export const alignCenter = (maxWidth: number) => (line: Bounds[]): Bounds[] =>
-  translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(
-    alignLeft(line)
-  );
+export const alignCenter =
+  (maxWidth: number) =>
+  (line: Bounds[]): Bounds[] =>
+    translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(
+      alignLeft(line)
+    );
 
-export const alignJustify = (maxLineWidth: number) => (
-  line: Bounds[]
-): Bounds[] => {
-  const count = line.length;
-  if (count === 0) {
-    return [];
-  }
-
-  const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
-  const countNonZeroWidthWords = nonZeroWidthWords.length;
-
-  if (countNonZeroWidthWords === 1) {
-    const [first, ...rest] = line;
-    first.x = 0;
-    return [first, ...rest];
-  }
-
-  const result: Bounds[] = [];
-  const combinedBounds = getCombinedBounds(nonZeroWidthWords);
-  const w = combinedBounds.width;
-  const totalSpace = maxLineWidth - w;
-  const spacerWidth = totalSpace / (countNonZeroWidthWords - 1);
-
-  let previousWord;
-  for (let i = 0; i < line.length; i++) {
-    const bounds = line[i];
-    if (bounds.width === 0) {
-      result[i] = { ...bounds };
-      continue;
+export const alignJustify =
+  (maxLineWidth: number) =>
+  (line: Bounds[]): Bounds[] => {
+    const count = line.length;
+    if (count === 0) {
+      return [];
     }
-    let x;
-    if (previousWord === undefined) {
-      x = 0;
-    } else {
-      x = previousWord.x + previousWord.width + spacerWidth;
+
+    const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
+    const countNonZeroWidthWords = nonZeroWidthWords.length;
+
+    if (countNonZeroWidthWords === 1) {
+      const [first, ...rest] = line;
+      first.x = 0;
+      return [first, ...rest];
     }
-    if (isNaN(x)) {
-      throw new Error(
-        `Something went wrong with the justified layout calculation. x is NaN.`
-      );
+
+    const result: Bounds[] = [];
+    const combinedBounds = getCombinedBounds(nonZeroWidthWords);
+    const w = combinedBounds.width;
+    const totalSpace = maxLineWidth - w;
+    const spacerWidth = totalSpace / (countNonZeroWidthWords - 1);
+
+    let previousWord;
+    for (let i = 0; i < line.length; i++) {
+      const bounds = line[i];
+      if (bounds.width === 0) {
+        result[i] = { ...bounds };
+        continue;
+      }
+      let x;
+      if (previousWord === undefined) {
+        x = 0;
+      } else {
+        x = previousWord.x + previousWord.width + spacerWidth;
+      }
+      if (isNaN(x)) {
+        throw new Error(
+          `Something went wrong with the justified layout calculation. x is NaN.`
+        );
+      }
+      const newWord: Bounds = setBoundsX(x)(bounds);
+      previousWord = newWord;
+      result[i] = newWord;
     }
-    const newWord: Bounds = setBoundsX(x)(bounds);
-    previousWord = newWord;
-    result[i] = newWord;
-  }
-  return result;
-};
+    return result;
+  };
 
 export const alignLines = (
   align: Align,
@@ -583,29 +592,27 @@ export const calculateFinalTokens = (
 
   let fontProperties: PIXI.IFontMetrics = INITIAL_FONT_PROPS;
 
-  const generateFinalTokenFromStyledToken = (
-    style: TextStyleExtended,
-    tags: string
-  ) => (token: StyledToken | TextToken | SpriteToken): FinalToken[] => {
-    let output: FinalToken[] = [];
+  const generateFinalTokenFromStyledToken =
+    (style: TextStyleExtended, tags: string) =>
+    (token: StyledToken | TextToken | SpriteToken): FinalToken[] => {
+      let output: FinalToken[] = [];
 
-    if (typeof token === "string") {
-      // split into pieces and convert into tokens.
+      if (typeof token === "string") {
+        // split into pieces and convert into tokens.
 
-      const textSegments = splitText(token, splitStyle);
+        const textSegments = splitText(token, splitStyle);
 
-      sizer.style = {
-        ...style,
-        // Override some styles for the purposes of sizing text.
-        wordWrap: false,
-        dropShadowBlur: 0,
-        dropShadowDistance: 0,
-        dropShadowAngle: 0,
-        dropShadow: false,
-      };
+        sizer.style = {
+          ...style,
+          // Override some styles for the purposes of sizing text.
+          wordWrap: false,
+          dropShadowBlur: 0,
+          dropShadowDistance: 0,
+          dropShadowAngle: 0,
+          dropShadow: false,
+        };
 
-      const textTokens = textSegments.map(
-        (str): FinalToken => {
+        const textTokens = textSegments.map((str): FinalToken => {
           sizer.text = str;
           fontProperties = { ...getFontPropertiesOfText(sizer, true) };
           const bounds = rectFromContainer(sizer);
@@ -626,57 +633,56 @@ export const calculateFinalTokens = (
             bounds,
             fontProperties,
           };
+        });
+
+        output = output.concat(textTokens);
+      } else if (token instanceof PIXI.Sprite) {
+        const sprite = token;
+        const imgDisplay = style[IMG_DISPLAY_PROPERTY];
+        // const isBlockImage = imgDisplay === "block";
+        const isIcon = imgDisplay === "icon";
+
+        if (isIcon) {
+          // Set to minimum of 1 to avoid devide by zero.
+          // if it's height is zero or one it probably hasn't loaded yet.
+          // It will get refreshed after it loads.
+          const h = Math.max(sprite.height, 1);
+
+          if (h > 1 && sprite.scale.y === 1) {
+            const ratio = (fontProperties.ascent / h) * ICON_SCALE_BASE;
+            sprite.scale.set(ratio);
+          }
         }
-      );
 
-      output = output.concat(textTokens);
-    } else if (token instanceof PIXI.Sprite) {
-      const sprite = token;
-      const imgDisplay = style[IMG_DISPLAY_PROPERTY];
-      // const isBlockImage = imgDisplay === "block";
-      const isIcon = imgDisplay === "icon";
+        // handle images
+        const bounds = rectFromContainer(sprite);
+        output.push({
+          content: sprite,
+          style,
+          tags,
+          bounds,
+          fontProperties,
+        });
+      } else {
+        // token is a composite
+        const styledToken = token as StyledToken;
+        const { children } = styledToken;
+        // set tags and styles for children of this composite token.
+        const newStyle = styledToken.style;
+        const newTags = styledToken.tags;
 
-      if (isIcon) {
-        // Set to minimum of 1 to avoid devide by zero.
-        // if it's height is zero or one it probably hasn't loaded yet.
-        // It will get refreshed after it loads.
-        const h = Math.max(sprite.height, 1);
-
-        if (h > 1 && sprite.scale.y === 1) {
-          const ratio = (fontProperties.ascent / h) * ICON_SCALE_BASE;
-          sprite.scale.set(ratio);
+        if (newStyle === undefined) {
+          throw new Error(
+            `Expected to find a 'style' property on ${styledToken}`
+          );
         }
-      }
 
-      // handle images
-      const bounds = rectFromContainer(sprite);
-      output.push({
-        content: sprite,
-        style,
-        tags,
-        bounds,
-        fontProperties,
-      });
-    } else {
-      // token is a composite
-      const styledToken = token as StyledToken;
-      const { children } = styledToken;
-      // set tags and styles for children of this composite token.
-      const newStyle = styledToken.style;
-      const newTags = styledToken.tags;
-
-      if (newStyle === undefined) {
-        throw new Error(
-          `Expected to find a 'style' property on ${styledToken}`
+        output = output.concat(
+          children.flatMap(generateFinalTokenFromStyledToken(newStyle, newTags))
         );
       }
-
-      output = output.concat(
-        children.flatMap(generateFinalTokenFromStyledToken(newStyle, newTags))
-      );
-    }
-    return output;
-  };
+      return output;
+    };
 
   // when starting out, use the default style
   const tags = "";
