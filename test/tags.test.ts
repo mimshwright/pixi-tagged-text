@@ -67,6 +67,7 @@ describe("tags module", () => {
       actual = tags.replaceSelfClosingTags(input);
       expect(actual).toEqual(expected);
     });
+
     it("Allows numbers in tags but not for the first character.", () => {
       input = `<a1/>`;
       expected = `<a1></a1>`;
@@ -75,6 +76,18 @@ describe("tags module", () => {
 
       input = `<1a/>`;
       expected = input;
+      actual = tags.replaceSelfClosingTags(input);
+      expect(actual).toEqual(expected);
+    });
+
+    it("Allows underscores in tags.", () => {
+      input = `<my_tag/>`;
+      expected = `<my_tag></my_tag>`;
+      actual = tags.replaceSelfClosingTags(input);
+      expect(actual).toEqual(expected);
+
+      input = `<_tag/>`;
+      expected = `<_tag></_tag>`;
       actual = tags.replaceSelfClosingTags(input);
       expect(actual).toEqual(expected);
     });
