@@ -7,7 +7,9 @@ import iconSrc from "./icon.base64";
 describe("TaggedText", () => {
   const iconImage = new Image();
   iconImage.src = `data:image/png;base64,${iconSrc}`;
-  const texture = PIXI.Texture.from(iconImage);
+  iconImage.width = 128;
+  iconImage.height = 128;
+  const texture = PIXI.Texture.from(iconImage, { width: 128, height: 128 });
   const icon = PIXI.Sprite.from(texture);
 
   const style = {
@@ -21,6 +23,21 @@ describe("TaggedText", () => {
 
   const emptySpriteBounds = new PIXI.Rectangle(0, 0, 0, 0);
   const containerSpriteBounds = new PIXI.Rectangle(0, 0, 1, 1);
+
+  describe("mock image", () => {
+    test("Image has loaded.", () => {
+      expect(iconImage.width).toBeGreaterThan(1);
+      expect(iconImage.height).toBeGreaterThan(1);
+    });
+    test("Texture has loaded.", () => {
+      expect(texture.width).toBeGreaterThan(1);
+      expect(texture.height).toBeGreaterThan(1);
+    });
+    test("Sprite has loaded.", () => {
+      expect(icon.width).toBeGreaterThan(1);
+      expect(icon.height).toBeGreaterThan(1);
+    });
+  });
 
   describe("constructor", () => {
     it("Takes a string for the text content. Strings can be multi-line. Strings don't need to contain any tags to work.", () => {
@@ -106,6 +123,28 @@ describe("TaggedText", () => {
         it("Should not clobber the existing styles if any were already defined.", () => {
           expect(iconStyle?.imgDisplay).toBe("icon");
           expect(iconStyle?.fontSize).toBe(48);
+        });
+
+        describe("Icon sizes", () => {
+          it("All icons in the same style should have same size.", () => {
+            const iconTest = new TaggedText(
+              "<icon />A<icon />",
+              { icon: { imgDisplay: "icon", fontSize: 30 } },
+              { imgMap: { icon } }
+            );
+            const tokens = iconTest.tokensFlat;
+            const [icon0, , icon1] = tokens;
+
+            expect(icon0.bounds.height).toBeGreaterThan(1);
+            expect(icon1.bounds.height).toBeGreaterThan(1);
+
+            expect(icon0.bounds.height).toBe(icon1.bounds.height);
+            expect(icon0.bounds.width).toBe(icon1.bounds.width);
+
+            const [icon0Sprite, icon1Sprite] = iconTest.sprites;
+            expect(icon0Sprite.height).toBe(icon1Sprite.height);
+            expect(icon0Sprite.width).toBe(icon1Sprite.width);
+          });
         });
       });
 
