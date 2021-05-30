@@ -6,7 +6,7 @@ import {
   flatReduce,
   Unary,
 } from "./functionalUtils";
-import { getFontPropertiesOfText, INITIAL_FONT_PROPS } from "./pixiUtils";
+import { getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import {
   Align,
@@ -590,27 +590,27 @@ export const calculateFinalTokens = (
   const sizer = new PIXI.Text("");
   const defaultStyle = styledTokens.style;
 
-  let fontProperties: PIXI.IFontMetrics = INITIAL_FONT_PROPS;
+  let fontProperties: PIXI.IFontMetrics;
 
   const generateFinalTokenFromStyledToken =
     (style: TextStyleExtended, tags: string) =>
     (token: StyledToken | TextToken | SpriteToken): FinalToken[] => {
       let output: FinalToken[] = [];
 
+      sizer.style = {
+        ...style,
+        // Override some styles for the purposes of sizing text.
+        wordWrap: false,
+        dropShadowBlur: 0,
+        dropShadowDistance: 0,
+        dropShadowAngle: 0,
+        dropShadow: false,
+      };
+
       if (typeof token === "string") {
         // split into pieces and convert into tokens.
 
         const textSegments = splitText(token, splitStyle);
-
-        sizer.style = {
-          ...style,
-          // Override some styles for the purposes of sizing text.
-          wordWrap: false,
-          dropShadowBlur: 0,
-          dropShadowDistance: 0,
-          dropShadowAngle: 0,
-          dropShadow: false,
-        };
 
         const textTokens = textSegments.map((str): FinalToken => {
           sizer.text = str;
@@ -641,6 +641,7 @@ export const calculateFinalTokens = (
         const imgDisplay = style[IMG_DISPLAY_PROPERTY];
         // const isBlockImage = imgDisplay === "block";
         const isIcon = imgDisplay === "icon";
+        fontProperties = { ...getFontPropertiesOfText(sizer, true) };
 
         if (isIcon) {
           // Set to minimum of 1 to avoid devide by zero.
