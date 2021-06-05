@@ -333,7 +333,7 @@ describe("calculateFinalTokens()", () => {
 
     const [[[normal], , [stroked], , [alsoStroked]]] = tokens;
 
-    it("Shouldn't affect non-strked text. ", () => {
+    it("Shouldn't affect non-stroked text. ", () => {
       expect(normal.content).toBe("A");
       expect(normal.style.strokeThickness ?? 0).toBe(0);
       expect(normal.bounds.height).toBe(23);
@@ -484,8 +484,8 @@ describe("calculateFinalTokens()", () => {
       default: {
         fontFamily: "arial",
       },
-      b: { fontWeight: "700" },
-      i: { fontStyle: "italic" },
+      b: { fontWeight: "700" as const },
+      i: { fontStyle: "italic" as const },
     };
     const tagTokens = textToTags(text, Object.keys(styles));
     const styleTokens = tagsToStyles(tagTokens, styles);

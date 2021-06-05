@@ -34,7 +34,7 @@
     "2d"
   ],
   "peerDependencies": {
-    "pixi.js": "^5.3.8"
+    "pixi.js": "^6.0.4"
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",

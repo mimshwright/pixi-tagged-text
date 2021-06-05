@@ -30,6 +30,7 @@ import {
   isNotWhitespaceToken,
   VAlign,
   createEmptyFinalToken,
+  IFontMetrics,
 } from "./types";
 
 const ICON_SCALE_BASE = 0.8;
@@ -590,7 +591,7 @@ export const calculateFinalTokens = (
   const sizer = new PIXI.Text("");
   const defaultStyle = styledTokens.style;
 
-  let fontProperties: PIXI.IFontMetrics;
+  let fontProperties: IFontMetrics;
 
   const generateFinalTokenFromStyledToken =
     (style: TextStyleExtended, tags: string) =>

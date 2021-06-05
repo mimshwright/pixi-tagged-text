@@ -1,8 +1,8 @@
 import * as PIXI from "pixi.js";
+import { IFontMetrics } from "./types";
 
-export const measureFont = (
-  context: CanvasRenderingContext2D
-): PIXI.IFontMetrics => PIXI.TextMetrics.measureFont(context.font);
+export const measureFont = (context: CanvasRenderingContext2D): IFontMetrics =>
+  PIXI.TextMetrics.measureFont(context.font);
 
 export const INITIAL_FONT_PROPS = {
   ascent: 10,
@@ -14,7 +14,7 @@ export const INITIAL_FONT_PROPS = {
 export const getFontPropertiesOfText = (
   textField: PIXI.Text,
   forceUpdate = false
-): PIXI.IFontMetrics => {
+): IFontMetrics => {
   if (forceUpdate) {
     textField.updateText(false);
     return measureFont(textField.context);
@@ -23,8 +23,9 @@ export const getFontPropertiesOfText = (
     if (
       props.ascent === INITIAL_FONT_PROPS.ascent &&
       props.descent === INITIAL_FONT_PROPS.descent &&
-      (textField.style.fontSize > INITIAL_FONT_PROPS.fontSize ||
-        isNaN(textField.style.fontSize))
+      (textField.style.fontSize === undefined ||
+        typeof textField.style.fontSize !== "number" ||
+        textField.style.fontSize > INITIAL_FONT_PROPS.fontSize)
     ) {
       throw new Error(
         "getFontPropertiesOfText() returned metrics associated with a Text field that has not been updated yet. Please try using the forceUpdate parameter when you call this function."

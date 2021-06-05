@@ -64,7 +64,7 @@ describe("style module", () => {
       },
     };
     const styles = {
-      em: { fontStyle: "italic" },
+      em: { fontStyle: "italic" as const },
     };
 
     it("should convert a tag with attributes into a style", () => {
@@ -79,7 +79,7 @@ describe("style module", () => {
 
   describe("getStyleForTag()", () => {
     const styles = {
-      em: { fontStyle: "italic" },
+      em: { fontStyle: "italic" as const },
     };
     it("should look up the style you asked for in the style tag list", () => {
       expect(style.getStyleForTag("em", styles)).toMatchObject(styles.em);
@@ -100,11 +100,11 @@ describe("style module", () => {
           strokeThickness: 2,
         },
         strong: {
-          fontWeight: "700",
+          fontWeight: "700" as const,
         },
-        em: { fontStyle: "italic" },
+        em: { fontStyle: "italic" as const },
         tiny: { fontSize: 1 },
-        blue: { fill: "blue", fontWeight: "normal" },
+        blue: { fill: "blue", fontWeight: "normal" as const },
       };
       const emTag = {
         tagName: "em",
@@ -213,8 +213,8 @@ describe("style module", () => {
         ],
       };
       const styles = {
-        b: { fontSize: 24, fontWeight: "700" },
-        i: { fontStyle: "italic" },
+        b: { fontSize: 24, fontWeight: "700" as const },
+        i: { fontStyle: "italic" as const },
         default: defaultStyle,
       };
       const expected = {
@@ -249,7 +249,7 @@ describe("style module", () => {
     });
 
     it("Should convert deeply nested Tokens", () => {
-      const italic = { fontStyle: "italic" };
+      const italic = { fontStyle: "italic" as const };
       const styles = {
         default: italic,
         a: { fontSize: 12 },

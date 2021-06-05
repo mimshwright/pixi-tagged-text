@@ -33,6 +33,12 @@ export interface TaggedTextOptions {
 
 ///// STYLE PROPERTIES
 
+export interface IFontMetrics {
+  ascent: number;
+  descent: number;
+  fontSize: number;
+}
+
 // PROPERTY NAMES
 export const IMG_SRC_PROPERTY = "imgSrc";
 export const IMG_DISPLAY_PROPERTY = "imgDisplay";
@@ -118,7 +124,7 @@ export type StyledTokens = StyledToken;
 export interface FinalToken {
   content: TextToken | SpriteToken;
   bounds: Rectangle;
-  fontProperties: PIXI.IFontMetrics;
+  fontProperties: IFontMetrics;
   style: TextStyleExtended;
   tags: string;
 }
