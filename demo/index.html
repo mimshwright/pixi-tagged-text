@@ -263,6 +263,41 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
 
       <div class="example">
         <div class="code">
+          <h2>Text transformations and variations</h2>
+          <pre><code class="js">
+          </code></pre>
+        </div>
+        <div class="pixi" id="textTransform">
+          <script>
+            // Basics
+            const textTransformText = `Text transformations:
+<uppercase>upper case text</uppercase>
+<lowercase>lower case text</lowercase>
+<capitalize>capitalized text</capitalize>
+<smallcaps>Small Caps</smallcaps>`;
+            const textTransformStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#cccccc",
+                align: "left",
+              },
+              uppercase: { textTransform: "uppercase" },
+              lowercase: { textTransform: "lowercase" },
+              capitalize: { textTransform: "capitalize" },
+              smallcaps: { fontVariant: "small-caps" },
+            };
+            let textTransform = new TaggedText(
+              textTransformText,
+              textTransformStyle
+            );
+
+            createDemo("textTransform", textTransform);
+          </script>
+        </div>
+      </div>
+      <div class="example">
+        <div class="code">
           <h2>Attributes</h2>
           <pre><code class="js">
           </code></pre>
