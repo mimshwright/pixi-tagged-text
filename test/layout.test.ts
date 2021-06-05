@@ -296,484 +296,499 @@ describe("layout module", () => {
         "world!",
       ]);
     });
-  });
-  it("Should throw if the method is unknown.", () => {
-    expect(() => {
-      splitText("abc", "bogus" as SplitStyle);
-    }).toThrow();
-  });
-});
-
-describe("calculateFinalTokens()", () => {
-  it("Should exist", () => {
-    expect(layout.calculateFinalTokens).toBeInstanceOf(Function);
-  });
-
-  it("Should throw if the styledToken has no style", () => {
-    expect(() => {
-      const fakeStyled = { children: ["No styles?"], tags: "" } as StyledToken;
-      layout.calculateFinalTokens(fakeStyled);
-    }).toThrow();
-  });
-
-  describe("Stroked text", () => {
-    const line: StyledTokens = {
-      children: [
-        "A ",
-        {
-          children: ["B C"],
-          style: { fontSize: 20, strokeThickness: 40 },
-          tags: "stroke",
-        },
-      ],
-      style: { fontSize: 20 },
-      tags: "",
-    };
-    const tokens = layout.calculateFinalTokens(line);
-
-    const [[[normal], , [stroked], , [alsoStroked]]] = tokens;
-
-    it("Shouldn't affect non-strked text. ", () => {
-      expect(normal.content).toBe("A");
-      expect(normal.style.strokeThickness ?? 0).toBe(0);
-      expect(normal.bounds.height).toBe(23);
-      expect(normal.fontProperties.ascent).toBe(18);
-      expect(normal.fontProperties.descent).toBe(5);
-      expect(normal.fontProperties.fontSize).toBe(23);
-    });
-
-    it("Should take the stroke into account when determining the size and the fontProperties (for baseline).", () => {
-      expect(stroked.content).toBe("B");
-      expect(stroked.style.strokeThickness).toBe(40);
-      expect(stroked.bounds.height).toBe(63);
-      expect(stroked.fontProperties.ascent).toBe(38);
-      expect(stroked.fontProperties.descent).toBe(25);
-      expect(stroked.fontProperties.fontSize).toBe(63);
-    });
-
-    it("Should not affect any other stroked text. Sometimes this happens when fontProperties are shared. ", () => {
-      expect(alsoStroked.content).toBe("C");
-      expect(alsoStroked.style.strokeThickness).toBe(40);
-      expect(alsoStroked.bounds.height).toBe(63);
-      expect(alsoStroked.fontProperties.ascent).toBe(38);
-      expect(alsoStroked.fontProperties.descent).toBe(25);
-      expect(alsoStroked.fontProperties.fontSize).toBe(63);
+    it("Should throw if the method is unknown.", () => {
+      expect(() => {
+        splitText("abc", "bogus" as SplitStyle);
+      }).toThrow();
     });
   });
 
-  describe("splitStyle", () => {
-    const lws = {
-      children: ["Lines, words, & segments!"],
-      tags: "",
-      style: {},
-    };
-    const result = layout.calculateFinalTokens(lws);
-    it("Should split on whitespace by default", () => {
-      expect(result).toHaveLength(1);
-      // line 0
-      // ["Lines,", " ", "words,", " ", "&", " ", "segmemnts!" ]
-      expect(result[0]).toHaveLength(7);
-      // word 0
-      expect(result[0][0]).toHaveLength(1);
-      // word 0 section 0
-      expect(result[0][0][0]).toHaveProperty("content", "Lines,");
-      // word 1 section 0
-      expect(result[0][1][0]).toHaveProperty("content", " ");
-      expect(result[0]).toMatchObject([
-        [{ content: "Lines," }],
-        [{ content: " " }],
-        [{ content: "words," }],
-        [{ content: " " }],
-        [{ content: "&" }],
-        [{ content: " " }],
-        [{ content: "segments!" }],
-      ]);
+  describe("calculateFinalTokens()", () => {
+    it("Should throw if the styledToken has no style", () => {
+      expect(() => {
+        const fakeStyled = {
+          children: ["No styles?"],
+          tags: "",
+        } as StyledToken;
+        layout.calculateFinalTokens(fakeStyled);
+      }).toThrow();
     });
-    it("Should split on character if specified", () => {
-      const helloWorld = { children: ["Hello, world!"], tags: "", style: {} };
-      expect(
-        layout.calculateFinalTokens(helloWorld, "characters")
-      ).toMatchObject([
-        [
-          [
-            { content: "H" },
-            { content: "e" },
-            { content: "l" },
-            { content: "l" },
-            { content: "o" },
-            { content: "," },
-          ],
+
+    describe("Stroked text", () => {
+      const line: StyledTokens = {
+        children: [
+          "A ",
+          {
+            children: ["B C"],
+            style: { fontSize: 20, strokeThickness: 40 },
+            tags: "stroke",
+          },
+        ],
+        style: { fontSize: 20 },
+        tags: "",
+      };
+      const tokens = layout.calculateFinalTokens(line);
+
+      const [[[normal], , [stroked], , [alsoStroked]]] = tokens;
+
+      it("Shouldn't affect non-strked text. ", () => {
+        expect(normal.content).toBe("A");
+        expect(normal.style.strokeThickness ?? 0).toBe(0);
+        expect(normal.bounds.height).toBe(23);
+        expect(normal.fontProperties.ascent).toBe(18);
+        expect(normal.fontProperties.descent).toBe(5);
+        expect(normal.fontProperties.fontSize).toBe(23);
+      });
+
+      it("Should take the stroke into account when determining the size and the fontProperties (for baseline).", () => {
+        expect(stroked.content).toBe("B");
+        expect(stroked.style.strokeThickness).toBe(40);
+        expect(stroked.bounds.height).toBe(63);
+        expect(stroked.fontProperties.ascent).toBe(38);
+        expect(stroked.fontProperties.descent).toBe(25);
+        expect(stroked.fontProperties.fontSize).toBe(63);
+      });
+
+      it("Should not affect any other stroked text. Sometimes this happens when fontProperties are shared. ", () => {
+        expect(alsoStroked.content).toBe("C");
+        expect(alsoStroked.style.strokeThickness).toBe(40);
+        expect(alsoStroked.bounds.height).toBe(63);
+        expect(alsoStroked.fontProperties.ascent).toBe(38);
+        expect(alsoStroked.fontProperties.descent).toBe(25);
+        expect(alsoStroked.fontProperties.fontSize).toBe(63);
+      });
+    });
+
+    describe("Text with textTransform style", () => {
+      const ttStyle = { textTransform: "uppercase" };
+      const styledToken = {
+        children: ["www", { children: ["www"], tags: "upper", style: ttStyle }],
+        tags: "",
+        style: {},
+      } as StyledToken;
+      const tokens = layout.calculateFinalTokens(styledToken);
+      const [[[lc, uc]]] = tokens;
+
+      it("Should calculate sizes of text that has textTransform style correctly without actually changing the content for them.", () => {
+        expect(uc.bounds.width).toBeGreaterThan(lc.bounds.width);
+        expect(uc.content).toBe(lc.content);
+      });
+    });
+
+    describe("splitStyle", () => {
+      const lws = {
+        children: ["Lines, words, & segments!"],
+        tags: "",
+        style: {},
+      };
+      const result = layout.calculateFinalTokens(lws);
+      it("Should split on whitespace by default", () => {
+        expect(result).toHaveLength(1);
+        // line 0
+        // ["Lines,", " ", "words,", " ", "&", " ", "segmemnts!" ]
+        expect(result[0]).toHaveLength(7);
+        // word 0
+        expect(result[0][0]).toHaveLength(1);
+        // word 0 section 0
+        expect(result[0][0][0]).toHaveProperty("content", "Lines,");
+        // word 1 section 0
+        expect(result[0][1][0]).toHaveProperty("content", " ");
+        expect(result[0]).toMatchObject([
+          [{ content: "Lines," }],
           [{ content: " " }],
-          [
-            { content: "w" },
-            { content: "o" },
-            { content: "r" },
-            { content: "l" },
-            { content: "d" },
-            { content: "!" },
-          ],
-        ],
-      ]);
-    });
-  });
-
-  describe("collapseWhitespacesOnEndOfLines()", () => {
-    const fontProperties = { ascent: 10, descent: 2, fontSize: 12 };
-    it("Should collapse the width of any whitespace characters that appear at end of lines. (but not in middle)", () => {
-      const example: Partial<FinalToken>[][][] = [
-        [
-          [{ content: "a", fontProperties, bounds: R(0, 0, 10, 10) }],
-          [{ content: " ", fontProperties, bounds: R(10, 0, 10, 10) }],
-          [{ content: "b", fontProperties, bounds: R(20, 0, 10, 10) }],
-          [{ content: " ", fontProperties, bounds: R(30, 0, 10, 10) }],
-          [{ content: " ", fontProperties, bounds: R(40, 0, 10, 10) }],
-        ],
-      ];
-      const result = layout.collapseWhitespacesOnEndOfLines(
-        example as ParagraphToken
-      );
-      expect(result).toMatchObject([
-        [
-          [{ content: "a", bounds: R(0, 0, 10, 10) }],
-          [{ content: " ", bounds: R(10, 0, 10, 10) }],
-          [{ content: "b", bounds: R(20, 0, 10, 10) }],
-          [{ content: " ", bounds: R(30, 0, 0, 10) }],
-          [{ content: " ", bounds: R(40, 0, 0, 10) }],
-        ],
-      ]);
-    });
-    it("Should collapse width and height of newlines.", () => {
-      const example: Partial<FinalToken>[][][] = [
-        [
-          [{ content: "a", fontProperties, bounds: R(0, 0, 10, 10) }],
-          [{ content: "\n", fontProperties, bounds: R(10, 0, 10, 20) }],
-        ],
-        [
-          [{ content: "b", fontProperties, bounds: R(0, 10, 10, 10) }],
-          [{ content: " ", fontProperties, bounds: R(10, 10, 10, 10) }],
-          [{ content: "\n", fontProperties, bounds: R(20, 10, 10, 20) }],
-        ],
-        [[{ content: "c", fontProperties, bounds: R(0, 0, 20, 10) }]],
-      ];
-      const result = layout.collapseWhitespacesOnEndOfLines(
-        example as ParagraphToken
-      );
-      expect(result).toMatchObject([
-        [
-          [{ content: "a", bounds: R(0, 0, 10, 10) }],
-          [{ content: "\n", bounds: R(10, 0, 0, 12) }],
-        ],
-        [
-          [{ content: "b", bounds: R(0, 10, 10, 10) }],
-          [{ content: " ", bounds: R(10, 10, 0, 10) }],
-          [{ content: "\n", bounds: R(20, 10, 0, 12) }],
-        ],
-        [[{ content: "c", bounds: R(0, 0, 20, 10) }]],
-      ]);
-    });
-  });
-
-  describe("end to end conversion", () => {
-    const textToTags = parseTagsNew;
-    const tagsToStyles = mapTagsToStyles;
-    const stylesToLayout = layout.calculateFinalTokens;
-
-    const text =
-      "<b>Hello, <i>World!</i></b>\nHow are you? I'm <b>S</b>U<b>P</b>E<b>R</b>!";
-    const styles = {
-      default: {
-        fontFamily: "arial",
-      },
-      b: { fontWeight: "700" },
-      i: { fontStyle: "italic" },
-    };
-    const tagTokens = textToTags(text, Object.keys(styles));
-    const styleTokens = tagsToStyles(tagTokens, styles);
-    const finalTokens = stylesToLayout(styleTokens);
-
-    const [line0, line1] = finalTokens;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [hello, s0, world, n0] = line0;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [how, s1, are, s2, you, s3, im, s4, superWord] = line1;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [s, u, p, e, r, bang] = superWord;
-
-    it("Should have default styles for styleTokens", () => {
-      expect(styleTokens.style).toMatchObject(styles.default);
-    });
-
-    it("Most words should have length 0 but Should treat SuPeR! as one word", () => {
-      expect(hello).toHaveLength(1);
-      expect(s0).toHaveLength(1);
-      expect(n0).toHaveLength(1);
-
-      expect(superWord).toHaveLength(6);
-      expect(s).toHaveProperty("tags", "b");
-      expect(u).toHaveProperty("tags", "");
-    });
-
-    it("Should give similar size properties to text with the same styles and same text.", () => {
-      const [space1] = s1;
-      const [space2] = s2;
-      expect(space1.style).toBe(space2.style);
-      expect(space1.content).toBe(space2.content);
-      expect(space1.tags).toBe(space2.tags);
-      expect(space1.bounds.width).toBe(space2.bounds.width);
-      expect(space1.bounds.height).toBe(space2.bounds.height);
-      expect(space1.fontProperties).toMatchObject(space2.fontProperties);
-    });
-
-    it("Should fully convert text to final tokens.", () => {
-      const d = styles.default;
-      const b = { ...styles.default, ...styles.b };
-      const bi = { ...styles.default, ...styles.b, ...styles.i };
-
-      expect(finalTokens).toMatchObject(
-        // all lines
-        [
-          // line 0
-          [
-            // word 0
-            [
-              // segment 0
-              {
-                content: "Hello,",
-                style: b,
-                tags: "b",
-              },
-            ],
-            // word 1
-            [
-              {
-                content: " ",
-                style: b,
-                tags: "b",
-              },
-            ],
-            // word 2
-            [
-              {
-                content: "World!",
-                style: bi,
-                tags: "b,i",
-              },
-            ],
-            // word 3
-            [
-              {
-                content: "\n",
-                style: d,
-                tags: "",
-              },
-            ],
-          ],
-          // line 1
+          [{ content: "words," }],
+          [{ content: " " }],
+          [{ content: "&" }],
+          [{ content: " " }],
+          [{ content: "segments!" }],
+        ]);
+      });
+      it("Should split on character if specified", () => {
+        const helloWorld = { children: ["Hello, world!"], tags: "", style: {} };
+        expect(
+          layout.calculateFinalTokens(helloWorld, "characters")
+        ).toMatchObject([
           [
             [
-              {
-                content: "How",
-                style: d,
-              },
+              { content: "H" },
+              { content: "e" },
+              { content: "l" },
+              { content: "l" },
+              { content: "o" },
+              { content: "," },
             ],
+            [{ content: " " }],
             [
-              {
-                content: " ",
-                style: d,
-              },
-            ],
-            [
-              {
-                content: "are",
-                style: d,
-              },
-            ],
-            [
-              {
-                content: " ",
-                style: d,
-              },
-            ],
-            [
-              {
-                content: "you?",
-                style: d,
-              },
-            ],
-            [
-              {
-                content: " ",
-                style: d,
-              },
-            ],
-            [
-              {
-                content: "I'm",
-                style: d,
-              },
-            ],
-            [
-              {
-                content: " ",
-                style: d,
-              },
-            ],
-            // word 8 has multiple segments
-            [
-              // segment 0
-              {
-                content: "S",
-                style: b,
-                tags: "b",
-              },
-              {
-                content: "U",
-                style: d,
-                tags: "",
-              },
-              {
-                content: "P",
-                style: b,
-              },
-              {
-                content: "E",
-                style: d,
-              },
-              {
-                content: "R",
-                style: b,
-              },
-              {
-                content: "!",
-                style: d,
-              },
+              { content: "w" },
+              { content: "o" },
+              { content: "r" },
+              { content: "l" },
+              { content: "d" },
+              { content: "!" },
             ],
           ],
-        ]
-      );
+        ]);
+      });
     });
-    it("Should unset styles when there are no styles", () => {
-      expect(how[0].style).not.toHaveProperty("fontWeight");
+
+    describe("collapseWhitespacesOnEndOfLines()", () => {
+      const fontProperties = { ascent: 10, descent: 2, fontSize: 12 };
+      it("Should collapse the width of any whitespace characters that appear at end of lines. (but not in middle)", () => {
+        const example: Partial<FinalToken>[][][] = [
+          [
+            [{ content: "a", fontProperties, bounds: R(0, 0, 10, 10) }],
+            [{ content: " ", fontProperties, bounds: R(10, 0, 10, 10) }],
+            [{ content: "b", fontProperties, bounds: R(20, 0, 10, 10) }],
+            [{ content: " ", fontProperties, bounds: R(30, 0, 10, 10) }],
+            [{ content: " ", fontProperties, bounds: R(40, 0, 10, 10) }],
+          ],
+        ];
+        const result = layout.collapseWhitespacesOnEndOfLines(
+          example as ParagraphToken
+        );
+        expect(result).toMatchObject([
+          [
+            [{ content: "a", bounds: R(0, 0, 10, 10) }],
+            [{ content: " ", bounds: R(10, 0, 10, 10) }],
+            [{ content: "b", bounds: R(20, 0, 10, 10) }],
+            [{ content: " ", bounds: R(30, 0, 0, 10) }],
+            [{ content: " ", bounds: R(40, 0, 0, 10) }],
+          ],
+        ]);
+      });
+      it("Should collapse width and height of newlines.", () => {
+        const example: Partial<FinalToken>[][][] = [
+          [
+            [{ content: "a", fontProperties, bounds: R(0, 0, 10, 10) }],
+            [{ content: "\n", fontProperties, bounds: R(10, 0, 10, 20) }],
+          ],
+          [
+            [{ content: "b", fontProperties, bounds: R(0, 10, 10, 10) }],
+            [{ content: " ", fontProperties, bounds: R(10, 10, 10, 10) }],
+            [{ content: "\n", fontProperties, bounds: R(20, 10, 10, 20) }],
+          ],
+          [[{ content: "c", fontProperties, bounds: R(0, 0, 20, 10) }]],
+        ];
+        const result = layout.collapseWhitespacesOnEndOfLines(
+          example as ParagraphToken
+        );
+        expect(result).toMatchObject([
+          [
+            [{ content: "a", bounds: R(0, 0, 10, 10) }],
+            [{ content: "\n", bounds: R(10, 0, 0, 12) }],
+          ],
+          [
+            [{ content: "b", bounds: R(0, 10, 10, 10) }],
+            [{ content: " ", bounds: R(10, 10, 0, 10) }],
+            [{ content: "\n", bounds: R(20, 10, 0, 12) }],
+          ],
+          [[{ content: "c", bounds: R(0, 0, 20, 10) }]],
+        ]);
+      });
+    });
+
+    describe("end to end conversion", () => {
+      const textToTags = parseTagsNew;
+      const tagsToStyles = mapTagsToStyles;
+      const stylesToLayout = layout.calculateFinalTokens;
+
+      const text =
+        "<b>Hello, <i>World!</i></b>\nHow are you? I'm <b>S</b>U<b>P</b>E<b>R</b>!";
+      const styles = {
+        default: {
+          fontFamily: "arial",
+        },
+        b: { fontWeight: "700" },
+        i: { fontStyle: "italic" },
+      };
+      const tagTokens = textToTags(text, Object.keys(styles));
+      const styleTokens = tagsToStyles(tagTokens, styles);
+      const finalTokens = stylesToLayout(styleTokens);
+
+      const [line0, line1] = finalTokens;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [hello, s0, world, n0] = line0;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [how, s1, are, s2, you, s3, im, s4, superWord] = line1;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [s, u, p, e, r, bang] = superWord;
+
+      it("Should have default styles for styleTokens", () => {
+        expect(styleTokens.style).toMatchObject(styles.default);
+      });
+
+      it("Most words should have length 0 but Should treat SuPeR! as one word", () => {
+        expect(hello).toHaveLength(1);
+        expect(s0).toHaveLength(1);
+        expect(n0).toHaveLength(1);
+
+        expect(superWord).toHaveLength(6);
+        expect(s).toHaveProperty("tags", "b");
+        expect(u).toHaveProperty("tags", "");
+      });
+
+      it("Should give similar size properties to text with the same styles and same text.", () => {
+        const [space1] = s1;
+        const [space2] = s2;
+        expect(space1.style).toBe(space2.style);
+        expect(space1.content).toBe(space2.content);
+        expect(space1.tags).toBe(space2.tags);
+        expect(space1.bounds.width).toBe(space2.bounds.width);
+        expect(space1.bounds.height).toBe(space2.bounds.height);
+        expect(space1.fontProperties).toMatchObject(space2.fontProperties);
+      });
+
+      it("Should fully convert text to final tokens.", () => {
+        const d = styles.default;
+        const b = { ...styles.default, ...styles.b };
+        const bi = { ...styles.default, ...styles.b, ...styles.i };
+
+        expect(finalTokens).toMatchObject(
+          // all lines
+          [
+            // line 0
+            [
+              // word 0
+              [
+                // segment 0
+                {
+                  content: "Hello,",
+                  style: b,
+                  tags: "b",
+                },
+              ],
+              // word 1
+              [
+                {
+                  content: " ",
+                  style: b,
+                  tags: "b",
+                },
+              ],
+              // word 2
+              [
+                {
+                  content: "World!",
+                  style: bi,
+                  tags: "b,i",
+                },
+              ],
+              // word 3
+              [
+                {
+                  content: "\n",
+                  style: d,
+                  tags: "",
+                },
+              ],
+            ],
+            // line 1
+            [
+              [
+                {
+                  content: "How",
+                  style: d,
+                },
+              ],
+              [
+                {
+                  content: " ",
+                  style: d,
+                },
+              ],
+              [
+                {
+                  content: "are",
+                  style: d,
+                },
+              ],
+              [
+                {
+                  content: " ",
+                  style: d,
+                },
+              ],
+              [
+                {
+                  content: "you?",
+                  style: d,
+                },
+              ],
+              [
+                {
+                  content: " ",
+                  style: d,
+                },
+              ],
+              [
+                {
+                  content: "I'm",
+                  style: d,
+                },
+              ],
+              [
+                {
+                  content: " ",
+                  style: d,
+                },
+              ],
+              // word 8 has multiple segments
+              [
+                // segment 0
+                {
+                  content: "S",
+                  style: b,
+                  tags: "b",
+                },
+                {
+                  content: "U",
+                  style: d,
+                  tags: "",
+                },
+                {
+                  content: "P",
+                  style: b,
+                },
+                {
+                  content: "E",
+                  style: d,
+                },
+                {
+                  content: "R",
+                  style: b,
+                },
+                {
+                  content: "!",
+                  style: d,
+                },
+              ],
+            ],
+          ]
+        );
+      });
+      it("Should unset styles when there are no styles", () => {
+        expect(how[0].style).not.toHaveProperty("fontWeight");
+      });
     });
   });
-});
 
-describe("verticalAlignInLines()", () => {
-  const fontProperties = { ascent: 20, descent: 10, fontSize: 30 };
-  const lines = [
-    // Line 0
-    [
-      // Word 0
+  describe("verticalAlignInLines()", () => {
+    const fontProperties = { ascent: 20, descent: 10, fontSize: 30 };
+    const lines = [
+      // Line 0
       [
-        // Segment 0
-        {
-          ...createEmptyFinalToken(),
-          fontProperties,
-          bounds: R(0, 0, 100, 20),
-        },
+        // Word 0
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(0, 0, 100, 20),
+          },
+        ],
+        // Word 1
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(100, 0, 100, 40),
+          },
+        ],
       ],
-      // Word 1
+      // Line 1
       [
-        // Segment 0
-        {
-          ...createEmptyFinalToken(),
-          fontProperties,
-          bounds: R(100, 0, 100, 40),
-        },
+        // Word 0
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(0, 40, 100, 30),
+          },
+        ],
+        // Word 1
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(100, 40, 100, 20),
+          },
+        ],
+        // Word 2
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(200, 40, 100, 10),
+          },
+        ],
       ],
-    ],
-    // Line 1
-    [
-      // Word 0
+      // Line 2
       [
-        // Segment 0
-        {
-          ...createEmptyFinalToken(),
-          fontProperties,
-          bounds: R(0, 40, 100, 30),
-        },
+        // Word 0
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(0, 70, 100, 20),
+          },
+        ],
       ],
-      // Word 1
-      [
-        // Segment 0
-        {
-          ...createEmptyFinalToken(),
-          fontProperties,
-          bounds: R(100, 40, 100, 20),
-        },
-      ],
-      // Word 2
-      [
-        // Segment 0
-        {
-          ...createEmptyFinalToken(),
-          fontProperties,
-          bounds: R(200, 40, 100, 10),
-        },
-      ],
-    ],
-    // Line 2
-    [
-      // Word 0
-      [
-        // Segment 0
-        {
-          ...createEmptyFinalToken(),
-          fontProperties,
-          bounds: R(0, 70, 100, 20),
-        },
-      ],
-    ],
-  ];
+    ];
 
-  const top = layout.verticalAlignInLines(lines, 0, "top");
-  const lineSpacing = layout.verticalAlignInLines(lines, 100, "top");
-  const bottom = layout.verticalAlignInLines(lines, 0, "bottom");
-  const middle = layout.verticalAlignInLines(lines, 0, "middle");
-  it("should position text vertically in a line so that it fits correctly.", () => {
-    expect(top).toMatchObject([
-      [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
-      [
-        [{ bounds: { y: 40 } }],
-        [{ bounds: { y: 40 } }],
-        [{ bounds: { y: 40 } }],
-      ],
-      [[{ bounds: { y: 70 } }]],
-    ]);
-    expect(lineSpacing).toMatchObject([
-      [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
-      [
-        [{ bounds: { y: 140 } }],
-        [{ bounds: { y: 140 } }],
-        [{ bounds: { y: 140 } }],
-      ],
-      [[{ bounds: { y: 270 } }]],
-    ]);
-    expect(bottom).toMatchObject([
-      [[{ bounds: { y: 20 } }], [{ bounds: { y: 0 } }]],
-      [
-        [{ bounds: { y: 40 } }],
-        [{ bounds: { y: 50 } }],
-        [{ bounds: { y: 60 } }],
-      ],
-      [[{ bounds: { y: 70 } }]],
-    ]);
-    expect(middle).toMatchObject([
-      [[{ bounds: { y: 10 } }], [{ bounds: { y: 0 } }]],
-      [
-        [{ bounds: { y: 40 } }],
-        [{ bounds: { y: 45 } }],
-        [{ bounds: { y: 50 } }],
-      ],
-      [[{ bounds: { y: 70 } }]],
-    ]);
-  });
-  it("should create a new object rather than editing the original.", () => {
-    expect(top[0]).not.toBe(lines[0]);
-    expect(top[0][0]).not.toBe(lines[0][0]);
-    expect(middle[0]).not.toBe(lines[0]);
-    expect(middle[0][0]).not.toBe(lines[0][0]);
-    expect(bottom[0]).not.toBe(lines[0]);
-    expect(bottom[0][0]).not.toBe(lines[0][0]);
+    const top = layout.verticalAlignInLines(lines, 0, "top");
+    const lineSpacing = layout.verticalAlignInLines(lines, 100, "top");
+    const bottom = layout.verticalAlignInLines(lines, 0, "bottom");
+    const middle = layout.verticalAlignInLines(lines, 0, "middle");
+    it("should position text vertically in a line so that it fits correctly.", () => {
+      expect(top).toMatchObject([
+        [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
+        [
+          [{ bounds: { y: 40 } }],
+          [{ bounds: { y: 40 } }],
+          [{ bounds: { y: 40 } }],
+        ],
+        [[{ bounds: { y: 70 } }]],
+      ]);
+      expect(lineSpacing).toMatchObject([
+        [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
+        [
+          [{ bounds: { y: 140 } }],
+          [{ bounds: { y: 140 } }],
+          [{ bounds: { y: 140 } }],
+        ],
+        [[{ bounds: { y: 270 } }]],
+      ]);
+      expect(bottom).toMatchObject([
+        [[{ bounds: { y: 20 } }], [{ bounds: { y: 0 } }]],
+        [
+          [{ bounds: { y: 40 } }],
+          [{ bounds: { y: 50 } }],
+          [{ bounds: { y: 60 } }],
+        ],
+        [[{ bounds: { y: 70 } }]],
+      ]);
+      expect(middle).toMatchObject([
+        [[{ bounds: { y: 10 } }], [{ bounds: { y: 0 } }]],
+        [
+          [{ bounds: { y: 40 } }],
+          [{ bounds: { y: 45 } }],
+          [{ bounds: { y: 50 } }],
+        ],
+        [[{ bounds: { y: 70 } }]],
+      ]);
+    });
+    it("should create a new object rather than editing the original.", () => {
+      expect(top[0]).not.toBe(lines[0]);
+      expect(top[0][0]).not.toBe(lines[0][0]);
+      expect(middle[0]).not.toBe(lines[0]);
+      expect(middle[0][0]).not.toBe(lines[0][0]);
+      expect(bottom[0]).not.toBe(lines[0]);
+      expect(bottom[0][0]).not.toBe(lines[0][0]);
+    });
   });
 });
