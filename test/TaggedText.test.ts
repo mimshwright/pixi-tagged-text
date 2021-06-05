@@ -485,6 +485,69 @@ Line 2`,
 Line 4`);
       });
     });
+
+    describe("textTransform style", () => {
+      const t = new TaggedText(
+        `control CONTROL
+<upper>upperCASE</upper>
+<lower>lowerCASE</lower>
+<capitalize>capitalized TEXT Text texT</capitalize>`,
+        {
+          upper: { textTransform: "uppercase" },
+          lower: { textTransform: "lowercase" },
+          capitalize: { textTransform: "capitalize" },
+        }
+      );
+      const { textFields, tokens } = t;
+      const [
+        control0,
+        control1,
+        upper,
+        lower,
+        capitalized0,
+        capitalized1,
+        capitalized2,
+        capitalized3,
+      ] = textFields;
+      const [
+        ,
+        [[upperToken]],
+        [[lowerToken]],
+        [[capitalizedToken0], , [capitalizedToken1]],
+      ] = tokens;
+      test("Control case", () => {
+        expect(control0).toHaveProperty("text", "control");
+        expect(control1).toHaveProperty("text", "CONTROL");
+      });
+      describe("textTransform: uppercase", () => {
+        it("Should convert the text to uppercase in the text field", () => {
+          expect(upper).toHaveProperty("text", "UPPERCASE");
+        });
+        it("Should not affect the tokens", () => {
+          expect(upperToken).toHaveProperty("content", "upperCASE");
+        });
+      });
+      describe("textTransform: lowercase", () => {
+        it("Should convert the text to lowercase in the text field", () => {
+          expect(lower).toHaveProperty("text", "lowercase");
+        });
+        it("Should not affect the tokens", () => {
+          expect(lowerToken).toHaveProperty("content", "lowerCASE");
+        });
+      });
+      describe("textTransform: capitalize", () => {
+        it("Should capitalize text in the text field", () => {
+          expect(capitalized0).toHaveProperty("text", "Capitalized");
+          expect(capitalized1).toHaveProperty("text", "TEXT");
+          expect(capitalized2).toHaveProperty("text", "Text");
+          expect(capitalized3).toHaveProperty("text", "TexT");
+        });
+        it("Should not affect the tokens", () => {
+          expect(capitalizedToken0).toHaveProperty("content", "capitalized");
+          expect(capitalizedToken1).toHaveProperty("content", "TEXT");
+        });
+      });
+    });
   });
 
   describe("styles", () => {

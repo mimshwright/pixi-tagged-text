@@ -46,6 +46,7 @@ export type ImageDisplayMode = "icon" | "block" | "inline";
 export type ImageSource = string;
 export type ImageDimensionPercentage = string;
 export type ImageDimension = number | string | ImageDimensionPercentage;
+export type TextTransform = "normal" | "capitalize" | "uppercase" | "lowercase";
 
 export interface TextStyle
   extends Record<string, unknown>,
@@ -66,6 +67,7 @@ export interface ImageStyles {
 export interface TextStyleExtended extends TextStyle, ImageStyles {
   lineSpacing?: number;
   valign?: VAlign;
+  textTransform?: TextTransform;
 }
 
 export type TextStyleSet = Record<string, TextStyleExtended>;

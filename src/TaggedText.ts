@@ -19,6 +19,7 @@ import {
   Point,
   ParagraphToken,
 } from "./types";
+import { capitalize } from "./stringUtil";
 import { calculateFinalTokens, getBoundsNested } from "./layout";
 import {
   combineAllStyles,
@@ -477,7 +478,22 @@ export default class TaggedText extends PIXI.Sprite {
   }
 
   private createTextFieldForToken(token: TextFinalToken): PIXI.Text {
-    return new PIXI.Text(token.content, token.style);
+    const { textTransform = "" } = token.style;
+    let text = token.content;
+    switch (textTransform.toLowerCase()) {
+      case "lowercase":
+        text = text.toLowerCase();
+        break;
+      case "uppercase":
+        text = text.toUpperCase();
+        break;
+      case "capitalize":
+        text = capitalize(text);
+        break;
+      default:
+    }
+
+    return new PIXI.Text(text, token.style);
   }
 
   /**

@@ -34,7 +34,7 @@
     "2d"
   ],
   "peerDependencies": {
-    "pixi.js": "^5.3.8"
+    "pixi.js": "^5.3.9"
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",
@@ -71,5 +71,6 @@
     "lint": "npm run prettier && npm run eslint",
     "prepare": "install-peers && husky install",
     "pre-commit": "npm run lint && npm run test"
-  }
+  },
+  "dependencies": {}
 }
