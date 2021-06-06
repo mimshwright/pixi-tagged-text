@@ -305,6 +305,58 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
       </div>
       <div class="example">
         <div class="code">
+          <h2>Underline, overline and Strikethru</h2>
+          <pre><code class="js">
+          </code></pre>
+        </div>
+        <div class="pixi" id="underline">
+          <script>
+            // underline
+            const underlineText = `<h1>Underline, overline and strikethru:</h1>
+<code>textStyle: "underline"</code>
+<underline>A cumque ea quia vel.</underline>
+
+<code>textStyle: "overline"</code>
+<overline>Est labore quibusdam laborum facere.</overline>
+
+<code>textStyle: "strikethru"</code>
+<strikethru>Veritatis aut ducimus occaecati illo.</strikethru>
+
+<code>line thickness, color, offset</code>
+<custom>consequuntur odit in excepturi</custom>`;
+            const underlineStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                align: "center",
+              },
+              h1: { fill: "#CCCCCC" },
+              code: { fontFamily: "courier", fontSize: 12, fill: "#FFFFFF" },
+              underline: { fontStyle: "underline", fill: "#FF6600" },
+              overline: { fontStyle: "overline", fill: "#66FF66" },
+              strikethru: { fontStyle: "strikethru", fill: "#0066FF" },
+              custom: {
+                fill: "#FFCCFF",
+                textStyle: "italic",
+                underlineThickness: 4,
+                undrlineColor: "#FFFF00",
+                underlineOffset: 10,
+                overlineColor: "#00FFFF",
+                overlineThickness: 1,
+                overlineOffset: -5,
+                strikethruThickness: 2,
+                strikethruColor: "#FF0000",
+              },
+            };
+
+            let underline = new TaggedText(underlineText, underlineStyle);
+
+            createDemo("underline", underline);
+          </script>
+        </div>
+      </div>
+      <div class="example">
+        <div class="code">
           <h2>Attributes</h2>
           <pre><code class="js">
           </code></pre>
