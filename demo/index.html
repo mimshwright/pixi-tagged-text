@@ -5,8 +5,8 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.9/pixi.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.9/pixi.js"></script>
 
     <!-- TaggedText -->
     <script src="../dist/pixi-tagged-text.umd.js"></script>
@@ -269,19 +269,25 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         </div>
         <div class="pixi" id="textTransform">
           <script>
-            // Basics
-            const textTransformText = `Text transformations:
-<upper>upperCASE</upper>
-<lower>lowerCASE</lower>
+            // textTransform
+            const textTransformText = `<h1>Text transformations:</h1>
+<code>textTransform: "lowercase"</code>
+<lower>lowerCASE text</lower>
+<code>textTransform: "uppercase"</code>
+<upper>upperCASE text</upper>
+<code>textTransform: "capitalize"</code>
 <capitalize>capitalized text</capitalize>
+<code>fontVariant: "small-caps"</code>
 <smallcaps>Small Caps</smallcaps>`;
             const textTransformStyle = {
               default: {
                 fontFamily: "Arial",
-                fontSize: "36px",
-                fill: "#FFFFFF",
-                align: "left",
+                fontSize: "24px",
+                fill: "#FFCC22",
+                align: "center",
               },
+              h1: { fontSize: "36px", fill: "#CCCCCC" },
+              code: { fontFamily: "courier", fontSize: 12, fill: "#FFFFFF" },
               upper: { textTransform: "uppercase" },
               lower: { textTransform: "lowercase" },
               capitalize: { textTransform: "capitalize" },
