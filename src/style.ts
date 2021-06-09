@@ -13,6 +13,7 @@ import {
   StyledToken,
   SpriteToken,
   isEmptyObject,
+  TextDecorationValue,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";
@@ -180,4 +181,37 @@ export const mapTagsToStyles = (
   };
 
   return convertTagTokenToStyledToken(tokens) as StyledTokens;
+};
+
+export const convertDecorationToUnderlineProps = (
+  style: TextStyleExtended
+): TextStyleExtended => {
+  const { textDecoration } = style;
+  if (textDecoration === undefined || textDecoration === "normal") {
+    return style;
+  }
+
+  function mergeDecoration(
+    decorationLineType: TextDecorationValue,
+    decorationLineTypeCamelCase: string = decorationLineType
+  ): Partial<TextStyleExtended> {
+    if (style.textDecoration?.includes(decorationLineType)) {
+      return {
+        [`${decorationLineTypeCamelCase}Color`]:
+          style[`${decorationLineTypeCamelCase}Color`] ?? style.fill,
+        [`${decorationLineTypeCamelCase}Thickness`]:
+          style[`${decorationLineTypeCamelCase}Thickness`] ?? 1,
+        [`${decorationLineTypeCamelCase}Offset`]:
+          style[`${decorationLineTypeCamelCase}Offset`] ?? 0,
+      };
+    }
+    return {};
+  }
+
+  return {
+    ...style,
+    ...mergeDecoration("underline"),
+    ...mergeDecoration("overline"),
+    ...mergeDecoration("line-through", "lineThrough"),
+  };
 };

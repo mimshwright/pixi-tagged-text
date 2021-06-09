@@ -1,7 +1,13 @@
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
-import { Align, SplitStyle, VAlign, ImageDisplayMode } from "../src/types";
+import {
+  Align,
+  SplitStyle,
+  VAlign,
+  ImageDisplayMode,
+  TextStyleSet,
+} from "../src/types";
 import iconSrc from "./icon.base64";
 
 describe("TaggedText", () => {
@@ -12,7 +18,7 @@ describe("TaggedText", () => {
   const texture = PIXI.Texture.from(iconImage, { width: 128, height: 128 });
   const icon = PIXI.Sprite.from(texture);
 
-  const style = {
+  const style: TextStyleSet = {
     default: {
       fontSize: 10,
       fontFamily: "arial",

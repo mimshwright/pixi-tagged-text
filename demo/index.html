@@ -319,8 +319,11 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
 <code>textStyle: "overline"</code>
 <overline>Est labore quibusdam laborum facere.</overline>
 
-<code>textStyle: "strikethru"</code>
-<strikethru>Veritatis aut ducimus occaecati illo.</strikethru>
+<code>textStyle: "line-through"</code>
+<lineThrough>Veritatis aut ducimus occaecati illo.</lineThrough>
+
+<code>textStyle: "undelrine overline"</code>
+<underOver>maiores fugiat quae voluptas eaque modi.</underOver>
 
 <code>line thickness, color, offset</code>
 <custom>consequuntur odit in excepturi</custom>`;
@@ -332,9 +335,13 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               },
               h1: { fill: "#CCCCCC" },
               code: { fontFamily: "courier", fontSize: 12, fill: "#FFFFFF" },
-              underline: { fontStyle: "underline", fill: "#FF6600" },
-              overline: { fontStyle: "overline", fill: "#66FF66" },
-              strikethru: { fontStyle: "strikethru", fill: "#0066FF" },
+              underline: { textDecoration: "underline", fill: "#FF0000" },
+              overline: { textDecoration: "overline", fill: "#66FF66" },
+              lineThrough: { textDecoration: "line-through", fill: "#0066FF" },
+              underOver: {
+                textDecoration: "underline overline",
+                fill: "#FF9900",
+              },
               custom: {
                 fill: "#FFCCFF",
                 textStyle: "italic",
@@ -344,8 +351,8 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
                 overlineColor: "#00FFFF",
                 overlineThickness: 1,
                 overlineOffset: -5,
-                strikethruThickness: 2,
-                strikethruColor: "#FF0000",
+                lineThroughThickness: 2,
+                lineThroughColor: "#FF0000",
               },
             };
 

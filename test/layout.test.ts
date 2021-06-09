@@ -4,6 +4,7 @@ import {
   ParagraphToken,
   StyledToken,
   StyledTokens,
+  TextStyleSet,
 } from "./../src/types";
 import { splitText } from "./../src/layout";
 import * as PIXI from "pixi.js";
@@ -494,7 +495,7 @@ describe("layout module", () => {
 
       const text =
         "<b>Hello, <i>World!</i></b>\nHow are you? I'm <b>S</b>U<b>P</b>E<b>R</b>!";
-      const styles = {
+      const styles: TextStyleSet = {
         default: {
           fontFamily: "arial",
         },

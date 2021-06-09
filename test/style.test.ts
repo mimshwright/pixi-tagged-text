@@ -4,6 +4,8 @@ import {
   TextStyleSet,
   StyledToken,
   TextStyleExtended,
+  FontStyle,
+  TextDecoration,
 } from "./../src/types";
 import * as style from "../src/style";
 import iconSrc from "./icon.base64";
@@ -63,7 +65,7 @@ describe("style module", () => {
         fontWeight: "700",
       },
     };
-    const styles = {
+    const styles: TextStyleSet = {
       em: { fontStyle: "italic" },
     };
 
@@ -78,7 +80,7 @@ describe("style module", () => {
   });
 
   describe("getStyleForTag()", () => {
-    const styles = {
+    const styles: TextStyleSet = {
       em: { fontStyle: "italic" },
     };
     it("should look up the style you asked for in the style tag list", () => {
@@ -94,7 +96,7 @@ describe("style module", () => {
   describe("getStyleForTags()", () => {
     it("should combine several styles with attributes to create one style.", () => {
       const styleCache = {};
-      const tagStyles = {
+      const tagStyles: TextStyleSet = {
         default: {
           stroke: "#FF3399",
           strokeThickness: 2,
@@ -212,9 +214,9 @@ describe("style module", () => {
           },
         ],
       };
-      const styles = {
+      const styles: TextStyleSet = {
         b: { fontSize: 24, fontWeight: "700" },
-        i: { fontStyle: "italic" },
+        i: { fontStyle: "italic" as FontStyle },
         default: defaultStyle,
       };
       const expected = {
@@ -249,8 +251,8 @@ describe("style module", () => {
     });
 
     it("Should convert deeply nested Tokens", () => {
-      const italic = { fontStyle: "italic" };
-      const styles = {
+      const italic = { fontStyle: "italic" as FontStyle };
+      const styles: TextStyleSet = {
         default: italic,
         a: { fontSize: 12 },
         b: { fontSize: 24 },
@@ -529,4 +531,142 @@ describe("style module", () => {
       });
     });
   });
+
+  describe("convertDecorationToUnderlineProps()", () => {
+    it(`Should not alter "textDecoration: 'normal'".`, () => {
+      const normal: TextStyleExtended = {
+        textDecoration: "normal",
+        fill: "#999999",
+        fontSize: "12px",
+      };
+      const newStyle = style.convertDecorationToUnderlineProps(normal);
+
+      expect(newStyle).toMatchObject(normal);
+    });
+
+    it(`Should convert "textDecoration: 'underline'" into underline style properties.`, () => {
+      const underline: TextStyleExtended = {
+        textDecoration: "underline",
+        fill: "#0000FF",
+        fontSize: "20px",
+      };
+      const newStyle = style.convertDecorationToUnderlineProps(underline);
+
+      expect(newStyle).toMatchObject({
+        fill: "#0000FF",
+        fontSize: "20px",
+        textDecoration: "underline",
+        underlineColor: "#0000FF",
+        underlineThickness: 1,
+        underlineOffset: 0,
+      });
+    });
+
+    it(`Should convert "textDecoration: 'overline'" into overline style properties.`, () => {
+      const overline: TextStyleExtended = {
+        textDecoration: "overline",
+        fill: "#000000",
+      };
+      const newStyle = style.convertDecorationToUnderlineProps(overline);
+
+      expect(newStyle).toMatchObject({
+        fill: "#000000",
+        textDecoration: "overline",
+        overlineColor: "#000000",
+        overlineThickness: 1,
+        overlineOffset: 0,
+      });
+    });
+
+    it(`Should convert "textDecoration: 'line-through'" into lineThrough style properties.`, () => {
+      const lineThrough: TextStyleExtended = {
+        textDecoration: "line-through",
+        fill: "#FF99FF",
+      };
+      const newStyle = style.convertDecorationToUnderlineProps(lineThrough);
+
+      expect(newStyle).toMatchObject({
+        textDecoration: "line-through",
+        lineThroughColor: "#FF99FF",
+        lineThroughThickness: 1,
+        lineThroughOffset: 0,
+      });
+    });
+
+    it(`Should convert "textDecoration" with multiple styles into multiple properties.`, () => {
+      const underOver: TextStyleExtended = {
+        textDecoration: "underline overline",
+        fill: "red",
+      };
+      const multi: TextStyleExtended = {
+        textDecoration: "underline overline line-through",
+        fill: "green",
+      };
+      expect(style.convertDecorationToUnderlineProps(underOver)).toMatchObject({
+        textDecoration: "underline overline",
+        fill: "red",
+        underlineColor: "red",
+        overlineColor: "red",
+        underlineThickness: 1,
+        overlineThickness: 1,
+        underlineOffset: 0,
+        overlineOffset: 0,
+      });
+      expect(style.convertDecorationToUnderlineProps(multi)).toMatchObject({
+        textDecoration: "underline overline line-through",
+        fill: "green",
+        underlineColor: "green",
+        overlineColor: "green",
+        lineThroughColor: "green",
+        underlineThickness: 1,
+        overlineThickness: 1,
+        lineThroughThickness: 1,
+        underlineOffset: 0,
+        overlineOffset: 0,
+        lineThroughOffset: 0,
+      });
+    });
+
+    it(`Should ignore 'normal' if there are multiple values`, () => {
+      const normalMulti: TextStyleExtended = {
+        textDecoration: "underline normal overline" as TextDecoration,
+        fill: "brown",
+      };
+      expect(
+        style.convertDecorationToUnderlineProps(normalMulti)
+      ).toMatchObject({
+        textDecoration: "underline normal overline",
+        fill: "brown",
+        underlineColor: "brown",
+        overlineColor: "brown",
+        underlineThickness: 1,
+        overlineThickness: 1,
+        underlineOffset: 0,
+        overlineOffset: 0,
+      });
+    });
+
+    it(`Shouldn't overwrite any properties that are already set explicitly`, () => {
+      const colorUnderline: TextStyleExtended = {
+        textDecoration: "underline" as TextDecoration,
+        fill: "#334433",
+        underlineColor: "#339933",
+      };
+      expect(
+        style.convertDecorationToUnderlineProps(colorUnderline)
+      ).toMatchObject({
+        textDecoration: "underline",
+        fill: "#334433",
+        underlineColor: "#339933",
+        underlineThickness: 1,
+        underlineOffset: 0,
+      });
+    });
+  });
+
+  // describe("extractUnderlines()" ()=> {
+  //   it ('')
+  //   it('Should convert text styles into UnderlineMetrics', () => {
+
+  //   });
 });
