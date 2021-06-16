@@ -103,11 +103,10 @@ export interface TextStyleExtended
   textDecoration?: TextDecoration;
 }
 
-export interface UnderlineMetrics {
+export interface TextDecorationMetrics {
   color: Color;
   bounds: Bounds;
 }
-export type Underlines = UnderlineMetrics[];
 
 export type TextStyleSet = Record<string, TextStyleExtended>;
 
@@ -162,6 +161,7 @@ export interface FinalToken {
   fontProperties: PIXI.IFontMetrics;
   style: TextStyleExtended;
   tags: string;
+  textDecorations?: TextDecorationMetrics[];
 }
 
 export const createEmptyFinalToken = (): FinalToken => ({
@@ -170,6 +170,7 @@ export const createEmptyFinalToken = (): FinalToken => ({
   fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
   style: {},
   tags: "",
+  textDecorations: [],
 });
 
 export type WordToken = FinalToken[];

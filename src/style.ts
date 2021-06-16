@@ -14,6 +14,10 @@ import {
   SpriteToken,
   isEmptyObject,
   TextDecorationValue,
+  Bounds,
+  TextDecorationMetrics,
+  Thickness,
+  Color,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";
@@ -214,4 +218,45 @@ export const convertDecorationToUnderlineProps = (
     ...mergeDecoration("overline"),
     ...mergeDecoration("line-through", "lineThrough"),
   };
+};
+
+export const extractDecorations = (
+  style: TextStyleExtended,
+  textBounds: Bounds,
+  fontProperties: PIXI.IFontMetrics
+): TextDecorationMetrics[] => {
+  const baseline = fontProperties.ascent;
+  const x = 0;
+  const width = textBounds.width;
+
+  function styleToMetrics(key: string): TextDecorationMetrics | undefined {
+    const color = style[`${key}Color`] as Color;
+    const height = style[`${key}Thickness`] as Thickness;
+    const offset = (style[`${key}Offset`] as number) ?? 0;
+
+    if (color === undefined || height === undefined) {
+      return undefined;
+    }
+
+    const y =
+      // position underline below baseline
+      key === "underline"
+        ? offset + baseline
+        : // position lineThrough in center of ascent
+        key === "lineThrough"
+        ? offset + baseline / 2
+        : // else, position overline at top of text
+          offset;
+
+    return {
+      color,
+      bounds: { x, y, width, height },
+    };
+  }
+
+  const keySuffices = ["underline", "overline", "lineThrough"];
+  const metrics = keySuffices
+    .map(styleToMetrics)
+    .filter((x) => x !== undefined) as TextDecorationMetrics[];
+  return metrics;
 };

@@ -1,3 +1,4 @@
+import { extractDecorations } from "./style";
 import { capitalize } from "./stringUtil";
 import {
   last,
@@ -640,12 +641,19 @@ export const calculateFinalTokens = (
               fontProperties.ascent + fontProperties.descent;
           }
 
+          const textDecorations = extractDecorations(
+            style,
+            bounds,
+            fontProperties
+          );
+
           return {
             content: str,
             style,
             tags,
             bounds,
             fontProperties,
+            textDecorations,
           };
         });
 
@@ -677,6 +685,7 @@ export const calculateFinalTokens = (
           tags,
           bounds,
           fontProperties,
+          textDecorations: [],
         });
       } else {
         // token is a composite

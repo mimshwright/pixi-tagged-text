@@ -664,9 +664,90 @@ describe("style module", () => {
     });
   });
 
-  // describe("extractUnderlines()" ()=> {
-  //   it ('')
-  //   it('Should convert text styles into UnderlineMetrics', () => {
+  describe("extractDecorations()", () => {
+    describe("it should convert text styles into TextDecorationMetrics", () => {
+      const wordBounds = { x: 0, y: 0, width: 100, height: 30 };
+      const fontProps = { ascent: 24, descent: 6, fontSize: 30 };
+      const color = "#339933";
+      const thickness = 2;
+      const offset = 1;
 
-  //   });
+      const colorUnderline: TextStyleExtended = {
+        fontSize: 12,
+        fill: "#334433",
+        underlineColor: color,
+        underlineThickness: thickness,
+        underlineOffset: offset,
+      };
+
+      const overline: TextStyleExtended = {
+        overlineColor: color,
+        overlineThickness: thickness,
+        overlineOffset: offset,
+      };
+      const lineThrough: TextStyleExtended = {
+        lineThroughColor: color,
+        lineThroughThickness: thickness,
+        lineThroughOffset: offset,
+      };
+
+      it("Should convert underline styles correctly.", () => {
+        const metrics = style.extractDecorations(
+          colorUnderline,
+          wordBounds,
+          fontProps
+        );
+
+        expect(metrics).toHaveLength(1);
+        expect(metrics[0]).toHaveProperty(
+          "color",
+          colorUnderline.underlineColor
+        );
+        expect(metrics[0].bounds).toHaveProperty("height", 2);
+        expect(metrics[0].bounds).toHaveProperty("width", wordBounds.width);
+        expect(metrics[0].bounds).toHaveProperty("x", 0);
+        expect(metrics[0].bounds).toHaveProperty("y", fontProps.ascent + 1);
+      });
+      describe("It should position the line at the correct y position.", () => {
+        it("Should position underline below the baseline.", () => {
+          const metrics = style.extractDecorations(
+            colorUnderline,
+            wordBounds,
+            fontProps
+          );
+          expect(metrics[0].bounds).toHaveProperty(
+            "y",
+            fontProps.ascent + offset
+          );
+        });
+        it("Should position overline above the ascent.", () => {
+          const metrics = style.extractDecorations(
+            overline,
+            wordBounds,
+            fontProps
+          );
+          expect(metrics[0].bounds).toHaveProperty("y", 0 + offset);
+        });
+        it("Should position lineThrough halfway above the baseline.", () => {
+          const metrics = style.extractDecorations(
+            lineThrough,
+            wordBounds,
+            fontProps
+          );
+          expect(metrics[0].bounds).toHaveProperty(
+            "y",
+            fontProps.ascent / 2 + offset
+          );
+        });
+      });
+      it("Should convert a style without decoration into an empty array.", () => {
+        const noDecoration = style.extractDecorations(
+          {},
+          wordBounds,
+          fontProps
+        );
+        expect(noDecoration).toHaveLength(0);
+      });
+    });
+  });
 });

@@ -4,7 +4,7 @@ export const measureFont = (
   context: CanvasRenderingContext2D
 ): PIXI.IFontMetrics => PIXI.TextMetrics.measureFont(context.font);
 
-export const INITIAL_FONT_PROPS = {
+export const INITIAL_FONT_PROPS: PIXI.IFontMetrics = {
   ascent: 10,
   descent: 3,
   fontSize: 13,

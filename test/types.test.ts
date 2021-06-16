@@ -7,23 +7,30 @@ import {
   isWhitespaceToken,
   isNewline,
   isNewlineToken,
+  TextFinalToken,
+  SpriteFinalToken,
 } from "./../src/types";
 
 describe("Type validation", () => {
   const textToken = {
     content: "Hello",
     bounds: { ...new PIXI.Rectangle() },
-    fontProperties: { ascent: 10, descent: 3, fontSize: 13 },
+    fontProperties: {
+      ascent: 10,
+      descent: 3,
+      fontSize: 13,
+    },
     style: {},
     tags: "img",
-  };
+    textDecorations: [],
+  } as TextFinalToken;
   const spriteToken = {
     content: new PIXI.Sprite(),
     bounds: { ...new PIXI.Rectangle() },
     fontProperties: { ascent: 10, descent: 3, fontSize: 13 },
     style: {},
     tags: "img",
-  };
+  } as SpriteFinalToken;
 
   const spaceToken = { ...textToken, content: " " };
   const multispaceToken = { ...textToken, content: " " };
