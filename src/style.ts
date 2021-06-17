@@ -21,6 +21,7 @@ import {
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";
+import { DEFAULT_STYLE } from "./TaggedText";
 
 /**
  * Combine 2 styles into one.
@@ -145,6 +146,7 @@ export const mapTagsToStyles = (
       tags = pluck("tagName")(tagStack).join(",");
       // Merge all tags into a style object.
       style = getStyleForTags(tagStack, styles, styleCache);
+      style = convertDecorationToUnderlineProps(style);
     }
 
     const styledToken: StyledToken = {
@@ -191,6 +193,7 @@ export const convertDecorationToUnderlineProps = (
   style: TextStyleExtended
 ): TextStyleExtended => {
   const { textDecoration } = style;
+  const defaultColor = style.fill || DEFAULT_STYLE.fill;
   if (textDecoration === undefined || textDecoration === "normal") {
     return style;
   }
@@ -202,7 +205,7 @@ export const convertDecorationToUnderlineProps = (
     if (style.textDecoration?.includes(decorationLineType)) {
       return {
         [`${decorationLineTypeCamelCase}Color`]:
-          style[`${decorationLineTypeCamelCase}Color`] ?? style.fill,
+          style[`${decorationLineTypeCamelCase}Color`] ?? defaultColor,
         [`${decorationLineTypeCamelCase}Thickness`]:
           style[`${decorationLineTypeCamelCase}Thickness`] ?? 1,
         [`${decorationLineTypeCamelCase}Offset`]:
@@ -225,9 +228,12 @@ export const extractDecorations = (
   textBounds: Bounds,
   fontProperties: PIXI.IFontMetrics
 ): TextDecorationMetrics[] => {
-  const baseline = fontProperties.ascent;
+  const { ascent, descent } = fontProperties;
+  const baseline = ascent;
+  const ascender = descent;
+  const xHeight = baseline - ascender;
+  const { width } = textBounds;
   const x = 0;
-  const width = textBounds.width;
 
   function styleToMetrics(key: string): TextDecorationMetrics | undefined {
     const color = style[`${key}Color`] as Color;
@@ -238,15 +244,15 @@ export const extractDecorations = (
       return undefined;
     }
 
-    const y =
+    let y = offset;
+    if (key === "underline") {
       // position underline below baseline
-      key === "underline"
-        ? offset + baseline
-        : // position lineThrough in center of ascent
-        key === "lineThrough"
-        ? offset + baseline / 2
-        : // else, position overline at top of text
-          offset;
+      y += baseline + descent / 2;
+    } else if (key === "lineThrough") {
+      // position lineThrough in center of ascent
+      y += ascender + xHeight / 2;
+    }
+    // else, position overline at top of text
 
     return {
       color,

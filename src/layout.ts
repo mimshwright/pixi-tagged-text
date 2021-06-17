@@ -685,7 +685,7 @@ export const calculateFinalTokens = (
           tags,
           bounds,
           fontProperties,
-          textDecorations: [],
+          textDecorations: undefined,
         });
       } else {
         // token is a composite

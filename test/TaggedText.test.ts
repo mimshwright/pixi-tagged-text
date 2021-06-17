@@ -554,6 +554,64 @@ Line 4`);
         });
       });
     });
+    describe("textDecoration style", () => {
+      const t = new TaggedText(
+        `<u>underline</u>
+<o>overline</o>
+<lt>line-through</lt>
+<u><o>multi</o></u>
+`,
+        {
+          default: {
+            fill: 0x000000,
+          },
+          u: {
+            textDecoration: "underline",
+          },
+          o: {
+            textDecoration: "overline",
+          },
+          lt: {
+            textDecoration: "line-through",
+          },
+        }
+      );
+
+      it("Should not break the whole TaggedText object", () => {
+        expect(t).toBeDefined();
+        expect(t).toHaveProperty("textFields");
+        expect(t).toHaveProperty("decorations");
+      });
+
+      it("Should create underline objects for each case where there is a line drawn.", () => {
+        // fixme: I actually expected this to be 5 since ther eare two lines drawn on the multi line.
+        expect(t.decorations).toHaveLength(4);
+      });
+
+      it("Should add the decorations as children to the text field.", () => {
+        const { textFields } = t;
+        expect(textFields[0].children).toHaveLength(1);
+        expect(textFields[0].getChildAt(0)).toBeInstanceOf(PIXI.Graphics);
+      });
+
+      it('Should throw an error if you try to use a color name like "red" for the underline.', () => {
+        expect(() => {
+          new TaggedText("a <b>c</b> d", {
+            b: { underlineColor: "red", textDecoration: "underline" },
+          });
+        }).toThrow();
+      });
+
+      it("If the default style is empty, use the default text color (black)", () => {
+        const noDefault = new TaggedText("<a>a</a>", {
+          a: { textDecoration: "underline" },
+        });
+        const decMetrics = noDefault.tokens[0][0][0].textDecorations;
+        expect(noDefault.decorations).toHaveLength(1);
+        expect(decMetrics).toHaveLength(1);
+        expect(decMetrics?.[0].color).toBe(0x000000);
+      });
+    });
   });
 
   describe("styles", () => {
@@ -606,10 +664,10 @@ Line 4`);
     });
   });
 
-  describe("Children", () => {
+  describe("Child display-object containers and references to children", () => {
     const t = new TaggedText(
-      "a b c <icon/>",
-      {},
+      "<u>a</u> b c <icon/>",
+      { u: { textDecoration: "underline" } },
       { imgMap: { icon }, debug: true }
     );
     it("Should have a child called textContainer that displays the text fields", () => {
@@ -619,8 +677,8 @@ Line 4`);
     });
     it("Should have a child called spriteContainer that displays the sprites", () => {
       expect(t.spriteContainer).toBeDefined();
-      // expect(t.spriteContainer.children).toHaveLength(3);
-      // expect(t.spriteContainer.getChildAt(0)).toBeInstanceOf(PIXI.Sprite);
+      expect(t.spriteContainer.children).toHaveLength(1);
+      expect(t.spriteContainer.getChildAt(0)).toBeInstanceOf(PIXI.Sprite);
     });
     it("Should have a child called debugContainer that displays the debug info", () => {
       expect(t.debugContainer).toBeDefined();
@@ -631,6 +689,15 @@ Line 4`);
       expect(t.textFields).toBeDefined();
       expect(t.textFields).toHaveLength(3);
       expect(t.textFields[0]).toBeInstanceOf(PIXI.Text);
+    });
+    it("Text field should contain its own underline.", () => {
+      expect(t.textFields[0].children).toHaveLength(1);
+      expect(t.textFields[0].getChildAt(0)).toBeInstanceOf(PIXI.Graphics);
+    });
+    it("should have a property decorations that is a list of text decorations (aka underlines)", () => {
+      expect(t.decorations).toBeDefined();
+      //   expect(t.decorations).toHaveLength(1);
+      //   expect(t.decorations[0]).toBeInstanceOf(PIXI.Graphics);
     });
     it("Should have a property sprites that is a list of sprites", () => {
       expect(t.sprites).toBeDefined();
