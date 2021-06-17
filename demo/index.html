@@ -313,34 +313,47 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
           <script>
             // underline
             const underlineText = `<h1>Underline, overline and strikethru:</h1>
-<code>textStyle: "underline"</code>
+<code>textDecoration: "underline"</code>
 <underline>A cumque ea quia vel.</underline>
 
-<code>textStyle: "overline"</code>
+<code>textDecoration: "overline"</code>
 <overline>Est labore quibusdam laborum facere.</overline>
 
-<code>textStyle: "line-through"</code>
+<code>textDecoration: "line-through"</code>
 <lineThrough>Veritatis aut ducimus occaecati illo.</lineThrough>
 
-<code>textStyle: "underline overline"</code>
+<code>underlineThickness, underlineOffset, underlineColor</code>
+<underlineCustom>Est labore quibusdam laborum facere.</underlineCustom>
+
+<code>textDecoration: "underline overline"</code>
 <underOver>maiores fugiat quae voluptas eaque modi.</underOver>
 
-<code>line thickness, color, offset</code>
+<code>nested tags (note, textDecoration will override in nested styles)</code>
+<overline><underlineCustom><purple>maiores fugiat quae voluptas eaque modi.</purple></underlineCustom></overline>
+
+<code>multiple custom decorations</code>
 <custom>consequuntur odit in excepturi</custom>`;
             const underlineStyle = {
               default: {
                 fontFamily: "Arial",
-                fontSize: "24px",
+                fontSize: "22px",
                 align: "center",
               },
               h1: { fill: "#CCCCCC" },
               code: { fontFamily: "courier", fontSize: 12, fill: "#FFFFFF" },
+              purple: { fill: "#6600FF" },
               underline: { textDecoration: "underline", fill: "#FF0000" },
-              overline: { textDecoration: "overline", fill: "#66FF66" },
+              overline: { textDecoration: "overline", fill: "#FFFF00" },
               lineThrough: { textDecoration: "line-through", fill: "#0066FF" },
               underOver: {
                 textDecoration: "underline overline",
                 fill: "#FF9900",
+              },
+              underlineCustom: {
+                underlineThickness: 3,
+                underlineOffset: 4,
+                underlineColor: "#FF00FF",
+                fill: "#66FF66",
               },
               custom: {
                 fill: "#FFCCFF",
@@ -356,7 +369,9 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               },
             };
 
-            let underline = new TaggedText(underlineText, underlineStyle);
+            let underline = new TaggedText(underlineText, underlineStyle, {
+              drawWhitespace: true,
+            });
 
             createDemo("underline", underline);
           </script>

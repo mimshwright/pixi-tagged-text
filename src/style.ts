@@ -146,7 +146,7 @@ export const mapTagsToStyles = (
       tags = pluck("tagName")(tagStack).join(",");
       // Merge all tags into a style object.
       style = getStyleForTags(tagStack, styles, styleCache);
-      style = convertDecorationToUnderlineProps(style);
+      style = convertDecorationToLineProps(style);
     }
 
     const styledToken: StyledToken = {
@@ -189,7 +189,7 @@ export const mapTagsToStyles = (
   return convertTagTokenToStyledToken(tokens) as StyledTokens;
 };
 
-export const convertDecorationToUnderlineProps = (
+export const convertDecorationToLineProps = (
   style: TextStyleExtended
 ): TextStyleExtended => {
   const { textDecoration } = style;

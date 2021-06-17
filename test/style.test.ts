@@ -532,14 +532,14 @@ describe("style module", () => {
     });
   });
 
-  describe("convertDecorationToUnderlineProps()", () => {
+  describe("convertDecorationToLineProps()", () => {
     it(`Should not alter "textDecoration: 'normal'".`, () => {
       const normal: TextStyleExtended = {
         textDecoration: "normal",
         fill: "#999999",
         fontSize: "12px",
       };
-      const newStyle = style.convertDecorationToUnderlineProps(normal);
+      const newStyle = style.convertDecorationToLineProps(normal);
 
       expect(newStyle).toMatchObject(normal);
     });
@@ -550,7 +550,7 @@ describe("style module", () => {
         fill: "#0000FF",
         fontSize: "20px",
       };
-      const newStyle = style.convertDecorationToUnderlineProps(underline);
+      const newStyle = style.convertDecorationToLineProps(underline);
 
       expect(newStyle).toMatchObject({
         fill: "#0000FF",
@@ -567,7 +567,7 @@ describe("style module", () => {
         textDecoration: "overline",
         fill: "#000000",
       };
-      const newStyle = style.convertDecorationToUnderlineProps(overline);
+      const newStyle = style.convertDecorationToLineProps(overline);
 
       expect(newStyle).toMatchObject({
         fill: "#000000",
@@ -583,7 +583,7 @@ describe("style module", () => {
         textDecoration: "line-through",
         fill: "#FF99FF",
       };
-      const newStyle = style.convertDecorationToUnderlineProps(lineThrough);
+      const newStyle = style.convertDecorationToLineProps(lineThrough);
 
       expect(newStyle).toMatchObject({
         textDecoration: "line-through",
@@ -602,7 +602,7 @@ describe("style module", () => {
         textDecoration: "underline overline line-through",
         fill: "green",
       };
-      expect(style.convertDecorationToUnderlineProps(underOver)).toMatchObject({
+      expect(style.convertDecorationToLineProps(underOver)).toMatchObject({
         textDecoration: "underline overline",
         fill: "red",
         underlineColor: "red",
@@ -612,7 +612,7 @@ describe("style module", () => {
         underlineOffset: 0,
         overlineOffset: 0,
       });
-      expect(style.convertDecorationToUnderlineProps(multi)).toMatchObject({
+      expect(style.convertDecorationToLineProps(multi)).toMatchObject({
         textDecoration: "underline overline line-through",
         fill: "green",
         underlineColor: "green",
@@ -632,9 +632,7 @@ describe("style module", () => {
         textDecoration: "underline normal overline" as TextDecoration,
         fill: "brown",
       };
-      expect(
-        style.convertDecorationToUnderlineProps(normalMulti)
-      ).toMatchObject({
+      expect(style.convertDecorationToLineProps(normalMulti)).toMatchObject({
         textDecoration: "underline normal overline",
         fill: "brown",
         underlineColor: "brown",
@@ -652,9 +650,7 @@ describe("style module", () => {
         fill: "#334433",
         underlineColor: "#339933",
       };
-      expect(
-        style.convertDecorationToUnderlineProps(colorUnderline)
-      ).toMatchObject({
+      expect(style.convertDecorationToLineProps(colorUnderline)).toMatchObject({
         textDecoration: "underline",
         fill: "#334433",
         underlineColor: "#339933",
@@ -668,7 +664,7 @@ describe("style module", () => {
         textDecoration: "underline",
         fontSize: "20px",
       };
-      const newStyle = style.convertDecorationToUnderlineProps(underline);
+      const newStyle = style.convertDecorationToLineProps(underline);
 
       expect(newStyle).toMatchObject({
         textDecoration: "underline",
