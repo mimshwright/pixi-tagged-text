@@ -8,7 +8,6 @@ import {
   AttributesList,
   ImageMap,
   IMG_SRC_PROPERTY,
-  IMG_DISPLAY_PROPERTY,
   FinalToken,
   isSpriteToken,
   TextFinalToken,
@@ -18,24 +17,18 @@ import {
   isWhitespaceToken,
   Point,
   ParagraphToken,
+  TextDecorationMetrics,
 } from "./types";
+import { capitalize } from "./stringUtil";
 import { calculateFinalTokens, getBoundsNested } from "./layout";
 import {
   combineAllStyles,
+  DEFAULT_STYLE,
   getStyleForTag as getStyleForTagExt,
   mapTagsToStyles,
 } from "./style";
 
-const DEFAULT_STYLE: TextStyleExtended = {
-  align: "left",
-  valign: "baseline",
-  [IMG_DISPLAY_PROPERTY]: "inline",
-  wordWrap: true,
-  wordWrapWidth: 500,
-  lineSpacing: 0,
-};
-
-const DEFAULT_OPTIONS: TaggedTextOptions = {
+export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debug: false,
   debugConsole: false,
   splitStyle: "words",
@@ -258,6 +251,10 @@ export default class TaggedText extends PIXI.Sprite {
   public get sprites(): PIXI.Sprite[] {
     return this._sprites;
   }
+  private _decorations: PIXI.Graphics[] = [];
+  public get decorations(): PIXI.Graphics[] {
+    return this._decorations;
+  }
   public get spriteTemplates(): PIXI.Sprite[] {
     return Object.values(this.options?.imgMap ?? {});
   }
@@ -268,6 +265,12 @@ export default class TaggedText extends PIXI.Sprite {
   public get textContainer(): PIXI.Container {
     return this._textContainer;
   }
+
+  private _decorationContainer: PIXI.Container;
+  public get decorationContainer(): PIXI.Container {
+    return this._decorationContainer;
+  }
+
   private _spriteContainer: PIXI.Container;
   public get spriteContainer(): PIXI.Container {
     return this._spriteContainer;
@@ -287,10 +290,12 @@ export default class TaggedText extends PIXI.Sprite {
 
     this._textContainer = new PIXI.Container();
     this._spriteContainer = new PIXI.Container();
+    this._decorationContainer = new PIXI.Container();
     this._debugContainer = new PIXI.Container();
 
     this.addChild(this._textContainer);
     this.addChild(this._spriteContainer);
+    this.addChild(this._decorationContainer);
     this.addChild(this._debugContainer);
 
     this.resetChildren();
@@ -318,9 +323,11 @@ export default class TaggedText extends PIXI.Sprite {
     this._debugContainer.removeChildren();
     this._textContainer.removeChildren();
     this._spriteContainer.removeChildren();
+    this._decorationContainer.removeChildren();
 
     this._textFields = [];
     this._sprites = [];
+    this._decorations = [];
   }
 
   /**
@@ -451,17 +458,27 @@ export default class TaggedText extends PIXI.Sprite {
       : // remove any tokens that are purely whitespace unless drawWhitespace is specified
         this.tokensFlat.filter(isNotWhitespaceToken);
 
+    let drewDecorations = false;
     let displayObject: PIXI.DisplayObject;
 
     tokens.forEach((t) => {
       if (isTextToken(t)) {
         displayObject = this.createTextFieldForToken(t as TextFinalToken);
-        this._textFields.push(displayObject as PIXI.Text);
         this.textContainer.addChild(displayObject);
+        this.textFields.push(displayObject as PIXI.Text);
+
+        if (t.textDecorations && t.textDecorations.length > 0) {
+          for (const d of t.textDecorations) {
+            const drawing = this.createDrawingForTextDecoration(d);
+            (displayObject as PIXI.Text).addChild(drawing);
+            this._decorations.push(drawing);
+          }
+          drewDecorations = true;
+        }
       }
       if (isSpriteToken(t)) {
         displayObject = t.content as PIXI.Sprite;
-        this._sprites.push(displayObject as PIXI.Sprite);
+        this.sprites.push(displayObject as PIXI.Sprite);
         this.spriteContainer.addChild(displayObject);
       }
 
@@ -470,14 +487,61 @@ export default class TaggedText extends PIXI.Sprite {
       displayObject.y = bounds.y;
     });
 
+    if (drawWhitespace === false && drewDecorations) {
+      console.warn(
+        "Warning: you may want to set the `drawWhitespace` option to `true` when using textDecoration (e.g. underlines) otherwise, spaces will not have text decorations."
+      );
+    }
+
     if (this.options.debug) {
       this.drawDebug();
     }
     this._needsDraw = false;
   }
 
+  private createDrawingForTextDecoration(
+    textDecoration: TextDecorationMetrics
+  ): PIXI.Graphics {
+    const { bounds } = textDecoration;
+    let { color } = textDecoration;
+    const drawing = new PIXI.Graphics();
+
+    if (typeof color === "string") {
+      if (color.indexOf("#") === 0) {
+        color = "0x" + color.substring(1);
+        color = parseInt(color, 16) as number;
+      } else {
+        throw new Error(
+          "Sorry, at this point, only hex colors are supported for textDecorations like underlines. Please use either a hex number like 0x66FF33 or a string like '#66FF33'"
+        );
+      }
+    }
+
+    drawing
+      .beginFill(color as number)
+      .drawRect(bounds.x, bounds.y, bounds.width, bounds.height)
+      .endFill();
+
+    return drawing;
+  }
+
   private createTextFieldForToken(token: TextFinalToken): PIXI.Text {
-    return new PIXI.Text(token.content, token.style);
+    const { textTransform = "" } = token.style;
+    let text = token.content;
+    switch (textTransform.toLowerCase()) {
+      case "lowercase":
+        text = text.toLowerCase();
+        break;
+      case "uppercase":
+        text = text.toUpperCase();
+        break;
+      case "capitalize":
+        text = capitalize(text);
+        break;
+      default:
+    }
+
+    return new PIXI.Text(text, token.style);
   }
 
   /**
@@ -565,10 +629,10 @@ export default class TaggedText extends PIXI.Sprite {
 
       if (this.defaultStyle.wordWrap) {
         const w = this.defaultStyle.wordWrapWidth ?? this.width;
-        g.endFill();
-        g.lineStyle(0.5, DEBUG.LINE_COLOR, 0.2);
-        g.drawRect(0, lineBounds.y, w, lineBounds.height);
-        g.endFill();
+        g.endFill()
+          .lineStyle(0.5, DEBUG.LINE_COLOR, 0.2)
+          .drawRect(0, lineBounds.y, w, lineBounds.height)
+          .endFill();
       }
 
       for (let wordNumber = 0; wordNumber < line.length; wordNumber++) {
@@ -591,11 +655,15 @@ export default class TaggedText extends PIXI.Sprite {
             isWhitespaceToken(segmentToken) &&
             this.options.drawWhitespace === false
           ) {
-            g.lineStyle(1, DEBUG.WHITESPACE_STROKE_COLOR, 1);
-            g.beginFill(DEBUG.WHITESPACE_COLOR, 0.2);
+            g.lineStyle(1, DEBUG.WHITESPACE_STROKE_COLOR, 1).beginFill(
+              DEBUG.WHITESPACE_COLOR,
+              0.2
+            );
           } else {
-            g.lineStyle(1, DEBUG.WORD_STROKE_COLOR, 1);
-            g.beginFill(DEBUG.WORD_FILL_COLOR, 0.2);
+            g.lineStyle(1, DEBUG.WORD_STROKE_COLOR, 1).beginFill(
+              DEBUG.WORD_FILL_COLOR,
+              0.2
+            );
           }
 
           if (isNewlineToken(segmentToken)) {
@@ -603,14 +671,14 @@ export default class TaggedText extends PIXI.Sprite {
               createInfoText("↩︎", { x, y: y + 10 })
             );
           } else {
-            g.lineStyle(0.5, DEBUG.LINE_COLOR, 0.2);
-            g.drawRect(x, y, width, height);
-            g.endFill();
+            g.lineStyle(0.5, DEBUG.LINE_COLOR, 0.2)
+              .drawRect(x, y, width, height)
+              .endFill()
 
-            g.lineStyle(1, DEBUG.BASELINE_COLOR, 1);
-            g.beginFill();
-            g.drawRect(x, baseline, width, 1);
-            g.endFill();
+              .lineStyle(1, DEBUG.BASELINE_COLOR, 1)
+              .beginFill()
+              .drawRect(x, baseline, width, 1)
+              .endFill();
           }
 
           let info;

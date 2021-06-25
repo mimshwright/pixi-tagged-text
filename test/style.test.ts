@@ -4,6 +4,8 @@ import {
   TextStyleSet,
   StyledToken,
   TextStyleExtended,
+  FontStyle,
+  TextDecoration,
 } from "./../src/types";
 import * as style from "../src/style";
 import iconSrc from "./icon.base64";
@@ -63,8 +65,8 @@ describe("style module", () => {
         fontWeight: "700",
       },
     };
-    const styles = {
-      em: { fontStyle: "italic" as const },
+    const styles: TextStyleSet = {
+      em: { fontStyle: "italic" },
     };
 
     it("should convert a tag with attributes into a style", () => {
@@ -78,8 +80,8 @@ describe("style module", () => {
   });
 
   describe("getStyleForTag()", () => {
-    const styles = {
-      em: { fontStyle: "italic" as const },
+    const styles: TextStyleSet = {
+      em: { fontStyle: "italic" },
     };
     it("should look up the style you asked for in the style tag list", () => {
       expect(style.getStyleForTag("em", styles)).toMatchObject(styles.em);
@@ -94,7 +96,7 @@ describe("style module", () => {
   describe("getStyleForTags()", () => {
     it("should combine several styles with attributes to create one style.", () => {
       const styleCache = {};
-      const tagStyles = {
+      const tagStyles: TextStyleSet = {
         default: {
           stroke: "#FF3399",
           strokeThickness: 2,
@@ -212,9 +214,9 @@ describe("style module", () => {
           },
         ],
       };
-      const styles = {
-        b: { fontSize: 24, fontWeight: "700" as const },
-        i: { fontStyle: "italic" as const },
+      const styles: TextStyleSet = {
+        b: { fontSize: 24, fontWeight: "700" },
+        i: { fontStyle: "italic" as FontStyle },
         default: defaultStyle,
       };
       const expected = {
@@ -249,8 +251,8 @@ describe("style module", () => {
     });
 
     it("Should convert deeply nested Tokens", () => {
-      const italic = { fontStyle: "italic" as const };
-      const styles = {
+      const italic = { fontStyle: "italic" as FontStyle };
+      const styles: TextStyleSet = {
         default: italic,
         a: { fontSize: 12 },
         b: { fontSize: 24 },
@@ -526,6 +528,237 @@ describe("style module", () => {
         expect(boldItalic.tags).toBe("b,i");
         expect(italicBold.style.fontFamily).toBe("Times");
         expect(boldItalic.style.fontFamily).toBe("Arial");
+      });
+    });
+  });
+
+  describe("convertDecorationToLineProps()", () => {
+    it(`Should not alter "textDecoration: 'normal'".`, () => {
+      const normal: TextStyleExtended = {
+        textDecoration: "normal",
+        fill: "#999999",
+        fontSize: "12px",
+      };
+      const newStyle = style.convertDecorationToLineProps(normal);
+
+      expect(newStyle).toMatchObject(normal);
+    });
+
+    it(`Should convert "textDecoration: 'underline'" into underline style properties.`, () => {
+      const underline: TextStyleExtended = {
+        textDecoration: "underline",
+        fill: "#0000FF",
+        fontSize: "20px",
+      };
+      const newStyle = style.convertDecorationToLineProps(underline);
+
+      expect(newStyle).toMatchObject({
+        fill: "#0000FF",
+        fontSize: "20px",
+        textDecoration: "underline",
+        underlineColor: "#0000FF",
+        underlineThickness: 1,
+        underlineOffset: 0,
+      });
+    });
+
+    it(`Should convert "textDecoration: 'overline'" into overline style properties.`, () => {
+      const overline: TextStyleExtended = {
+        textDecoration: "overline",
+        fill: "#000000",
+      };
+      const newStyle = style.convertDecorationToLineProps(overline);
+
+      expect(newStyle).toMatchObject({
+        fill: "#000000",
+        textDecoration: "overline",
+        overlineColor: "#000000",
+        overlineThickness: 1,
+        overlineOffset: 0,
+      });
+    });
+
+    it(`Should convert "textDecoration: 'line-through'" into lineThrough style properties.`, () => {
+      const lineThrough: TextStyleExtended = {
+        textDecoration: "line-through",
+        fill: "#FF99FF",
+      };
+      const newStyle = style.convertDecorationToLineProps(lineThrough);
+
+      expect(newStyle).toMatchObject({
+        textDecoration: "line-through",
+        lineThroughColor: "#FF99FF",
+        lineThroughThickness: 1,
+        lineThroughOffset: 0,
+      });
+    });
+
+    it(`Should convert "textDecoration" with multiple styles into multiple properties.`, () => {
+      const underOver: TextStyleExtended = {
+        textDecoration: "underline overline",
+        fill: "red",
+      };
+      const multi: TextStyleExtended = {
+        textDecoration: "underline overline line-through",
+        fill: "green",
+      };
+      expect(style.convertDecorationToLineProps(underOver)).toMatchObject({
+        textDecoration: "underline overline",
+        fill: "red",
+        underlineColor: "red",
+        overlineColor: "red",
+        underlineThickness: 1,
+        overlineThickness: 1,
+        underlineOffset: 0,
+        overlineOffset: 0,
+      });
+      expect(style.convertDecorationToLineProps(multi)).toMatchObject({
+        textDecoration: "underline overline line-through",
+        fill: "green",
+        underlineColor: "green",
+        overlineColor: "green",
+        lineThroughColor: "green",
+        underlineThickness: 1,
+        overlineThickness: 1,
+        lineThroughThickness: 1,
+        underlineOffset: 0,
+        overlineOffset: 0,
+        lineThroughOffset: 0,
+      });
+    });
+
+    it(`Should ignore 'normal' if there are multiple values`, () => {
+      const normalMulti: TextStyleExtended = {
+        textDecoration: "underline normal overline" as TextDecoration,
+        fill: "brown",
+      };
+      expect(style.convertDecorationToLineProps(normalMulti)).toMatchObject({
+        textDecoration: "underline normal overline",
+        fill: "brown",
+        underlineColor: "brown",
+        overlineColor: "brown",
+        underlineThickness: 1,
+        overlineThickness: 1,
+        underlineOffset: 0,
+        overlineOffset: 0,
+      });
+    });
+
+    it(`Shouldn't overwrite any properties that are already set explicitly`, () => {
+      const colorUnderline: TextStyleExtended = {
+        textDecoration: "underline" as TextDecoration,
+        fill: "#334433",
+        underlineColor: "#339933",
+      };
+      expect(style.convertDecorationToLineProps(colorUnderline)).toMatchObject({
+        textDecoration: "underline",
+        fill: "#334433",
+        underlineColor: "#339933",
+        underlineThickness: 1,
+        underlineOffset: 0,
+      });
+    });
+
+    it(`Should use a default color if there is no 'fill' set on the default style.`, () => {
+      const underline: TextStyleExtended = {
+        textDecoration: "underline",
+        fontSize: "20px",
+      };
+      const newStyle = style.convertDecorationToLineProps(underline);
+
+      expect(newStyle).toMatchObject({
+        textDecoration: "underline",
+        underlineColor: 0,
+        underlineThickness: 1,
+        underlineOffset: 0,
+      });
+    });
+  });
+
+  describe("extractDecorations()", () => {
+    describe("it should convert text styles into TextDecorationMetrics", () => {
+      const wordBounds = { x: 50, y: 30, width: 100, height: 30 };
+      const fontProps = { ascent: 24, descent: 6, fontSize: 30 };
+      const color = "#339933";
+      const thickness = 2;
+      const offset = 1;
+
+      const colorUnderline: TextStyleExtended = {
+        fontSize: 12,
+        fill: "#334433",
+        underlineColor: color,
+        underlineThickness: thickness,
+        underlineOffset: offset,
+      };
+
+      const overline: TextStyleExtended = {
+        overlineColor: color,
+        overlineThickness: thickness,
+        overlineOffset: offset,
+      };
+      const lineThrough: TextStyleExtended = {
+        lineThroughColor: color,
+        lineThroughThickness: thickness,
+        lineThroughOffset: offset,
+      };
+
+      it("Should convert underline styles correctly.", () => {
+        const metrics = style.extractDecorations(
+          colorUnderline,
+          wordBounds,
+          fontProps
+        );
+
+        expect(metrics).toHaveLength(1);
+        expect(metrics[0]).toHaveProperty(
+          "color",
+          colorUnderline.underlineColor
+        );
+        expect(metrics[0].bounds).toHaveProperty("height", 2);
+        expect(metrics[0].bounds).toHaveProperty("width", wordBounds.width);
+        expect(metrics[0].bounds).toHaveProperty("x", 0);
+      });
+      describe("It should position the line at the correct y position.", () => {
+        it("Should position underline below the baseline, halfway down the descender height.", () => {
+          const metrics = style.extractDecorations(
+            colorUnderline,
+            wordBounds,
+            fontProps
+          );
+
+          expect(metrics[0].bounds).toHaveProperty(
+            "y",
+            fontProps.ascent + offset + fontProps.descent / 2
+          );
+        });
+        it("Should position overline above the ascent.", () => {
+          const metrics = style.extractDecorations(
+            overline,
+            wordBounds,
+            fontProps
+          );
+          expect(metrics[0].bounds).toHaveProperty("y", 0 + offset);
+        });
+        it("Should position lineThrough halfway through the xHeight.", () => {
+          const metrics = style.extractDecorations(
+            lineThrough,
+            wordBounds,
+            fontProps
+          );
+          const xHeight = fontProps.ascent - fontProps.descent;
+          expect(metrics[0].bounds).toHaveProperty(
+            "y",
+            fontProps.ascent - xHeight / 2 + offset
+          );
+        });
+      });
+      it("Should convert a style without decoration into an empty array.", () => {
+        const noDecoration = style.extractDecorations(
+          {},
+          wordBounds,
+          fontProps
+        );
+        expect(noDecoration).toHaveLength(0);
       });
     });
   });

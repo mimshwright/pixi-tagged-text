@@ -1,3 +1,5 @@
+import { extractDecorations } from "./style";
+import { capitalize } from "./stringUtil";
 import {
   last,
   first,
@@ -614,7 +616,20 @@ export const calculateFinalTokens = (
         const textSegments = splitText(token, splitStyle);
 
         const textTokens = textSegments.map((str): FinalToken => {
-          sizer.text = str;
+          switch (style.textTransform) {
+            case "uppercase":
+              sizer.text = str.toUpperCase();
+              break;
+            case "lowercase":
+              sizer.text = str.toLowerCase();
+              break;
+            case "capitalize":
+              sizer.text = capitalize(str);
+              break;
+            default:
+              sizer.text = str;
+          }
+
           fontProperties = { ...getFontPropertiesOfText(sizer, true) };
           const bounds = rectFromContainer(sizer);
 
@@ -627,12 +642,19 @@ export const calculateFinalTokens = (
               fontProperties.ascent + fontProperties.descent;
           }
 
+          const textDecorations = extractDecorations(
+            style,
+            bounds,
+            fontProperties
+          );
+
           return {
             content: str,
             style,
             tags,
             bounds,
             fontProperties,
+            textDecorations,
           };
         });
 
@@ -664,6 +686,7 @@ export const calculateFinalTokens = (
           tags,
           bounds,
           fontProperties,
+          textDecorations: undefined,
         });
       } else {
         // token is a composite

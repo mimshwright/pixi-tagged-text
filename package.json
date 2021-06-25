@@ -1,6 +1,6 @@
 {
   "name": "pixi-tagged-text",
-  "version": "2.0.3",
+  "version": "2.1.2",
   "description": "TaggedText for pixi.js",
   "author": "Mims Wright, JT Smith, tleunen",
   "license": "MIT",
@@ -71,5 +71,6 @@
     "lint": "npm run prettier && npm run eslint",
     "prepare": "install-peers && husky install",
     "pre-commit": "npm run lint && npm run test"
-  }
+  },
+  "dependencies": {}
 }

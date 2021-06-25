@@ -1,7 +1,13 @@
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
-import { Align, SplitStyle, VAlign, ImageDisplayMode } from "../src/types";
+import {
+  Align,
+  SplitStyle,
+  VAlign,
+  ImageDisplayMode,
+  TextStyleSet,
+} from "../src/types";
 import iconSrc from "./icon.base64";
 
 describe("TaggedText", () => {
@@ -12,7 +18,7 @@ describe("TaggedText", () => {
   const texture = PIXI.Texture.from(iconImage, { width: 128, height: 128 });
   const icon = PIXI.Sprite.from(texture);
 
-  const style = {
+  const style: TextStyleSet = {
     default: {
       fontSize: 10,
       fontFamily: "arial",
@@ -485,6 +491,136 @@ Line 2`,
 Line 4`);
       });
     });
+
+    describe("textTransform style", () => {
+      const t = new TaggedText(
+        `control CONTROL
+<upper>upperCASE</upper>
+<lower>lowerCASE</lower>
+<capitalize>capitalized TEXT Text texT</capitalize>`,
+        {
+          upper: { textTransform: "uppercase" },
+          lower: { textTransform: "lowercase" },
+          capitalize: { textTransform: "capitalize" },
+        }
+      );
+      const { textFields, tokens } = t;
+      const [
+        control0,
+        control1,
+        upper,
+        lower,
+        capitalized0,
+        capitalized1,
+        capitalized2,
+        capitalized3,
+      ] = textFields;
+      const [
+        ,
+        [[upperToken]],
+        [[lowerToken]],
+        [[capitalizedToken0], , [capitalizedToken1]],
+      ] = tokens;
+      test("Control case", () => {
+        expect(control0).toHaveProperty("text", "control");
+        expect(control1).toHaveProperty("text", "CONTROL");
+      });
+      describe("textTransform: uppercase", () => {
+        it("Should convert the text to uppercase in the text field", () => {
+          expect(upper).toHaveProperty("text", "UPPERCASE");
+        });
+        it("Should not affect the tokens", () => {
+          expect(upperToken).toHaveProperty("content", "upperCASE");
+        });
+      });
+      describe("textTransform: lowercase", () => {
+        it("Should convert the text to lowercase in the text field", () => {
+          expect(lower).toHaveProperty("text", "lowercase");
+        });
+        it("Should not affect the tokens", () => {
+          expect(lowerToken).toHaveProperty("content", "lowerCASE");
+        });
+      });
+      describe("textTransform: capitalize", () => {
+        it("Should capitalize text in the text field", () => {
+          expect(capitalized0).toHaveProperty("text", "Capitalized");
+          expect(capitalized1).toHaveProperty("text", "TEXT");
+          expect(capitalized2).toHaveProperty("text", "Text");
+          expect(capitalized3).toHaveProperty("text", "TexT");
+        });
+        it("Should not affect the tokens", () => {
+          expect(capitalizedToken0).toHaveProperty("content", "capitalized");
+          expect(capitalizedToken1).toHaveProperty("content", "TEXT");
+        });
+      });
+    });
+    describe("textDecoration style", () => {
+      const t = new TaggedText(
+        `<u>underline</u>
+<o>overline</o>
+<lt>line-through</lt>
+<u><o>multi</o></u>
+`,
+        {
+          default: {
+            fill: 0x000000,
+          },
+          u: {
+            textDecoration: "underline",
+          },
+          o: {
+            textDecoration: "overline",
+          },
+          lt: {
+            textDecoration: "line-through",
+          },
+        },
+        { drawWhitespace: true }
+      );
+
+      it("Should not break the whole TaggedText object", () => {
+        expect(t).toBeDefined();
+        expect(t).toHaveProperty("textFields");
+        expect(t).toHaveProperty("decorations");
+      });
+
+      it("Should create underline objects for each case where there is a line drawn.", () => {
+        // fixme: I actually expected this to be 5 since ther eare two lines drawn on the multi line.
+        expect(t.decorations).toHaveLength(4);
+      });
+
+      it("Should add the decorations as children to the text field.", () => {
+        const { textFields } = t;
+        expect(textFields[0].children).toHaveLength(1);
+        expect(textFields[0].getChildAt(0)).toBeInstanceOf(PIXI.Graphics);
+      });
+
+      it('Should throw an error if you try to use a color name like "red" for the underline.', () => {
+        expect(() => {
+          new TaggedText(
+            "a <b>c</b> d",
+            {
+              b: { underlineColor: "red", textDecoration: "underline" },
+            },
+            { drawWhitespace: true }
+          );
+        }).toThrow();
+      });
+
+      it("If the default style is empty, use the default text color (black)", () => {
+        const noDefault = new TaggedText(
+          "<a>a</a>",
+          {
+            a: { textDecoration: "underline" },
+          },
+          { drawWhitespace: true }
+        );
+        const decMetrics = noDefault.tokens[0][0][0].textDecorations;
+        expect(noDefault.decorations).toHaveLength(1);
+        expect(decMetrics).toHaveLength(1);
+        expect(decMetrics?.[0].color).toBe(0x000000);
+      });
+    });
   });
 
   describe("styles", () => {
@@ -537,21 +673,21 @@ Line 4`);
     });
   });
 
-  describe("Children", () => {
+  describe("Child display-object containers and references to children", () => {
     const t = new TaggedText(
-      "a b c <icon/>",
-      {},
-      { imgMap: { icon }, debug: true }
+      "<u>a</u> b c <icon/>",
+      { u: { textDecoration: "underline" } },
+      { imgMap: { icon }, debug: true, drawWhitespace: true }
     );
     it("Should have a child called textContainer that displays the text fields", () => {
       expect(t.textContainer).toBeDefined();
-      expect(t.textContainer.children).toHaveLength(3);
+      expect(t.textContainer.children).toHaveLength(6);
       expect(t.textContainer.getChildAt(0)).toBeInstanceOf(PIXI.Text);
     });
     it("Should have a child called spriteContainer that displays the sprites", () => {
       expect(t.spriteContainer).toBeDefined();
-      // expect(t.spriteContainer.children).toHaveLength(3);
-      // expect(t.spriteContainer.getChildAt(0)).toBeInstanceOf(PIXI.Sprite);
+      expect(t.spriteContainer.children).toHaveLength(1);
+      expect(t.spriteContainer.getChildAt(0)).toBeInstanceOf(PIXI.Sprite);
     });
     it("Should have a child called debugContainer that displays the debug info", () => {
       expect(t.debugContainer).toBeDefined();
@@ -560,8 +696,17 @@ Line 4`);
     });
     it("Should have a property textFields that is a list of text fields", () => {
       expect(t.textFields).toBeDefined();
-      expect(t.textFields).toHaveLength(3);
+      expect(t.textFields).toHaveLength(6);
       expect(t.textFields[0]).toBeInstanceOf(PIXI.Text);
+    });
+    it("Text field should contain its own underline.", () => {
+      expect(t.textFields[0].children).toHaveLength(1);
+      expect(t.textFields[0].getChildAt(0)).toBeInstanceOf(PIXI.Graphics);
+    });
+    it("should have a property decorations that is a list of text decorations (aka underlines)", () => {
+      expect(t.decorations).toBeDefined();
+      //   expect(t.decorations).toHaveLength(1);
+      //   expect(t.decorations[0]).toBeInstanceOf(PIXI.Graphics);
     });
     it("Should have a property sprites that is a list of sprites", () => {
       expect(t.sprites).toBeDefined();
