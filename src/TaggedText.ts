@@ -8,7 +8,6 @@ import {
   AttributesList,
   ImageMap,
   IMG_SRC_PROPERTY,
-  IMG_DISPLAY_PROPERTY,
   FinalToken,
   isSpriteToken,
   TextFinalToken,
@@ -24,19 +23,10 @@ import { capitalize } from "./stringUtil";
 import { calculateFinalTokens, getBoundsNested } from "./layout";
 import {
   combineAllStyles,
+  DEFAULT_STYLE,
   getStyleForTag as getStyleForTagExt,
   mapTagsToStyles,
 } from "./style";
-
-export const DEFAULT_STYLE: TextStyleExtended = {
-  align: "left",
-  valign: "baseline",
-  [IMG_DISPLAY_PROPERTY]: "inline",
-  wordWrap: true,
-  wordWrapWidth: 500,
-  lineSpacing: 0,
-  fill: 0x000000,
-};
 
 export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debug: false,

@@ -5,6 +5,7 @@ import {
   TextStyleExtended,
   TextStyleSet,
   IMG_SRC_PROPERTY,
+  IMG_DISPLAY_PROPERTY,
   ImageMap,
   TextToken,
   TagToken,
@@ -21,7 +22,16 @@ import {
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";
-import { DEFAULT_STYLE } from "./TaggedText";
+
+export const DEFAULT_STYLE: TextStyleExtended = {
+  align: "left",
+  valign: "baseline",
+  [IMG_DISPLAY_PROPERTY]: "inline",
+  wordWrap: true,
+  wordWrapWidth: 500,
+  lineSpacing: 0,
+  fill: 0x000000,
+};
 
 /**
  * Combine 2 styles into one.
