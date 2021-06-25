@@ -574,7 +574,8 @@ Line 4`);
           lt: {
             textDecoration: "line-through",
           },
-        }
+        },
+        { drawWhitespace: true }
       );
 
       it("Should not break the whole TaggedText object", () => {
@@ -596,16 +597,24 @@ Line 4`);
 
       it('Should throw an error if you try to use a color name like "red" for the underline.', () => {
         expect(() => {
-          new TaggedText("a <b>c</b> d", {
-            b: { underlineColor: "red", textDecoration: "underline" },
-          });
+          new TaggedText(
+            "a <b>c</b> d",
+            {
+              b: { underlineColor: "red", textDecoration: "underline" },
+            },
+            { drawWhitespace: true }
+          );
         }).toThrow();
       });
 
       it("If the default style is empty, use the default text color (black)", () => {
-        const noDefault = new TaggedText("<a>a</a>", {
-          a: { textDecoration: "underline" },
-        });
+        const noDefault = new TaggedText(
+          "<a>a</a>",
+          {
+            a: { textDecoration: "underline" },
+          },
+          { drawWhitespace: true }
+        );
         const decMetrics = noDefault.tokens[0][0][0].textDecorations;
         expect(noDefault.decorations).toHaveLength(1);
         expect(decMetrics).toHaveLength(1);
@@ -668,11 +677,11 @@ Line 4`);
     const t = new TaggedText(
       "<u>a</u> b c <icon/>",
       { u: { textDecoration: "underline" } },
-      { imgMap: { icon }, debug: true }
+      { imgMap: { icon }, debug: true, drawWhitespace: true }
     );
     it("Should have a child called textContainer that displays the text fields", () => {
       expect(t.textContainer).toBeDefined();
-      expect(t.textContainer.children).toHaveLength(3);
+      expect(t.textContainer.children).toHaveLength(6);
       expect(t.textContainer.getChildAt(0)).toBeInstanceOf(PIXI.Text);
     });
     it("Should have a child called spriteContainer that displays the sprites", () => {
@@ -687,7 +696,7 @@ Line 4`);
     });
     it("Should have a property textFields that is a list of text fields", () => {
       expect(t.textFields).toBeDefined();
-      expect(t.textFields).toHaveLength(3);
+      expect(t.textFields).toHaveLength(6);
       expect(t.textFields[0]).toBeInstanceOf(PIXI.Text);
     });
     it("Text field should contain its own underline.", () => {

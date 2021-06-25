@@ -499,7 +499,7 @@ export default class TaggedText extends PIXI.Sprite {
 
     if (drawWhitespace === false && drewDecorations) {
       console.warn(
-        "Warning: you may want to set the `drawWhitespace` option to `true` when using textDecorations (e.g. underlines)."
+        "Warning: you may want to set the `drawWhitespace` option to `true` when using textDecoration (e.g. underlines) otherwise, spaces will not have text decorations."
       );
     }
 
