@@ -38,19 +38,29 @@ export const IMG_SRC_PROPERTY = "imgSrc";
 export const IMG_DISPLAY_PROPERTY = "imgDisplay";
 
 // todo: add text-transform: uppercase
-export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
-export type Align = "left" | "right" | "center" | "justify";
+export type Thickness = number;
 export type Color = string | number;
 export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
+export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
+export type Align = "left" | "right" | "center" | "justify";
 export type ImageDisplayMode = "icon" | "block" | "inline";
 export type ImageSource = string;
 export type ImageDimensionPercentage = string;
 export type ImageDimension = number | string | ImageDimensionPercentage;
+export type TextTransform = "normal" | "capitalize" | "uppercase" | "lowercase";
+export type FontStyle = "normal" | "italic" | "oblique";
+export type TextDecorationValue = "underline" | "overline" | "line-through";
+export type TextDecoration =
+  | "normal"
+  | TextDecorationValue
+  | `${TextDecorationValue} ${TextDecorationValue}`
+  | `${TextDecorationValue} ${TextDecorationValue} ${TextDecorationValue}`;
 
 export interface TextStyle
   extends Record<string, unknown>,
     Partial<PIXI.TextStyle> {
   align?: Align;
+  fontStyle?: FontStyle;
 }
 
 export interface ImageStyles {
@@ -63,9 +73,39 @@ export interface ImageStyles {
   imgHeight?: ImageDimension;
 }
 
-export interface TextStyleExtended extends TextStyle, ImageStyles {
+export interface UnderlineStyle {
+  underlineColor?: Color;
+  underlineThickness?: Thickness;
+  underlineOffset?: number;
+}
+export interface OverlineStyle {
+  overlineColor?: Color;
+  overlineThickness?: Thickness;
+  overlineOffset?: number;
+}
+export interface LineThroughStyle {
+  lineThroughColor?: Color;
+  lineThroughThickness?: Thickness;
+  lineThroughOffset?: number;
+}
+
+export interface TextDecorationStyles
+  extends UnderlineStyle,
+    OverlineStyle,
+    LineThroughStyle {}
+export interface TextStyleExtended
+  extends TextStyle,
+    ImageStyles,
+    TextDecorationStyles {
   lineSpacing?: number;
   valign?: VAlign;
+  textTransform?: TextTransform;
+  textDecoration?: TextDecoration;
+}
+
+export interface TextDecorationMetrics {
+  color: Color;
+  bounds: Bounds;
 }
 
 export type TextStyleSet = Record<string, TextStyleExtended>;
@@ -121,6 +161,7 @@ export interface FinalToken {
   fontProperties: PIXI.IFontMetrics;
   style: TextStyleExtended;
   tags: string;
+  textDecorations?: TextDecorationMetrics[];
 }
 
 export const createEmptyFinalToken = (): FinalToken => ({
@@ -129,6 +170,7 @@ export const createEmptyFinalToken = (): FinalToken => ({
   fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
   style: {},
   tags: "",
+  textDecorations: [],
 });
 
 export type WordToken = FinalToken[];

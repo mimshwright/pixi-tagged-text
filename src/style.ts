@@ -5,6 +5,7 @@ import {
   TextStyleExtended,
   TextStyleSet,
   IMG_SRC_PROPERTY,
+  IMG_DISPLAY_PROPERTY,
   ImageMap,
   TextToken,
   TagToken,
@@ -13,9 +14,24 @@ import {
   StyledToken,
   SpriteToken,
   isEmptyObject,
+  TextDecorationValue,
+  Bounds,
+  TextDecorationMetrics,
+  Thickness,
+  Color,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";
+
+export const DEFAULT_STYLE: TextStyleExtended = {
+  align: "left",
+  valign: "baseline",
+  [IMG_DISPLAY_PROPERTY]: "inline",
+  wordWrap: true,
+  wordWrapWidth: 500,
+  lineSpacing: 0,
+  fill: 0x000000,
+};
 
 /**
  * Combine 2 styles into one.
@@ -140,6 +156,7 @@ export const mapTagsToStyles = (
       tags = pluck("tagName")(tagStack).join(",");
       // Merge all tags into a style object.
       style = getStyleForTags(tagStack, styles, styleCache);
+      style = convertDecorationToLineProps(style);
     }
 
     const styledToken: StyledToken = {
@@ -180,4 +197,82 @@ export const mapTagsToStyles = (
   };
 
   return convertTagTokenToStyledToken(tokens) as StyledTokens;
+};
+
+export const convertDecorationToLineProps = (
+  style: TextStyleExtended
+): TextStyleExtended => {
+  const { textDecoration } = style;
+  const defaultColor = style.fill || DEFAULT_STYLE.fill;
+  if (textDecoration === undefined || textDecoration === "normal") {
+    return style;
+  }
+
+  function mergeDecoration(
+    decorationLineType: TextDecorationValue,
+    decorationLineTypeCamelCase: string = decorationLineType
+  ): Partial<TextStyleExtended> {
+    if (style.textDecoration?.includes(decorationLineType)) {
+      return {
+        [`${decorationLineTypeCamelCase}Color`]:
+          style[`${decorationLineTypeCamelCase}Color`] ?? defaultColor,
+        [`${decorationLineTypeCamelCase}Thickness`]:
+          style[`${decorationLineTypeCamelCase}Thickness`] ?? 1,
+        [`${decorationLineTypeCamelCase}Offset`]:
+          style[`${decorationLineTypeCamelCase}Offset`] ?? 0,
+      };
+    }
+    return {};
+  }
+
+  return {
+    ...style,
+    ...mergeDecoration("underline"),
+    ...mergeDecoration("overline"),
+    ...mergeDecoration("line-through", "lineThrough"),
+  };
+};
+
+export const extractDecorations = (
+  style: TextStyleExtended,
+  textBounds: Bounds,
+  fontProperties: PIXI.IFontMetrics
+): TextDecorationMetrics[] => {
+  const { ascent, descent } = fontProperties;
+  const baseline = ascent;
+  const ascender = descent;
+  const xHeight = baseline - ascender;
+  const { width } = textBounds;
+  const x = 0;
+
+  function styleToMetrics(key: string): TextDecorationMetrics | undefined {
+    const color = style[`${key}Color`] as Color;
+    const height = style[`${key}Thickness`] as Thickness;
+    const offset = (style[`${key}Offset`] as number) ?? 0;
+
+    if (color === undefined || height === undefined) {
+      return undefined;
+    }
+
+    let y = offset;
+    if (key === "underline") {
+      // position underline below baseline
+      y += baseline + descent / 2;
+    } else if (key === "lineThrough") {
+      // position lineThrough in center of ascent
+      y += ascender + xHeight / 2;
+    }
+    // else, position overline at top of text
+
+    return {
+      color,
+      bounds: { x, y, width, height },
+    };
+  }
+
+  const keySuffices = ["underline", "overline", "lineThrough"];
+  const metrics = keySuffices
+    .map(styleToMetrics)
+    .filter((x) => x !== undefined) as TextDecorationMetrics[];
+  return metrics;
 };

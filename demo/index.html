@@ -5,8 +5,8 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.8/pixi.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.9/pixi.js"></script>
 
     <!-- TaggedText -->
     <script src="../dist/pixi-tagged-text.umd.js"></script>
@@ -261,6 +261,122 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         </div>
       </div>
 
+      <div class="example">
+        <div class="code">
+          <h2>Text transformations and variations</h2>
+          <pre><code class="js">
+          </code></pre>
+        </div>
+        <div class="pixi" id="textTransform">
+          <script>
+            // textTransform
+            const textTransformText = `<h1>Text transformations:</h1>
+<code>textTransform: "lowercase"</code>
+<lower>lowerCASE text</lower>
+<code>textTransform: "uppercase"</code>
+<upper>upperCASE text</upper>
+<code>textTransform: "capitalize"</code>
+<capitalize>capitalized text</capitalize>
+<code>fontVariant: "small-caps"</code>
+<smallcaps>Small Caps</smallcaps>`;
+            const textTransformStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "24px",
+                fill: "#FFCC22",
+                align: "center",
+              },
+              h1: { fontSize: "36px", fill: "#CCCCCC" },
+              code: { fontFamily: "courier", fontSize: 12, fill: "#FFFFFF" },
+              upper: { textTransform: "uppercase" },
+              lower: { textTransform: "lowercase" },
+              capitalize: { textTransform: "capitalize" },
+              smallcaps: { fontVariant: "small-caps" },
+            };
+
+            let textTransform = new TaggedText(
+              textTransformText,
+              textTransformStyle
+            );
+
+            createDemo("textTransform", textTransform);
+          </script>
+        </div>
+      </div>
+      <div class="example">
+        <div class="code">
+          <h2>Underline, overline and Strikethru</h2>
+          <pre><code class="js">
+          </code></pre>
+        </div>
+        <div class="pixi" id="underline">
+          <script>
+            // underline
+            const underlineText = `<h1>Underline, overline and strikethru:</h1>
+<code>textDecoration: "underline"</code>
+<underline>A cumque ea quia vel.</underline>
+
+<code>textDecoration: "overline"</code>
+<overline>Est labore quibusdam laborum facere.</overline>
+
+<code>textDecoration: "line-through"</code>
+<lineThrough>Veritatis aut ducimus occaecati illo.</lineThrough>
+
+<code>underlineThickness, underlineOffset, underlineColor</code>
+<underlineCustom>Est labore quibusdam laborum facere.</underlineCustom>
+
+<code>textDecoration: "underline overline"</code>
+<underOver>maiores fugiat quae voluptas eaque modi.</underOver>
+
+<code>nested tags (note, textDecoration will override in nested styles)</code>
+<overline><underlineCustom><purple>maiores fugiat quae voluptas eaque modi.</purple></underlineCustom></overline>
+
+<code>multiple custom decorations</code>
+<custom>consequuntur odit in excepturi perspiciatis dolores commodi aliquam exercitationem at</custom>`;
+            const underlineStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "22px",
+                align: "center",
+              },
+              h1: { fill: "#CCCCCC" },
+              code: { fontFamily: "courier", fontSize: 12, fill: "#FFFFFF" },
+              purple: { fill: "#6600FF" },
+              underline: { textDecoration: "underline", fill: "#FF0000" },
+              overline: { textDecoration: "overline", fill: "#FFFF00" },
+              lineThrough: { textDecoration: "line-through", fill: "#0066FF" },
+              underOver: {
+                textDecoration: "underline overline",
+                fill: "#FF9900",
+              },
+              underlineCustom: {
+                underlineThickness: 3,
+                underlineOffset: 4,
+                underlineColor: "#FF00FF",
+                fill: "#66FF66",
+              },
+              custom: {
+                fill: "#FFCCFF",
+                textStyle: "italic",
+                underlineThickness: 4,
+                underlineColor: "#FFFF00",
+                underlineOffset: 5,
+                overlineColor: "#00FFFF",
+                overlineThickness: 4,
+                overlineOffset: -3,
+                lineThroughThickness: 2,
+                lineThroughColor: "#FF0000",
+              },
+            };
+
+            let underline = new TaggedText(underlineText, underlineStyle, {
+              drawWhitespace: true,
+            });
+
+            createDemo("underline", underline);
+          </script>
+        </div>
+      </div>
       <div class="example">
         <div class="code">
           <h2>Attributes</h2>
