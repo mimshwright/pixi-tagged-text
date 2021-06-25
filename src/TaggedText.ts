@@ -468,6 +468,7 @@ export default class TaggedText extends PIXI.Sprite {
       : // remove any tokens that are purely whitespace unless drawWhitespace is specified
         this.tokensFlat.filter(isNotWhitespaceToken);
 
+    let drewDecorations = false;
     let displayObject: PIXI.DisplayObject;
 
     tokens.forEach((t) => {
@@ -482,6 +483,7 @@ export default class TaggedText extends PIXI.Sprite {
             (displayObject as PIXI.Text).addChild(drawing);
             this._decorations.push(drawing);
           }
+          drewDecorations = true;
         }
       }
       if (isSpriteToken(t)) {
@@ -494,6 +496,12 @@ export default class TaggedText extends PIXI.Sprite {
       displayObject.x = bounds.x;
       displayObject.y = bounds.y;
     });
+
+    if (drawWhitespace === false && drewDecorations) {
+      console.warn(
+        "Warning: you may want to set the `drawWhitespace` option to `true` when using textDecorations (e.g. underlines)."
+      );
+    }
 
     if (this.options.debug) {
       this.drawDebug();
