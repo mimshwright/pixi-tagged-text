@@ -716,9 +716,11 @@ export const calculateFinalTokens = (
     generateFinalTokenFromStyledToken(style, tags)
   );
 
+  const { wordWrap: ww, wordWrapWidth: www } = defaultStyle;
+  const hasWordWrapWidth = www !== undefined && isNaN(www) === false && www > 0;
   const maxWidth =
-    (defaultStyle.wordWrap && defaultStyle.wordWrapWidth) ||
-    Number.POSITIVE_INFINITY;
+    ww && hasWordWrapWidth ? (www as number) : Number.POSITIVE_INFINITY;
+
   const lineSpacing = defaultStyle.lineSpacing ?? 0;
   const align = defaultStyle.align ?? "left";
 
