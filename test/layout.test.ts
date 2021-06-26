@@ -315,6 +315,120 @@ describe("layout module", () => {
       }).toThrow();
     });
 
+    describe("wordWrap and wordWrapWidth properties", () => {
+      describe("Should respect the wordWrap property", () => {
+        const lorem =
+          "Labore dolores possimus aut assumenda sequi quaerat. Ipsa numquam maiores voluptatem autem. Incidunt qui perferendis nesciunt et magni. Omnis quo excepturi.";
+        const longLine = 1000;
+
+        it("When wordWrap is true, use the wordWrapWidth to determine the maximum width of a line.", () => {
+          const wrap: StyledTokens = {
+            children: [lorem],
+            tags: "",
+            style: { wordWrap: true, wordWrapWidth: 300, fontSize: 16 },
+          };
+          const wrapTokens = layout.calculateFinalTokens(wrap);
+
+          expect(wrapTokens.length).toBeGreaterThan(1);
+
+          const wrapTokenBounds = layout.getBoundsNested(wrapTokens);
+          expect(wrapTokenBounds.width).toBeGreaterThan(200);
+          expect(wrapTokenBounds.width).toBeLessThanOrEqual(300);
+        });
+
+        it("When wordWrap is true, text can sometimes be larger than wordWrapWidth if a single word is very long.", () => {
+          const longWordsSmall: StyledTokens = {
+            children: ["abba bbabbabab abababbaba a"],
+            tags: "",
+            style: { wordWrap: true, wordWrapWidth: 300, fontSize: 32 },
+          };
+          const longWordsTokensSmall =
+            layout.calculateFinalTokens(longWordsSmall);
+
+          const longWordsLarge: StyledTokens = {
+            children: ["abba bbabbabab abababbaba a"],
+            tags: "",
+            style: { wordWrap: true, wordWrapWidth: 300, fontSize: 64 },
+          };
+          const longWordsTokensLarge =
+            layout.calculateFinalTokens(longWordsLarge);
+
+          expect(longWordsTokensSmall.length).toBe(2);
+          expect(longWordsTokensLarge.length).toBe(3);
+
+          expect(
+            layout.getBoundsNested(longWordsTokensSmall).width
+          ).toBeLessThanOrEqual(300);
+          expect(
+            layout.getBoundsNested(longWordsTokensLarge).width
+          ).toBeGreaterThan(300);
+        });
+
+        it("When wordWrap is true but wordWrapWidth is undefined, 0, negative, or NaN, it is unbounded.", () => {
+          const style = {
+            wordWrap: true,
+            wordWrapWidth: undefined,
+            fontSize: 100,
+          };
+          const negStyle = { ...style, wordWrapWidth: -1 };
+          const nanStyle = { ...style, wordWrapWidth: NaN };
+          const zeroStyle = { ...style, wordWrapWidth: 0 };
+
+          const base: StyledTokens = {
+            children: [lorem],
+            tags: "",
+            style,
+          };
+
+          const undefinedTokens = layout.calculateFinalTokens(base);
+          const negativeTokens = layout.calculateFinalTokens({
+            ...base,
+            ...{ style: negStyle },
+          });
+          const nanTokens = layout.calculateFinalTokens({
+            ...base,
+            ...{ style: nanStyle },
+          });
+          const zeroTokens = layout.calculateFinalTokens({
+            ...base,
+            ...{ style: zeroStyle },
+          });
+
+          expect(undefinedTokens).toHaveLength(1);
+          expect(negativeTokens).toHaveLength(1);
+          expect(nanTokens).toHaveLength(1);
+          expect(zeroTokens).toHaveLength(1);
+
+          expect(layout.getBoundsNested(undefinedTokens).width).toBeGreaterThan(
+            longLine
+          );
+          expect(layout.getBoundsNested(negativeTokens).width).toBeGreaterThan(
+            longLine
+          );
+          expect(layout.getBoundsNested(nanTokens).width).toBeGreaterThan(
+            longLine
+          );
+          expect(layout.getBoundsNested(zeroTokens).width).toBeGreaterThan(
+            longLine
+          );
+        });
+
+        it("When wordWrap is false, text can continue to grow horizontally indefinitely", () => {
+          const noWrap: StyledTokens = {
+            children: [lorem],
+            tags: "",
+            style: { wordWrap: false, fontSize: 100 },
+          };
+          const noWrapTokens = layout.calculateFinalTokens(noWrap);
+
+          // only one line because no wrapping
+          expect(noWrapTokens).toHaveLength(1);
+          const noWrapTokenBounds = layout.getBoundsNested(noWrapTokens);
+          expect(noWrapTokenBounds.width).toBeGreaterThanOrEqual(longLine);
+        });
+      });
+    });
+
     describe("Stroked text", () => {
       const line: StyledTokens = {
         children: [
