@@ -7,7 +7,8 @@ import {
   TagWithAttributes,
   AttributesList,
   ImageMap,
-  IMG_SRC_PROPERTY,
+  ImageSourceMap,
+  IMG_REFERENCE_PROPERTY,
   FinalToken,
   isSpriteToken,
   TextFinalToken,
@@ -18,6 +19,8 @@ import {
   Point,
   ParagraphToken,
   TextDecorationMetrics,
+  isSpriteSource,
+  isTextureSource,
 } from "./types";
 import { capitalize } from "./stringUtil";
 import { calculateFinalTokens, getBoundsNested } from "./layout";
@@ -185,12 +188,12 @@ export default class TaggedText extends PIXI.Sprite {
     // e.g. wordWrapWidth on a styel other than default.
 
     // Override some settings on default styles.
-    if (tag === "default" && this.defaultStyle[IMG_SRC_PROPERTY]) {
+    if (tag === "default" && this.defaultStyle[IMG_REFERENCE_PROPERTY]) {
       // prevents accidentally setting all text to images.
       console.error(
-        `Style "${IMG_SRC_PROPERTY}" can not be set on the "default" style because it will add images to EVERY tag!`
+        `Style "${IMG_REFERENCE_PROPERTY}" can not be set on the "default" style because it will add images to EVERY tag!`
       );
-      this.defaultStyle[IMG_SRC_PROPERTY] = undefined;
+      this.defaultStyle[IMG_REFERENCE_PROPERTY] = undefined;
     }
     // TODO: add a way to test for identical styles to prevent unnecessary updates.
     this._needsUpdate = true;
@@ -255,8 +258,9 @@ export default class TaggedText extends PIXI.Sprite {
   public get decorations(): PIXI.Graphics[] {
     return this._decorations;
   }
-  public get spriteTemplates(): PIXI.Sprite[] {
-    return Object.values(this.options?.imgMap ?? {});
+  private _spriteTemplates: ImageMap = {};
+  public get spriteTemplates(): ImageMap {
+    return this._spriteTemplates;
   }
   private _debugGraphics: PIXI.Graphics | null = null;
 
@@ -309,7 +313,7 @@ export default class TaggedText extends PIXI.Sprite {
     this.tagStyles = tagStyles;
 
     if (this.options.imgMap) {
-      this.registerImageMap(this.options.imgMap);
+      this.createSpriteTemplatesFromSourceMap(this.options.imgMap);
     }
 
     this.text = text;
@@ -335,8 +339,25 @@ export default class TaggedText extends PIXI.Sprite {
    * image Sprite objects which are included in the text.
    * @param imgMap
    */
-  private registerImageMap(imgMap: ImageMap) {
-    Object.entries(imgMap).forEach(([key, sprite]) => {
+  private createSpriteTemplatesFromSourceMap(imgMap: ImageSourceMap) {
+    this._spriteTemplates = {};
+
+    Object.entries(imgMap).forEach(([key, spriteSource]) => {
+      let sprite: PIXI.Sprite;
+      if (spriteSource instanceof PIXI.Sprite) {
+        sprite = spriteSource;
+      } else {
+        // if the entry is not a sprite, attempt to load the sprite as if it is a reference to the sprite source (e.g. an Image element, url, or texture).
+        if (isSpriteSource(spriteSource)) {
+          sprite = PIXI.Sprite.from(spriteSource);
+        } else if (isTextureSource(spriteSource)) {
+          sprite = PIXI.Sprite.from(PIXI.Texture.from(spriteSource));
+        } else {
+          throw new TypeError(
+            `The spriteSource provided for key ${key} was not in a valid format. Please use a Sprite, Texture, BaseTexture, string, HTMLImageElement, HTMLVideoElement, HTMLCanvasElement, or SVGElement`
+          );
+        }
+      }
       // Listen for changes to sprites (e.g. when they load.)
       const texture = sprite.texture;
       if (texture !== undefined) {
@@ -347,9 +368,11 @@ export default class TaggedText extends PIXI.Sprite {
         );
       }
 
+      this.spriteTemplates[key] = sprite;
+
       // create a style for each of these by default.
       const existingStyle = this.getStyleForTag(key) ?? {};
-      const style = { [IMG_SRC_PROPERTY]: key, ...existingStyle };
+      const style = { [IMG_REFERENCE_PROPERTY]: key, ...existingStyle };
       this.setStyleForTag(key, style);
     });
   }
@@ -392,7 +415,8 @@ export default class TaggedText extends PIXI.Sprite {
   public update(skipDraw?: boolean): ParagraphToken {
     // Determine default style properties
     const tagStyles = this.tagStyles;
-    const { imgMap, splitStyle } = this.options;
+    const { splitStyle } = this.options;
+    const spriteTemplates = this.options.imgMap && this.spriteTemplates;
     // const wordWrapWidth = this.defaultStyle.wordWrap
     //   ? this.defaultStyle.wordWrapWidth
     //   : Number.POSITIVE_INFINITY;
@@ -403,7 +427,11 @@ export default class TaggedText extends PIXI.Sprite {
     // Parse tags in the text.
     const tagTokensNew = parseTagsNew(this.text, Object.keys(this.tagStyles));
     // Assign styles to each segment.
-    const styledTokens = mapTagsToStyles(tagTokensNew, tagStyles, imgMap);
+    const styledTokens = mapTagsToStyles(
+      tagTokensNew,
+      tagStyles,
+      spriteTemplates
+    );
     styledTokens;
     // Measure font for each style
     // Measure each segment

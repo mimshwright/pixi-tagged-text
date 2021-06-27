@@ -18,14 +18,38 @@ export type Nested<T> = T | Array<Nested<T>>;
 
 ///// OPTIONS
 
+export type SpriteSource =
+  | string
+  | PIXI.Texture
+  | HTMLCanvasElement
+  | HTMLVideoElement;
+
+export type TextureSource =
+  | string
+  | HTMLImageElement
+  | HTMLCanvasElement
+  | HTMLVideoElement
+  | PIXI.BaseTexture;
+
+export type ImageSource = PIXI.Sprite | SpriteSource | TextureSource;
+
+export const isSpriteSource = (s: ImageSource): s is SpriteSource =>
+  typeof s === "string" ||
+  s instanceof PIXI.Texture ||
+  s instanceof HTMLCanvasElement ||
+  s instanceof HTMLVideoElement;
+export const isTextureSource = (s: ImageSource): s is TextureSource =>
+  s instanceof HTMLImageElement || s instanceof PIXI.BaseTexture;
+
+export type ImageSourceMap = Record<string, ImageSource>;
+export type ImageMap = Record<string, PIXI.Sprite>;
+
 export type SplitStyle = "words" | "characters";
-export type SpriteReference = PIXI.Sprite;
-export type ImageMap = Record<string, SpriteReference>;
 export interface TaggedTextOptions {
   debug?: boolean;
   debugConsole?: boolean;
   splitStyle?: SplitStyle;
-  imgMap?: ImageMap;
+  imgMap?: ImageSourceMap;
   skipUpdates?: boolean;
   skipDraw?: boolean;
   drawWhitespace?: boolean;
@@ -34,7 +58,7 @@ export interface TaggedTextOptions {
 ///// STYLE PROPERTIES
 
 // PROPERTY NAMES
-export const IMG_SRC_PROPERTY = "imgSrc";
+export const IMG_REFERENCE_PROPERTY = "imgSrc";
 export const IMG_DISPLAY_PROPERTY = "imgDisplay";
 
 // todo: add text-transform: uppercase
@@ -44,7 +68,7 @@ export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
 export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
 export type Align = "left" | "right" | "center" | "justify";
 export type ImageDisplayMode = "icon" | "block" | "inline";
-export type ImageSource = string;
+export type ImageReference = string;
 export type ImageDimensionPercentage = string;
 export type ImageDimension = number | string | ImageDimensionPercentage;
 export type TextTransform = "normal" | "capitalize" | "uppercase" | "lowercase";
@@ -64,7 +88,7 @@ export interface TextStyle
 }
 
 export interface ImageStyles {
-  [IMG_SRC_PROPERTY]?: ImageSource;
+  [IMG_REFERENCE_PROPERTY]?: ImageReference;
   [IMG_DISPLAY_PROPERTY]?: ImageDisplayMode;
   imgScale?: ImageDimensionPercentage;
   imgScaleX?: ImageDimensionPercentage;

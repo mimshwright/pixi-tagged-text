@@ -94,12 +94,16 @@ and <ms>multistyle</ms> text for
         <div class="pixi" id="img">
           <script>
             const thinking = PIXI.Sprite.from("./icon.png");
-            const doot = PIXI.Sprite.from("./doot.png");
+            const doot = PIXI.Texture.from("./doot.png");
+            const url = "100.png";
 
             const imgText = `<h2>Inline Images!</h2>
 Add an image.
-<img imgSrc="doot" imgDisplay="inline" /> <img imgSrc="thinking" imgDisplay="inline" /> Or...
-put an icon <thinking imgDisplay="icon" /> in there, bro!`;
+<img imgSrc="doot" imgDisplay="inline" /> <img imgSrc="thinking" imgDisplay="inline" />
+Or...
+put an icon <thinking imgDisplay="icon" /> in there, bro!
+
+You can even load from a URL <url /> (if you can figure out the CORS stuff!)`;
             const imgStyle = {
               default: {
                 fontFamily: "Arial",
@@ -115,12 +119,13 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               },
               img: {},
               icon: {},
+              url: { imgDisplay: "icon" },
             };
 
             const imgTaggedText = new TaggedText(imgText, imgStyle, {
               // debug: true,
               // debugConsole: true,
-              imgMap: { thinking, doot },
+              imgMap: { thinking, doot, url },
             });
 
             const imgApp = createDemo("img", imgTaggedText);
