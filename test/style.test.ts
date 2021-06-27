@@ -102,11 +102,11 @@ describe("style module", () => {
           strokeThickness: 2,
         },
         strong: {
-          fontWeight: "700",
+          fontWeight: "700" as const,
         },
-        em: { fontStyle: "italic" },
+        em: { fontStyle: "italic" as const },
         tiny: { fontSize: 1 },
-        blue: { fill: "blue", fontWeight: "normal" },
+        blue: { fill: "blue", fontWeight: "normal" as const },
       };
       const emTag = {
         tagName: "em",

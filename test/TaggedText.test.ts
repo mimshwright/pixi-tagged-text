@@ -24,8 +24,8 @@ describe("TaggedText", () => {
       fontSize: 10,
       fontFamily: "arial",
     },
-    b: { fontWeight: "bold" },
-    i: { fontStyle: "italic" },
+    b: { fontWeight: "bold" as const },
+    i: { fontStyle: "italic" as const },
   };
 
   const emptySpriteBounds = new PIXI.Rectangle(0, 0, 0, 0);
