@@ -4,7 +4,7 @@ import {
   TagWithAttributes,
   TextStyleExtended,
   TextStyleSet,
-  IMG_SRC_PROPERTY,
+  IMG_REFERENCE_PROPERTY,
   IMG_DISPLAY_PROPERTY,
   ImageMap,
   TextToken,
@@ -132,7 +132,7 @@ export const getStyleForTags = (
 export const mapTagsToStyles = (
   tokens: TagTokens,
   styles: TextStyleSet,
-  imgMap?: ImageMap
+  spriteTemplates?: ImageMap
 ): StyledTokens => {
   const defaultStyle: TextStyleExtended = styles.default ?? {};
   const tagStack: TagWithAttributes[] = [];
@@ -166,17 +166,17 @@ export const mapTagsToStyles = (
     };
 
     // If a matching sprite exits in the imgMap...
-    const imgKey = style[IMG_SRC_PROPERTY] ?? "";
+    const imgKey = style[IMG_REFERENCE_PROPERTY] ?? "";
     if (imgKey) {
-      if (imgMap === undefined) {
+      if (spriteTemplates === undefined) {
         throw new Error(
-          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but no imgMap was provided. Please include a valid Sprite in the imgMap property in the options in your TaggedText constructor.`
+          `An image tag with ${IMG_REFERENCE_PROPERTY}="${imgKey}" was encountered, but no imgMap was provided. Please include a valid Sprite in the imgMap property in the options in your TaggedText constructor.`
         );
       }
-      const sprite: SpriteToken | undefined = imgMap[imgKey];
+      const sprite: SpriteToken | undefined = spriteTemplates[imgKey];
       if (sprite === undefined) {
         throw new Error(
-          `An image tag with ${IMG_SRC_PROPERTY}="${imgKey}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your TaggedText constructor.`
+          `An image tag with ${IMG_REFERENCE_PROPERTY}="${imgKey}" was encountered, but there was no matching sprite in the sprite map. Please include a valid Sprite in the imgMap property in the options in your TaggedText constructor.`
         );
       }
       if (sprite instanceof PIXI.Sprite === false) {

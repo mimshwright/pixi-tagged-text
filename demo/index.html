@@ -94,12 +94,16 @@ and <ms>multistyle</ms> text for
         <div class="pixi" id="img">
           <script>
             const thinking = PIXI.Sprite.from("./icon.png");
-            const doot = PIXI.Sprite.from("./doot.png");
+            const doot = PIXI.Texture.from("./doot.png");
+            const url = "100.png";
 
             const imgText = `<h2>Inline Images!</h2>
 Add an image.
-<img imgSrc="doot" imgDisplay="inline" /> <img imgSrc="thinking" imgDisplay="inline" /> Or...
-put an icon <thinking imgDisplay="icon" /> in there, bro!`;
+<img imgSrc="doot" imgDisplay="inline" /> <img imgSrc="thinking" imgDisplay="inline" />
+Or...
+put an icon <thinking imgDisplay="icon" /> in there, bro!
+
+You can even load from a URL <url /> (if you can figure out the CORS stuff!)`;
             const imgStyle = {
               default: {
                 fontFamily: "Arial",
@@ -115,12 +119,13 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
               },
               img: {},
               icon: {},
+              url: { imgDisplay: "icon" },
             };
 
             const imgTaggedText = new TaggedText(imgText, imgStyle, {
               // debug: true,
               // debugConsole: true,
-              imgMap: { thinking, doot },
+              imgMap: { thinking, doot, url },
             });
 
             const imgApp = createDemo("img", imgTaggedText);
@@ -482,20 +487,35 @@ put an icon <thinking imgDisplay="icon" /> in there, bro!`;
         <div class="pixi" id="wrapping">
           <script>
             // Wrapping and Alignment
-            const wrappingText =
-              'Global word wrap and alignment properties are controlled by the "default" style, and can\'t be overridden by other styles.';
+            const wrappingText = `Global word wrap and alignment properties are controlled by the "default" style, and can\'t be overridden by other styles.`;
             const wrappingStyle = {
               default: {
                 fontFamily: "Arial",
                 fontSize: "24px",
-                fill: "#cccccc",
+                fill: "#CC6600",
                 wordWrap: true,
                 wordWrapWidth: 150,
                 align: "right",
               },
             };
             let wrapping = new TaggedText(wrappingText, wrappingStyle);
-            createDemo("wrapping", wrapping);
+
+            const nonWrappingText = `This one doesn't have \`wordWrap\` so it just keeps going and going and going off the edge!`;
+            const nonWrappingStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: "17px",
+                fill: "#669900",
+                wordWrap: false,
+                wordWrapWidth: 150,
+                align: "left",
+              },
+            };
+            let nonWrapping = new TaggedText(nonWrappingText, nonWrappingStyle);
+            nonWrapping.x = 30;
+            nonWrapping.y = 330;
+
+            createDemo("wrapping", wrapping).stage.addChild(nonWrapping);
           </script>
         </div>
       </div>

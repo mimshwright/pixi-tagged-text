@@ -11,12 +11,13 @@ import {
 import iconSrc from "./icon.base64";
 
 describe("TaggedText", () => {
+  const ICON_SRC = `data:image/png;base64,${iconSrc}`;
   const iconImage = new Image();
-  iconImage.src = `data:image/png;base64,${iconSrc}`;
+  iconImage.src = ICON_SRC;
   iconImage.width = 128;
   iconImage.height = 128;
-  const texture = PIXI.Texture.from(iconImage, { width: 128, height: 128 });
-  const icon = PIXI.Sprite.from(texture);
+  const iconTexture = PIXI.Texture.from(iconImage, { width: 128, height: 128 });
+  const icon = PIXI.Sprite.from(iconTexture);
 
   const style: TextStyleSet = {
     default: {
@@ -36,8 +37,8 @@ describe("TaggedText", () => {
       expect(iconImage.height).toBeGreaterThan(1);
     });
     test("Texture has loaded.", () => {
-      expect(texture.width).toBeGreaterThan(1);
-      expect(texture.height).toBeGreaterThan(1);
+      expect(iconTexture.width).toBeGreaterThan(1);
+      expect(iconTexture.height).toBeGreaterThan(1);
     });
     test("Sprite has loaded.", () => {
       expect(icon.width).toBeGreaterThan(1);
@@ -151,6 +152,61 @@ describe("TaggedText", () => {
             expect(icon0Sprite.height).toBe(icon1Sprite.height);
             expect(icon0Sprite.width).toBe(icon1Sprite.width);
           });
+        });
+
+        describe("imgSrc using non-Sprite references", () => {
+          it("Should load images from a Texture object", () => {
+            const texTest = new TaggedText(
+              "<icon />",
+              { icon: { imgDisplay: "icon" } },
+              { imgMap: { icon: iconTexture } }
+            );
+
+            const icon = texTest.tokensFlat[0];
+            expect(icon.bounds.height).toBeGreaterThan(1);
+            expect(texTest.spriteTemplates.icon).toBeInstanceOf(PIXI.Sprite);
+          });
+          it("Should load images from an HTMLImage object", () => {
+            const imgTest = new TaggedText(
+              "<icon />",
+              { icon: { imgDisplay: "icon" } },
+              { imgMap: { icon: iconImage } }
+            );
+
+            const icon = imgTest.tokensFlat[0];
+            expect(icon.bounds.height).toBeGreaterThan(1);
+            expect(imgTest.spriteTemplates.icon).toBeInstanceOf(PIXI.Sprite);
+          });
+          it("Should load images from a URL", () => {
+            const urlTest = new TaggedText(
+              "<img />",
+              {},
+              {
+                imgMap: { img: "./100.png" },
+              }
+            );
+
+            expect(urlTest.spriteTemplates).toHaveProperty("img");
+            expect(urlTest.spriteTemplates.img).toBeInstanceOf(PIXI.Sprite);
+            const img = urlTest.tokensFlat[0];
+            expect(img.bounds.height).toBeGreaterThanOrEqual(1);
+            expect(img.bounds.width).toBeGreaterThanOrEqual(1);
+          });
+
+          // todo: test HTMLVideoElement
+          // todo: test video URL
+          // todo: test HTMLCanvasElement
+          // todo: test BaseTexture
+        });
+
+        it("should throw if an imgSrc uses a bogus reference", () => {
+          expect(() => {
+            new TaggedText(
+              "<img />",
+              {},
+              { imgMap: { img: new Date() as unknown as string } }
+            );
+          }).toThrow();
         });
       });
 
@@ -713,10 +769,11 @@ Line 4`);
       expect(t.sprites).toHaveLength(1);
       expect(t.sprites[0]).toBeInstanceOf(PIXI.Sprite);
     });
-    it("Should have a property spriteTemplates that is a list of the original sprites from imgMap", () => {
+    it("Should have a property spriteTemplates that is a map of sprites created from the sources in imgMap. Each one is cloned before being drawn.", () => {
       expect(t.spriteTemplates).toBeDefined();
-      expect(t.spriteTemplates).toHaveLength(1);
-      expect(t.spriteTemplates[0]).toBeInstanceOf(PIXI.Sprite);
+      expect(t.spriteTemplates).toBeInstanceOf(Object);
+      const sprites = Object.values(t.spriteTemplates);
+      expect(sprites[0]).toBeInstanceOf(PIXI.Sprite);
     });
     it("spriteTemplates are not the same as the objects in sprites or spriteContainer, the latter are clones of the spriteTemplates.", () => {
       expect(t.spriteTemplates[0]).not.toBe(t.sprites[0]);
