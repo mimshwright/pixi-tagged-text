@@ -1,3 +1,5 @@
+// Note: some font pixel values are different when rendered in a browser (or Electron) vs using jsdom test environment.
+// In order to allow testing in multiple environments for IDE integration, I've made some of these value checks into ranges of 1 px instead.
 import {
   createEmptyFinalToken,
   FinalToken,
@@ -449,28 +451,39 @@ describe("layout module", () => {
       it("Shouldn't affect non-strked text. ", () => {
         expect(normal.content).toBe("A");
         expect(normal.style.strokeThickness ?? 0).toBe(0);
-        expect(normal.bounds.height).toBe(23);
-        expect(normal.fontProperties.ascent).toBe(18);
+        // Why greater than and less than? see line 1 of this file.
+        expect(normal.fontProperties.ascent).toBeGreaterThanOrEqual(18);
+        expect(normal.fontProperties.ascent).toBeLessThanOrEqual(19);
         expect(normal.fontProperties.descent).toBe(5);
-        expect(normal.fontProperties.fontSize).toBe(23);
+        expect(normal.fontProperties.fontSize).toBeGreaterThanOrEqual(23);
+        expect(normal.fontProperties.fontSize).toBeLessThanOrEqual(24);
+        expect(normal.bounds.height).toBe(normal.fontProperties.fontSize);
       });
 
       it("Should take the stroke into account when determining the size and the fontProperties (for baseline).", () => {
         expect(stroked.content).toBe("B");
         expect(stroked.style.strokeThickness).toBe(40);
-        expect(stroked.bounds.height).toBe(63);
-        expect(stroked.fontProperties.ascent).toBe(38);
+        // Why greater than and less than? see line 1 of this file.
+        expect(stroked.fontProperties.ascent).toBeGreaterThanOrEqual(38);
+        expect(stroked.fontProperties.ascent).toBeLessThanOrEqual(39);
         expect(stroked.fontProperties.descent).toBe(25);
-        expect(stroked.fontProperties.fontSize).toBe(63);
+        expect(stroked.fontProperties.fontSize).toBeGreaterThanOrEqual(63);
+        expect(stroked.fontProperties.fontSize).toBeLessThanOrEqual(64);
+        expect(stroked.bounds.height).toBe(stroked.fontProperties.fontSize);
       });
 
       it("Should not affect any other stroked text. Sometimes this happens when fontProperties are shared. ", () => {
         expect(alsoStroked.content).toBe("C");
         expect(alsoStroked.style.strokeThickness).toBe(40);
-        expect(alsoStroked.bounds.height).toBe(63);
-        expect(alsoStroked.fontProperties.ascent).toBe(38);
+        // Why greater than and less than? see line 1 of this file.
+        expect(alsoStroked.fontProperties.ascent).toBeGreaterThanOrEqual(38);
+        expect(alsoStroked.fontProperties.ascent).toBeLessThanOrEqual(39);
         expect(alsoStroked.fontProperties.descent).toBe(25);
-        expect(alsoStroked.fontProperties.fontSize).toBe(63);
+        expect(alsoStroked.fontProperties.fontSize).toBeGreaterThanOrEqual(63);
+        expect(alsoStroked.fontProperties.fontSize).toBeLessThanOrEqual(64);
+        expect(alsoStroked.bounds.height).toBe(
+          alsoStroked.fontProperties.fontSize
+        );
       });
     });
 

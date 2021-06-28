@@ -1,0 +1,3 @@
+{
+  "jest.jestCommandLine": "yarn jest -c jest.config.vscode.js"
+}
