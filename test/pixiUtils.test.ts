@@ -55,9 +55,12 @@ describe("pixiUtils", () => {
         fontFamily: "Arial",
       };
       const fontProps = pixiUtils.getFontPropertiesOfText(textField, true);
-      expect(fontProps.ascent).toBe(27);
+      // Why greater than and less than? see line 1 of this layout.test.ts
+      expect(fontProps.ascent).toBeGreaterThanOrEqual(27);
+      expect(fontProps.ascent).toBeLessThanOrEqual(28);
       expect(fontProps.descent).toBe(7);
-      expect(fontProps.fontSize).toBe(34);
+      expect(fontProps.fontSize).toBeGreaterThanOrEqual(34);
+      expect(fontProps.fontSize).toBeLessThanOrEqual(35);
     });
 
     describe("What if the text you want is exactly what the initial value is?", () => {

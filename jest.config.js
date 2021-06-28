@@ -1,4 +1,5 @@
 module.exports = {
   preset: "ts-jest",
-  testEnvironment: "jsdom",
+  runner: "@jest-runner/electron",
+  testEnvironment: "@jest-runner/electron/environment",
 };
