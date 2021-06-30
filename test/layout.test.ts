@@ -1,3 +1,4 @@
+import { TextStyleExtended } from "./../dist/types.d";
 import {
   createEmptyFinalToken,
   FinalToken,
@@ -487,6 +488,77 @@ describe("layout module", () => {
       it("Should calculate sizes of text that has textTransform style correctly without actually changing the content for them.", () => {
         expect(uc.bounds.width).toBeGreaterThan(lc.bounds.width);
         expect(uc.content).toBe(lc.content);
+      });
+    });
+
+    describe("Scaled text", () => {
+      const makeExample = (style: TextStyleExtended): StyledTokens => ({
+        children: [
+          {
+            children: ["scaled"],
+            tags: "scaled",
+            style: { fontSize: 30, ...style } as TextStyleExtended,
+          },
+          " unscaled",
+        ],
+        tags: "",
+        style: { fontSize: 30 },
+      });
+
+      const control = makeExample({});
+      const controlTokens = layout.calculateFinalTokens(control).flat(2);
+      expect(controlTokens).toHaveLength(3);
+      const [scaled, , unscaled] = controlTokens;
+      const W = scaled.bounds.width;
+      const H = scaled.bounds.height;
+
+      it("Default should be 1x scale for X and Y.", () => {
+        expect(W).toBe(88);
+        expect(H).toBe(34);
+        expect(unscaled.bounds.width).toBe(122);
+        expect(unscaled.bounds.height).toBe(34);
+
+        const def = makeExample({ fontScaleWidth: 1, fontScaleHeight: 1 });
+        const scaleSetToDefaultValues = layout
+          .calculateFinalTokens(def)
+          .flat(2);
+        expect(scaleSetToDefaultValues[0]).toMatchObject(scaled);
+        expect(scaleSetToDefaultValues[2]).toMatchObject(unscaled);
+      });
+
+      it("Should scale the width of text.", () => {
+        const wide = makeExample({ fontScaleWidth: 2.0 });
+        const wideTokens = layout.calculateFinalTokens(wide).flat(2)[0];
+
+        expect(wideTokens.bounds.width / W).toBeCloseTo(2);
+
+        const condensed = makeExample({ fontScaleWidth: 0.5 });
+        const condensedTokens = layout
+          .calculateFinalTokens(condensed)
+          .flat(2)[0];
+        expect(condensedTokens.bounds.width / W).toBeCloseTo(0.5);
+      });
+      it("Scale the height of text by using fontSize and <100% font scaling.", () => {
+        const tall = makeExample({ fontScaleHeight: 2 });
+        const tallTokens = layout.calculateFinalTokens(tall).flat(2);
+        expect(tallTokens[0].bounds.width / W).toBeCloseTo(1, 1);
+        expect(tallTokens[0].bounds.height / H).toBeCloseTo(2, 1);
+
+        const short = makeExample({ fontScaleHeight: 0.5 });
+        const shortTokens = layout.calculateFinalTokens(short).flat(2);
+        expect(shortTokens[0].bounds.width / W).toBeCloseTo(1, 1);
+        expect(shortTokens[0].bounds.height / H).toBeCloseTo(0.5, 1);
+      });
+
+      it("Should ignore values that are not in the format x.xx", () => {
+        const bogus = makeExample({ fontScaleHeight: NaN });
+        const bogusTokens = layout.calculateFinalTokens(bogus).flat(2);
+        expect(bogusTokens[0].bounds.height).toEqual(
+          controlTokens[0].bounds.height
+        );
+        expect(bogusTokens[0].bounds.width).toEqual(
+          controlTokens[0].bounds.width
+        );
       });
     });
 

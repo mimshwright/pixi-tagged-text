@@ -629,7 +629,20 @@ export const calculateFinalTokens = (
               sizer.text = str;
           }
 
+          const sw = style.fontScaleWidth;
+          const sh = style.fontScaleHeight;
+          // ignore bogus fontScales
+          const scaleWidth = sw === undefined || isNaN(sw) || sw < 0 ? 1.0 : sw;
+          const scaleHeight =
+            sh === undefined || isNaN(sh) || sh < 0 ? 1.0 : sh;
+
+          sizer.scale.set(scaleWidth, scaleHeight);
+
           fontProperties = { ...getFontPropertiesOfText(sizer, true) };
+          fontProperties.ascent *= scaleHeight;
+          fontProperties.descent *= scaleHeight;
+          fontProperties.fontSize *= scaleHeight;
+
           const bounds = rectFromContainer(sizer);
 
           // Incorporate the size of the stroke into the size of the text.
