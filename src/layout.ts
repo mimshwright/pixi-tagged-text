@@ -629,12 +629,11 @@ export const calculateFinalTokens = (
               sizer.text = str;
           }
 
-          const sw = style.fontScaleWidth;
-          const sh = style.fontScaleHeight;
-          // ignore bogus fontScales
-          const scaleWidth = sw === undefined || isNaN(sw) || sw < 0 ? 1.0 : sw;
-          const scaleHeight =
-            sh === undefined || isNaN(sh) || sh < 0 ? 1.0 : sh;
+          const sw = style.fontScaleWidth ?? 1.0;
+          const sh = style.fontScaleHeight ?? 1.0;
+          // clamp negative or NaN fontScales to 0
+          const scaleWidth = isNaN(sw) || sw < 0 ? 0.0 : sw;
+          const scaleHeight = isNaN(sh) || sh < 0 ? 0.0 : sh;
 
           sizer.scale.set(scaleWidth, scaleHeight);
 

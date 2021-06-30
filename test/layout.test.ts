@@ -550,15 +550,18 @@ describe("layout module", () => {
         expect(shortTokens[0].bounds.height / H).toBeCloseTo(0.5, 1);
       });
 
-      it("Should ignore values that are not in the format x.xx", () => {
+      it("Should convert NaN to 0", () => {
         const bogus = makeExample({ fontScaleHeight: NaN });
         const bogusTokens = layout.calculateFinalTokens(bogus).flat(2);
-        expect(bogusTokens[0].bounds.height).toEqual(
-          controlTokens[0].bounds.height
-        );
+        expect(bogusTokens[0].bounds.height).toEqual(0);
         expect(bogusTokens[0].bounds.width).toEqual(
           controlTokens[0].bounds.width
         );
+      });
+      it("Should convert negative numbers to 0", () => {
+        const bogus = makeExample({ fontScaleWidth: -1 });
+        const bogusTokens = layout.calculateFinalTokens(bogus).flat(2);
+        expect(bogusTokens[0].bounds.width).toEqual(0);
       });
     });
 

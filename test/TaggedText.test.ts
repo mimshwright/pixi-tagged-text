@@ -685,7 +685,7 @@ Line 4`);
           wide: { fontScaleWidth: 1.5 },
         };
         const text = `hello
-  <wide>hello</wide>`;
+<wide>hello</wide>`;
         const w = new TaggedText(text, wideStyle);
         const [normal, wide] = w.textFields;
         expect(wide.width / normal.width).toBeCloseTo(1.5, 1);
@@ -703,6 +703,20 @@ Line 4`);
         const [normal, tall] = h.textFields;
         expect(tall.width / normal.width).toBeCloseTo(1, 1);
         expect(tall.height / normal.height).toBeCloseTo(1.5, 1);
+      });
+      test("bogus values are handled correctly.", () => {
+        const wideStyle = {
+          default: { fontSize: 20 },
+          neg: { fontScaleWidth: -1.5 },
+          nan: { fontScaleWidth: NaN },
+        };
+        const text = `hello
+<neg>hello</neg>
+<nan>hello</nan>`;
+        const w = new TaggedText(text, wideStyle);
+        const [, neg, nan] = w.textFields;
+        expect(neg.width).toBe(0);
+        expect(nan.width).toBe(0);
       });
     });
   });

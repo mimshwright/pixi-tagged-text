@@ -554,11 +554,8 @@ export default class TaggedText extends PIXI.Sprite {
   }
 
   private createTextFieldForToken(token: TextFinalToken): PIXI.Text {
-    const {
-      textTransform = "",
-      fontScaleWidth = 1.0,
-      fontScaleHeight = 1.0,
-    } = token.style;
+    const { textTransform = "" } = token.style;
+
     let text = token.content;
     switch (textTransform.toLowerCase()) {
       case "lowercase":
@@ -574,6 +571,12 @@ export default class TaggedText extends PIXI.Sprite {
     }
 
     const textField = new PIXI.Text(text, token.style);
+
+    let { fontScaleWidth = 1.0, fontScaleHeight = 1.0 } = token.style;
+    fontScaleWidth =
+      isNaN(fontScaleWidth) || fontScaleWidth < 0 ? 0 : fontScaleWidth;
+    fontScaleHeight =
+      isNaN(fontScaleHeight) || fontScaleHeight < 0 ? 0 : fontScaleHeight;
     textField.scale.set(fontScaleWidth, fontScaleHeight);
     return textField;
   }
