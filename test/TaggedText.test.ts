@@ -678,15 +678,31 @@ Line 4`);
       });
     });
 
-    describe("scaleX style", () => {
-      it("Should scale the final text output.", () => {
-        const style = { default: { fontSize: 20 }, wide: { scaleX: 1.5 } };
+    describe("fontScaleWidth & fontScaleHeight styles", () => {
+      test("fontScaleWidth should scale the final text output horizontally.", () => {
+        const wideStyle = {
+          default: { fontSize: 20 },
+          wide: { fontScaleWidth: 1.5 },
+        };
         const text = `hello
-<wide>hello</wide>`;
-        const t = new TaggedText(text, style);
-        const [normal, wide] = t.textFields;
-        const ratio = wide.width / normal.width;
-        expect(ratio).toBeCloseTo(1.5, 1);
+  <wide>hello</wide>`;
+        const w = new TaggedText(text, wideStyle);
+        const [normal, wide] = w.textFields;
+        expect(wide.width / normal.width).toBeCloseTo(1.5, 1);
+        expect(wide.height / normal.height).toBeCloseTo(1, 1);
+      });
+
+      test("fontScaleHeight should scale the final text output vertically.", () => {
+        const tallStyle = {
+          default: { fontSize: 20 },
+          tall: { fontScaleHeight: 1.5 },
+        };
+        const text = `hello
+<tall>hello</tall>`;
+        const h = new TaggedText(text, tallStyle);
+        const [normal, tall] = h.textFields;
+        expect(tall.width / normal.width).toBeCloseTo(1, 1);
+        expect(tall.height / normal.height).toBeCloseTo(1.5, 1);
       });
     });
   });

@@ -518,7 +518,7 @@ describe("layout module", () => {
         expect(unscaled.bounds.width).toBe(122);
         expect(unscaled.bounds.height).toBe(34);
 
-        const def = makeExample({ scaleX: 1 });
+        const def = makeExample({ fontScaleWidth: 1, fontScaleHeight: 1 });
         const scaleSetToDefaultValues = layout
           .calculateFinalTokens(def)
           .flat(2);
@@ -527,27 +527,31 @@ describe("layout module", () => {
       });
 
       it("Should scale the width of text.", () => {
-        const wide = makeExample({ scaleX: 2.0 });
+        const wide = makeExample({ fontScaleWidth: 2.0 });
         const wideTokens = layout.calculateFinalTokens(wide).flat(2)[0];
 
         expect(wideTokens.bounds.width / W).toBeCloseTo(2);
 
-        const condensed = makeExample({ scaleX: 0.5 });
+        const condensed = makeExample({ fontScaleWidth: 0.5 });
         const condensedTokens = layout
           .calculateFinalTokens(condensed)
           .flat(2)[0];
         expect(condensedTokens.bounds.width / W).toBeCloseTo(0.5);
       });
       it("Scale the height of text by using fontSize and <100% font scaling.", () => {
-        const tall = makeExample({ scaleX: 0.5, fontSize: 60 });
+        const tall = makeExample({ fontScaleHeight: 2 });
         const tallTokens = layout.calculateFinalTokens(tall).flat(2);
-
-        expect(tallTokens[0].bounds.height / H).toBeCloseTo(2, 1);
         expect(tallTokens[0].bounds.width / W).toBeCloseTo(1, 1);
+        expect(tallTokens[0].bounds.height / H).toBeCloseTo(2, 1);
+
+        const short = makeExample({ fontScaleHeight: 0.5 });
+        const shortTokens = layout.calculateFinalTokens(short).flat(2);
+        expect(shortTokens[0].bounds.width / W).toBeCloseTo(1, 1);
+        expect(shortTokens[0].bounds.height / H).toBeCloseTo(0.5, 1);
       });
 
       it("Should ignore values that are not in the format x.xx", () => {
-        const bogus = makeExample({ scaleX: NaN });
+        const bogus = makeExample({ fontScaleHeight: NaN });
         const bogusTokens = layout.calculateFinalTokens(bogus).flat(2);
         expect(bogusTokens[0].bounds.height).toEqual(
           controlTokens[0].bounds.height

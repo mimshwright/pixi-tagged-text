@@ -125,7 +125,8 @@ export interface TextStyleExtended
   valign?: VAlign;
   textTransform?: TextTransform;
   textDecoration?: TextDecoration;
-  scaleX?: number;
+  fontScaleWidth?: number;
+  fontScaleHeight?: number;
 }
 
 export interface TextDecorationMetrics {
