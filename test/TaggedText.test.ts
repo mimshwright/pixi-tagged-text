@@ -677,6 +677,18 @@ Line 4`);
         expect(decMetrics?.[0].color).toBe(0x000000);
       });
     });
+
+    describe("scaleX style", () => {
+      it("Should scale the final text output.", () => {
+        const style = { default: { fontSize: 20 }, wide: { scaleX: 1.5 } };
+        const text = `hello
+<wide>hello</wide>`;
+        const t = new TaggedText(text, style);
+        const [normal, wide] = t.textFields;
+        const ratio = wide.width / normal.width;
+        expect(ratio).toBeCloseTo(1.5, 1);
+      });
+    });
   });
 
   describe("styles", () => {

@@ -519,6 +519,54 @@ You can even load from a URL <url /> (if you can figure out the CORS stuff!)`;
           </script>
         </div>
       </div>
+      <div class="example">
+        <div class="code">
+          <h2>Wrapping and Alignment</h2>
+          <pre><code class="js"></code></pre>
+        </div>
+        <div class="pixi" id="fontScaling">
+          <script>
+            // Font scaling
+            const fontScalingText = `You can change the scaling of the font:
+
+<b>scaleX:</b>
+75% = <condensed>narrow / condensed</condensed>
+125% = <extended>wide / extended</extended>
+
+<b>scaleY:</b>
+75% = <short>short</short>
+125% = <tall>tall</tall>
+`;
+            const fontScalingStyle = {
+              default: {
+                fontFamily: "arial",
+                fontSize: "36px",
+                valign: "baseline",
+                fill: "#FFFFFF",
+              },
+              b: {
+                fontWeight: 700,
+                fontFamily: "courier",
+              },
+              condensed: {
+                scaleX: 0.75,
+                fill: "#FF8899",
+                fontFamily: "georgia",
+              },
+              extended: {
+                scaleX: 1.25,
+                fill: "#9988FF",
+                fontFamily: "georgia",
+              },
+              tall: { scaleY: 1.25, fill: "#88FF99", fontFamily: "georgia" },
+              short: { scaleY: 0.75, fill: "#FFFF33", fontFamily: "georgia" },
+            };
+            let fontScaling = new TaggedText(fontScalingText, fontScalingStyle);
+
+            createDemo("fontScaling", fontScaling);
+          </script>
+        </div>
+      </div>
       <!--div class="example">
         <div class="code">
           <h2>Wrapping and Alignment II - splitStyle = "characters"</h2>

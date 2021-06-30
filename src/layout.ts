@@ -629,6 +629,14 @@ export const calculateFinalTokens = (
               sizer.text = str;
           }
 
+          const scaleX: number =
+            style.scaleX !== undefined &&
+            isNaN(style.scaleX) === false &&
+            style.scaleX >= 0
+              ? style.scaleX
+              : 1.0;
+          sizer.scale.x = scaleX;
+
           fontProperties = { ...getFontPropertiesOfText(sizer, true) };
           const bounds = rectFromContainer(sizer);
 
