@@ -1,6 +1,6 @@
 {
   "name": "pixi-tagged-text",
-  "version": "2.2.2-beta1",
+  "version": "2.2.2",
   "description": "TaggedText for pixi.js",
   "author": "Mims Wright, JT Smith, tleunen",
   "license": "MIT",
