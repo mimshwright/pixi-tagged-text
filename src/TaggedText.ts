@@ -30,6 +30,7 @@ import {
   getStyleForTag as getStyleForTagExt,
   mapTagsToStyles,
 } from "./style";
+import { fontSizeStringToNumber } from "./pixiUtils";
 
 export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debug: false,
@@ -577,7 +578,29 @@ export default class TaggedText extends PIXI.Sprite {
       isNaN(fontScaleWidth) || fontScaleWidth < 0 ? 0 : fontScaleWidth;
     fontScaleHeight =
       isNaN(fontScaleHeight) || fontScaleHeight < 0 ? 0 : fontScaleHeight;
-    textField.scale.set(fontScaleWidth, fontScaleHeight);
+
+    let finalScaleWidth = fontScaleWidth;
+    let finalScaleHeight = fontScaleHeight;
+    const largerScale = Math.max(fontScaleWidth, fontScaleHeight);
+
+    if (largerScale > 1) {
+      if (largerScale === fontScaleHeight) {
+        finalScaleWidth /= largerScale;
+        finalScaleHeight = 1.0;
+      } else {
+        finalScaleHeight /= largerScale;
+        finalScaleWidth = 1.0;
+      }
+
+      const fs = textField.style.fontSize;
+      const fontSizePx =
+        (typeof fs === "string" ? fontSizeStringToNumber(fs) : fs) *
+        largerScale;
+
+      textField.style.fontSize = fontSizePx;
+    }
+
+    textField.scale.set(finalScaleWidth, finalScaleHeight);
     return textField;
   }
 
