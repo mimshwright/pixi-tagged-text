@@ -94,4 +94,26 @@ describe("pixiUtils", () => {
       });
     });
   });
+
+  describe("fontSizeStringToNumber", () => {
+    describe("Converts different text based font sizes to a pixel number. everything is based on 16px as the base.", () => {
+      it("Converts rems and ems to px", () => {
+        expect(pixiUtils.fontSizeStringToNumber("1rem")).toBeCloseTo(16);
+        expect(pixiUtils.fontSizeStringToNumber("1em")).toBeCloseTo(16);
+        expect(pixiUtils.fontSizeStringToNumber("3em")).toBeCloseTo(48);
+      });
+      it("Converts % to px", () => {
+        expect(pixiUtils.fontSizeStringToNumber("100%")).toBeCloseTo(16);
+        expect(pixiUtils.fontSizeStringToNumber("200%")).toBeCloseTo(32);
+      });
+      it("Converts pt to px", () => {
+        expect(pixiUtils.fontSizeStringToNumber("10pt")).toBeCloseTo(13.281472);
+        expect(pixiUtils.fontSizeStringToNumber("20pt")).toBeCloseTo(26.562945);
+      });
+      it("Converts px to px", () => {
+        expect(pixiUtils.fontSizeStringToNumber("16.0px")).toBe(16.0);
+        expect(pixiUtils.fontSizeStringToNumber("100px")).toBe(100);
+      });
+    });
+  });
 });
