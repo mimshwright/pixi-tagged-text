@@ -421,6 +421,36 @@ describe("TaggedText", () => {
 
         console.log({ timeControl, timeSkipDraw, timeSkipUpdates });
       });
+      describe("wrapEmoji", () => {
+        const control = new TaggedText("test");
+        it("Should be true by default", () => {
+          expect(control.options.wrapEmoji).toBeTruthy();
+        });
+        it("should wrap emoji in a span", () => {
+          const t = new TaggedText(
+            "test 🔥",
+            { default: { fontFamily: "Georgia" } },
+            { wrapEmoji: true }
+          );
+          expect(t.tokensFlat).toMatchObject([
+            { content: "test", style: { fontFamily: "Georgia" } },
+            { content: " " },
+            { content: "🔥", style: { fontFamily: "sans-serif" } },
+          ]);
+        });
+        it("should not wrap emoji when set to false", () => {
+          const t = new TaggedText(
+            "test 🔥",
+            { default: { fontFamily: "Georgia" } },
+            { wrapEmoji: false }
+          );
+          expect(t.tokensFlat).toMatchObject([
+            { content: "test", style: { fontFamily: "Georgia" } },
+            { content: " " },
+            { content: "🔥", style: { fontFamily: "Georgia" } },
+          ]);
+        });
+      });
     });
   });
 
