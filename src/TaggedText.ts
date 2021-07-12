@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { parseTagsNew, removeTags } from "./tags";
+import { parseTagsNew, removeTags, EMOJI_TAG } from "./tags";
 import {
   TaggedTextOptions,
   TextStyleSet,
@@ -310,6 +310,10 @@ export default class TaggedText extends PIXI.Sprite {
     this._options = mergedOptions;
 
     tagStyles = { default: {}, ...tagStyles };
+
+    if (this.options.wrapEmoji) {
+      tagStyles[EMOJI_TAG] = { fontFamily: "sans-serif" };
+    }
     const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
     tagStyles.default = mergedDefaultStyles;
     this.tagStyles = tagStyles;
