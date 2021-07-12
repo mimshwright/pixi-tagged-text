@@ -12,11 +12,12 @@
     "url": "https://github.com/mimshwright/pixi-tagged-text/issues"
   },
   "homepage": "https://github.com/mimshwright/pixi-tagged-text",
-  "source": "src/index.ts",
-  "main": "dist/pixi-tagged-text.js",
-  "umd:main": "dist/pixi-tagged-text.umd.js",
-  "module": "dist/pixi-tagged-text.m.js",
-  "types": "dist/pixi-tagged-text.d.ts",
+  "source": "./src/index.ts",
+  "main": "./dist/pixi-tagged-text.js",
+  "umd:main": "./dist/pixi-tagged-text.umd.js",
+  "module": "./dist/pixi-tagged-text.m.js",
+  "exports": "./dist/pixi-tagged-text.modern.js",
+  "types": "./dist/pixi-tagged-text.d.ts",
   "files": [
     "dist"
   ],
@@ -60,8 +61,8 @@
   },
   "scripts": {
     "demo": "npm run build && http-server . --port 8080 && opener http://localhost:8080/demo/index.html",
-    "dev": "microbundle watch --name TaggedText --globals 'pixi.js'=PIXI",
-    "build": "microbundle --name TaggedText --globals 'pixi.js'=PIXI",
+    "dev": "microbundle watch -f umd --name TaggedText --external 'pixi.js' --globals 'pixi.js'=PIXI",
+    "build": "microbundle --name TaggedText --external 'pixi.js' --globals  'pixi.js'=PIXI",
     "prepublishOnly": "npm run build",
     "release": "standard-version",
     "test": "jest",
