@@ -53,6 +53,7 @@ export interface TaggedTextOptions {
   skipUpdates?: boolean;
   skipDraw?: boolean;
   drawWhitespace?: boolean;
+  wrapEmoji?: boolean;
 }
 
 ///// STYLE PROPERTIES

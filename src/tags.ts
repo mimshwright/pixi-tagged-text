@@ -263,11 +263,12 @@ export const containsEmoji = (input: string): boolean =>
  */
 export const parseTagsNew = (
   input: string,
-  tagNamesToMatch?: string[]
+  tagNamesToMatch?: string[],
+  shouldWrapEmoji?: boolean
 ): CompositeToken<TagToken | TextToken> => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
 
-  if (containsEmoji(input)) {
+  if (shouldWrapEmoji && containsEmoji(input)) {
     console.log(`Found emoji in: ${input}`);
     input = wrapEmoji(input);
     console.log(`Emoji wrapped input: ${input}`);

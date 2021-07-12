@@ -40,6 +40,7 @@ export const DEFAULT_OPTIONS: TaggedTextOptions = {
   skipUpdates: false,
   skipDraw: false,
   drawWhitespace: false,
+  wrapEmoji: true,
 };
 
 // TODO: make customizable
@@ -426,7 +427,11 @@ export default class TaggedText extends PIXI.Sprite {
 
     // Pre-process text.
     // Parse tags in the text.
-    const tagTokensNew = parseTagsNew(this.text, Object.keys(this.tagStyles));
+    const tagTokensNew = parseTagsNew(
+      this.text,
+      Object.keys(this.tagStyles),
+      this.options.wrapEmoji
+    );
     // Assign styles to each segment.
     const styledTokens = mapTagsToStyles(
       tagTokensNew,

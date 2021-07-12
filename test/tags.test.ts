@@ -438,8 +438,16 @@ describe("tags module", () => {
         expect(tags.parseTagsNew("<1>2</1>", ["1"])).toMatchObject({
           children: [{ tag: "1", children: ["2"] }],
         });
+        expect(tags.parseTagsNew("<🔥>😎</🔥>", ["🔥"], false)).toMatchObject({
+          children: [
+            {
+              tag: "🔥",
+              children: ["😎"],
+            },
+          ],
+        });
         expect(
-          tags.parseTagsNew("<🔥>😎</🔥>", ["🔥", tags.EMOJI_TAG])
+          tags.parseTagsNew("<🔥>😎</🔥>", ["🔥", tags.EMOJI_TAG], true)
         ).toMatchObject({
           children: [
             {
