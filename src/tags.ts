@@ -269,9 +269,7 @@ export const parseTagsNew = (
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
 
   if (shouldWrapEmoji && containsEmoji(input)) {
-    console.log(`Found emoji in: ${input}`);
     input = wrapEmoji(input);
-    console.log(`Emoji wrapped input: ${input}`);
   }
 
   input = replaceSelfClosingTags(input);
