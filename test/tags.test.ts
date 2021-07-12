@@ -1,6 +1,57 @@
 import * as tags from "../src/tags";
 
 describe("tags module", () => {
+  describe("containsEmoji()", () => {
+    it("Should detect if there is any emoji in a string", () => {
+      expect(tags.containsEmoji("Hello World")).toBe(false);
+      expect(tags.containsEmoji("👍")).toBe(true);
+      expect(tags.containsEmoji("🔥")).toBe(true);
+      expect(tags.containsEmoji("Hello 👍")).toBe(true);
+      expect(tags.containsEmoji("Hello 👍🏻")).toBe(true);
+      expect(tags.containsEmoji("⛳⛳⛳")).toBe(true);
+      expect(tags.containsEmoji(":)")).toBe(false);
+      expect(tags.containsEmoji("Hello :world:")).toBe(false);
+    });
+  });
+
+  describe("wrapEmoji()", () => {
+    const tagged = (str: string) =>
+      `<${tags.EMOJI_TAG}>${str}</${tags.EMOJI_TAG}>`;
+
+    it("Should replace emoji characters with the same character wrapped in an emoji tag.", () => {
+      expect(tags.wrapEmoji(`Hello World`)).toBe(`Hello World`);
+      expect(tags.wrapEmoji(``)).toBe(``);
+      expect(tags.wrapEmoji(`👍`)).toBe(`${tagged("👍")}`);
+      expect(tags.wrapEmoji(`👍🏻`)).toBe(`${tagged("👍🏻")}`);
+      expect(tags.wrapEmoji(`🔥`)).toBe(`${tagged("🔥")}`);
+      expect(tags.wrapEmoji(`👍 🔥`)).toBe(`${tagged("👍")} ${tagged("🔥")}`);
+      expect(tags.wrapEmoji(`🔥 👍`)).toBe(`${tagged("🔥")} ${tagged("👍")}`);
+      expect(tags.wrapEmoji(`👍🏻🔥👍🏻`)).toBe(`${tagged("👍🏻🔥👍🏻")}`);
+      expect(tags.wrapEmoji(`🔥 🔥`)).toBe(`${tagged("🔥")} ${tagged("🔥")}`);
+      expect(tags.wrapEmoji(`😎face`)).toBe(`${tagged("😎")}face`);
+      expect(tags.wrapEmoji(`Hello ⛳⛳⛳`)).toBe(`Hello ${tagged("⛳⛳⛳")}`);
+      expect(tags.wrapEmoji(`Hello ...👍... World`)).toBe(
+        `Hello ...${tagged("👍")}... World`
+      );
+      expect(tags.wrapEmoji(`Hello\n👍\nworld`)).toBe(
+        `Hello\n${tagged("👍")}\nworld`
+      );
+    });
+
+    it(`Should not wrap tags.`, () => {
+      expect(tags.wrapEmoji(`<👍>emoji</👍>`)).toBe(`<👍>emoji</👍>`);
+      expect(tags.wrapEmoji(`<👍>em 👍 oji</👍>`)).toBe(
+        `<👍>em ${tagged("👍")} oji</👍>`
+      );
+      expect(tags.wrapEmoji(`<thumb👍>emoji</thumb👍>`)).toBe(
+        `<thumb👍>emoji</thumb👍>`
+      );
+      expect(tags.wrapEmoji(`<thumb text="👍">emoji</thumb 👍>`)).toBe(
+        `<thumb text="👍">emoji</thumb 👍>`
+      );
+    });
+  });
+
   describe("replaceSelfClosingTags()", () => {
     let input, expected, actual;
     it("should replace any tags that close themselves with an empty pair of tags.", () => {
@@ -387,8 +438,23 @@ describe("tags module", () => {
         expect(tags.parseTagsNew("<1>2</1>", ["1"])).toMatchObject({
           children: [{ tag: "1", children: ["2"] }],
         });
-        expect(tags.parseTagsNew("<🔥>😎</🔥>", ["🔥"])).toMatchObject({
-          children: [{ tag: "🔥", children: ["😎"] }],
+        expect(tags.parseTagsNew("<🔥>😎</🔥>", ["🔥"], false)).toMatchObject({
+          children: [
+            {
+              tag: "🔥",
+              children: ["😎"],
+            },
+          ],
+        });
+        expect(
+          tags.parseTagsNew("<🔥>😎</🔥>", ["🔥", tags.EMOJI_TAG], true)
+        ).toMatchObject({
+          children: [
+            {
+              tag: "🔥",
+              children: [{ tag: tags.EMOJI_TAG, children: ["😎"] }],
+            },
+          ],
         });
       });
       it("Should throw when there are badly formed tags", () => {

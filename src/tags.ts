@@ -1,3 +1,5 @@
+import getEmojiRegex from "emoji-regex/es2015/RGI_Emoji";
+
 import { last } from "./functionalUtils";
 import {
   TagMatchData,
@@ -52,6 +54,8 @@ export const getTagRegex = (tagNamesToMatch: string[] = ["\\w+"]): RegExp => {
 
   return new RegExp(pattern, "g");
 };
+
+export const EMOJI_TAG = "__EMOJI__";
 
 /**
  * Takes a string of attributes and returns an object with key value pairs for each attribute.
@@ -158,6 +162,22 @@ const selfClosingTagSearch = (() => {
     `gs`
   );
 })();
+
+export const wrapEmoji = (input: string): string => {
+  const emojiRegex = new RegExp(
+    `((<|</)[^>]*)?(${getEmojiRegex().source})+`,
+    "gums"
+  );
+
+  return input.replaceAll(emojiRegex, (match, tagStart) => {
+    if (tagStart?.length > 0) {
+      // if the emoji is inside a tag, ignore it.
+      return match;
+    }
+    return `<${EMOJI_TAG}>${match}</${EMOJI_TAG}>`;
+  });
+};
+
 export const replaceSelfClosingTags = (input: string): string =>
   input.replace(selfClosingTagSearch, (_, tag, attributes = "") => {
     let output = `<${tag}${attributes}></${tag}>`;
@@ -232,6 +252,9 @@ export const createTokensNew = (
   return rootTokens.children;
 };
 
+export const containsEmoji = (input: string): boolean =>
+  getEmojiRegex().test(input);
+
 /**
  * Converts a string into a list of tokens that match segments of text with styles.
  *
@@ -240,9 +263,14 @@ export const createTokensNew = (
  */
 export const parseTagsNew = (
   input: string,
-  tagNamesToMatch?: string[]
+  tagNamesToMatch?: string[],
+  shouldWrapEmoji?: boolean
 ): CompositeToken<TagToken | TextToken> => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
+
+  if (shouldWrapEmoji && containsEmoji(input)) {
+    input = wrapEmoji(input);
+  }
 
   input = replaceSelfClosingTags(input);
   const re = getTagRegex(tagNamesToMatch);

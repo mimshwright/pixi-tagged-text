@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { parseTagsNew, removeTags } from "./tags";
+import { parseTagsNew, removeTags, EMOJI_TAG } from "./tags";
 import {
   TaggedTextOptions,
   TextStyleSet,
@@ -40,6 +40,7 @@ export const DEFAULT_OPTIONS: TaggedTextOptions = {
   skipUpdates: false,
   skipDraw: false,
   drawWhitespace: false,
+  wrapEmoji: true,
 };
 
 // TODO: make customizable
@@ -309,6 +310,10 @@ export default class TaggedText extends PIXI.Sprite {
     this._options = mergedOptions;
 
     tagStyles = { default: {}, ...tagStyles };
+
+    if (this.options.wrapEmoji) {
+      tagStyles[EMOJI_TAG] = { fontFamily: "sans-serif" };
+    }
     const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
     tagStyles.default = mergedDefaultStyles;
     this.tagStyles = tagStyles;
@@ -426,7 +431,11 @@ export default class TaggedText extends PIXI.Sprite {
 
     // Pre-process text.
     // Parse tags in the text.
-    const tagTokensNew = parseTagsNew(this.text, Object.keys(this.tagStyles));
+    const tagTokensNew = parseTagsNew(
+      this.text,
+      Object.keys(this.tagStyles),
+      this.options.wrapEmoji
+    );
     // Assign styles to each segment.
     const styledTokens = mapTagsToStyles(
       tagTokensNew,

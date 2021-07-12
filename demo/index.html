@@ -132,6 +132,59 @@ You can even load from a URL <url /> (if you can figure out the CORS stuff!)`;
           </script>
         </div>
       </div>
+
+      <div class="example">
+        <div class="code">
+          <h2>Emoji</h2>
+          <pre><code class="js"></code></pre>
+        </div>
+        <div class="pixi" id="emoji">
+          <script>
+            const emojiText = `<h2>🙆🏾‍♀️ EMOJI 🆗*</h2>
+<warning>*But unfortunately, will render differently on different browsers & OSes</warning>
+
+The quick, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
+
+<big>💯👯‍♂️🔥</big>
+
+<small>🐞🐛🕷🐜🐞🐛🕷🐜🐞🐛🕷🐜</small>`;
+
+            const emojiStyle = {
+              default: {
+                fontFamily: "Arial",
+                fontSize: 26,
+                fill: "#FFFFCC",
+                align: "center",
+                lineSpacing: 0,
+                valign: "baseline",
+              },
+              h2: {
+                fontSize: 48,
+                fontWeight: 700,
+              },
+              big: {
+                fontSize: 150,
+              },
+              small: {
+                fontSize: 24,
+              },
+              warning: {
+                fontStyle: "italic",
+                fontSize: 14,
+                fill: "#ff8888",
+              },
+            };
+
+            const emojiTaggedText = new TaggedText(emojiText, emojiStyle, {
+              wrapEmoji: true,
+            });
+            console.log(emojiTaggedText.tokens);
+
+            const emojiApp = createDemo("emoji", emojiTaggedText);
+          </script>
+        </div>
+      </div>
+
       <div class="example">
         <div class="code">
           <h2>Alignment</h2>
