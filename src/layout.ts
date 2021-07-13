@@ -32,6 +32,8 @@ import {
   isNotWhitespaceToken,
   VAlign,
   createEmptyFinalToken,
+  FontProperty,
+  FontMap,
 } from "./types";
 
 const ICON_SCALE_BASE = 0.8;
@@ -313,7 +315,6 @@ export const verticalAlignInLines = (
 
   for (const line of lines) {
     const newLine: LineToken = [];
-    // const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
 
     let tallestToken: FinalToken = getTallestToken(line);
     // Note, paragraphModifier from previous line applied here.
@@ -342,7 +343,7 @@ export const verticalAlignInLines = (
       const newWord: WordToken = [];
       for (const segment of word) {
         const { bounds, fontProperties, style } = segment;
-        const height = bounds.height;
+        const { height } = bounds;
 
         const newBounds: Bounds = { ...bounds };
         const valign = overrideValign ?? style.valign;
@@ -581,7 +582,8 @@ export const splitText = (s: string, splitStyle: SplitStyle): string[] => {
 export const calculateFinalTokens = (
   styledTokens: StyledTokens,
   splitStyle: SplitStyle = "words",
-  scaleIcons = true
+  scaleIcons = true,
+  adjustFontBaseline?: FontMap
 ): ParagraphToken => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
@@ -633,11 +635,13 @@ export const calculateFinalTokens = (
           sizer.scale.set(scaleWidth, scaleHeight);
 
           fontProperties = { ...getFontPropertiesOfText(sizer, true) };
+
           fontProperties.ascent *= scaleHeight;
           fontProperties.descent *= scaleHeight;
           fontProperties.fontSize *= scaleHeight;
 
           const bounds = rectFromContainer(sizer);
+          // bounds.height = fontProperties.fontSize;
 
           // Incorporate the size of the stroke into the size of the text.
           const stroke = sizer.style.strokeThickness ?? 0;
@@ -653,6 +657,20 @@ export const calculateFinalTokens = (
             bounds,
             fontProperties
           );
+
+          const fontBaselineAdjustment = getAdjustFontBaselineForToken(
+            style,
+            adjustFontBaseline
+          );
+
+          if (fontBaselineAdjustment !== null) {
+            const offset = getBaselineAdjustment(
+              fontBaselineAdjustment,
+              fontProperties.ascent
+            );
+
+            fontProperties.ascent += offset;
+          }
 
           return {
             content: str,
@@ -743,4 +761,36 @@ export const calculateFinalTokens = (
   const lines = layout(finalTokens, maxWidth, lineSpacing, align);
 
   return lines;
+};
+
+export const getBaselineAdjustment = (
+  fontAdjustment: FontProperty,
+  ascent: number
+): number => {
+  if (typeof fontAdjustment === "string") {
+    const percentPair = fontAdjustment.split("%");
+    const isPercent = percentPair.length > 1;
+    const value = Number(percentPair[0]);
+
+    if (isPercent) {
+      return ascent * (value / 100);
+    } else {
+      return value;
+    }
+  } else {
+    return Number(fontAdjustment);
+  }
+};
+
+export const getAdjustFontBaselineForToken = (
+  style: TextStyleExtended,
+  adjustFontBaseline?: FontMap
+): FontProperty | null => {
+  if (style && adjustFontBaseline !== undefined) {
+    const fontFamily = style.fontFamily?.toString() ?? "";
+
+    return adjustFontBaseline[fontFamily] ?? null;
+  } else {
+    return null;
+  }
 };

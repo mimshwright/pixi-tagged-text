@@ -9,6 +9,8 @@ import {
   isNewlineToken,
   TextFinalToken,
   SpriteFinalToken,
+  percentStringToNumber,
+  isPercent,
 } from "./../src/types";
 
 describe("Type validation", () => {
@@ -146,6 +148,47 @@ describe("Type validation", () => {
       expect(isEmptyObject(null)).toBeFalsy();
       expect(isEmptyObject(undefined)).toBeFalsy();
       expect(isEmptyObject(NaN)).toBeFalsy();
+    });
+  });
+
+  describe("isPercent()", () => {
+    it("Should return true if the input is a percentage.", () => {
+      expect(isPercent("50%")).toBeTruthy();
+      expect(isPercent("0%")).toBeTruthy();
+      expect(isPercent("100%")).toBeTruthy();
+    });
+    it("Should ignore extra whitespace", () => {
+      expect(isPercent(" 50% ")).toBeTruthy();
+    });
+    it("Should return false if the input is not a percentage.", () => {
+      expect(isPercent("50")).toBeFalsy();
+      expect(isPercent("0")).toBeFalsy();
+      expect(isPercent("100")).toBeFalsy();
+      expect(isPercent("50px")).toBeFalsy();
+      expect(isPercent("0px")).toBeFalsy();
+      expect(isPercent("100px")).toBeFalsy();
+      expect(isPercent("50%px")).toBeFalsy();
+      expect(isPercent("0%px")).toBeFalsy();
+      expect(isPercent("100%px")).toBeFalsy();
+    });
+  });
+
+  describe("percentStringToNumber()", () => {
+    it("Should return the percentage as a number.", () => {
+      expect(percentStringToNumber("50%")).toBe(0.5);
+      expect(percentStringToNumber("0%")).toBe(0);
+      expect(percentStringToNumber("100%")).toBe(1.0);
+    });
+    it("Should return NaN if the input is not a percentage.", () => {
+      expect(percentStringToNumber("50")).toBeNaN();
+      expect(percentStringToNumber("0")).toBeNaN();
+      expect(percentStringToNumber("100")).toBeNaN();
+      expect(percentStringToNumber("50px")).toBeNaN();
+      expect(percentStringToNumber("0px")).toBeNaN();
+      expect(percentStringToNumber("100px")).toBeNaN();
+      expect(percentStringToNumber("50%px")).toBeNaN();
+      expect(percentStringToNumber("0%px")).toBeNaN();
+      expect(percentStringToNumber("100%px")).toBeNaN();
     });
   });
 });
