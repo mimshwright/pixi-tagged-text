@@ -17,7 +17,7 @@
   "umd:main": "./dist/pixi-tagged-text.umd.js",
   "module": "./dist/pixi-tagged-text.m.js",
   "exports": "./dist/pixi-tagged-text.modern.js",
-  "types": "./dist/pixi-tagged-text.d.ts",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
