@@ -545,6 +545,9 @@ const layout = (
         }
       }
       if (isLastToken) {
+        if (wordShouldWrap()) {
+          finalizeLineAndMoveCursorToNextLine();
+        }
         positionWordAtCursorAndAdvanceCursor();
         line.push(word);
         lines.push(line);
