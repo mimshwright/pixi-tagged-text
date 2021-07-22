@@ -1,5 +1,6 @@
 import { TextStyleExtended } from "./../dist/types.d";
 import {
+  Align,
   createEmptyFinalToken,
   FinalToken,
   ParagraphToken,
@@ -335,6 +336,42 @@ describe("layout module", () => {
           const wrapTokenBounds = layout.getBoundsNested(wrapTokens);
           expect(wrapTokenBounds.width).toBeGreaterThan(200);
           expect(wrapTokenBounds.width).toBeLessThanOrEqual(300);
+        });
+
+        it("Should not cut off text at the end of a line. (issues 100 & 118)", () => {
+          const text = "Test Test Test";
+          const style = {
+            fontFamily: "Arial",
+            fontSize: "24px",
+            fill: "#CC6600",
+            wordWrap: true,
+            wordWrapWidth: 150,
+            align: "right" as Align,
+          };
+
+          const wrappingStyledTokens = {
+            children: [text],
+            tags: "",
+            style: style,
+          };
+
+          const wrappingStyledTokensWithExtraSpace = {
+            children: [text, " "],
+            tags: "",
+            style: style,
+          };
+
+          const tokens = layout.calculateFinalTokens(wrappingStyledTokens);
+          const tokensWithExtraSpace = layout.calculateFinalTokens(
+            wrappingStyledTokensWithExtraSpace
+          );
+          expect(tokens).toHaveLength(1);
+          expect(tokens[0]).toHaveLength(5);
+          expect(tokensWithExtraSpace).toHaveLength(1);
+          expect(tokensWithExtraSpace[0]).toHaveLength(6);
+          expect(tokens[0][4][0].bounds.width).toBe(
+            tokensWithExtraSpace[0][4][0].bounds.width
+          );
         });
 
         it("When wordWrap is true, text can sometimes be larger than wordWrapWidth if a single word is very long.", () => {
