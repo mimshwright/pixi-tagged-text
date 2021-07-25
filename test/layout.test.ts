@@ -1,5 +1,6 @@
 import { TextStyleExtended } from "./../dist/types.d";
 import {
+  Align,
   createEmptyFinalToken,
   FinalToken,
   ParagraphToken,
@@ -337,32 +338,203 @@ describe("layout module", () => {
           expect(wrapTokenBounds.width).toBeLessThanOrEqual(300);
         });
 
+        it("Should not cut off text at the end of a line. (issue 118)", () => {
+          const text = `aa bb aa
+aa bb aa`;
+          const www = 300;
+          const style = {
+            fontSize: 64,
+            wordWrap: true,
+            wordWrapWidth: www,
+          };
+
+          const wrappingStyledTokens = {
+            children: [text],
+            tags: "",
+            style: style,
+          };
+
+          const tokens = layout.calculateFinalTokens(wrappingStyledTokens);
+
+          wrappingStyledTokens.children = [text + " "];
+          const tokensWithExtraSpace =
+            layout.calculateFinalTokens(wrappingStyledTokens);
+
+          expect(tokens).toHaveLength(2);
+          expect(tokensWithExtraSpace).toHaveLength(2);
+          expect(tokens[0]).toHaveLength(6);
+          expect(tokensWithExtraSpace[0]).toHaveLength(6);
+          expect(tokens[1]).toHaveLength(5);
+          expect(tokensWithExtraSpace[1]).toHaveLength(6);
+          expect(tokens[1][4][0].bounds.width).toBe(
+            tokensWithExtraSpace[1][4][0].bounds.width
+          );
+
+          const [, , , , a1, n0, a2] = tokens.flat(2);
+          // first line is under bounds width.
+          expect(a1.bounds.x + a1.bounds.width).toBeLessThan(www);
+          // first line plus the first word of second line is over bounds width.
+          expect(
+            a1.bounds.x + a1.bounds.width + n0.bounds.width + a2.bounds.width
+          ).toBeGreaterThan(www);
+        });
+
         it("When wordWrap is true, text can sometimes be larger than wordWrapWidth if a single word is very long.", () => {
-          const longWordsSmall: StyledTokens = {
-            children: ["abba bbabbabab abababbaba a"],
+          const shared = {
+            children: ["abba bbabb abababbaba a"],
             tags: "",
             style: { wordWrap: true, wordWrapWidth: 300, fontSize: 32 },
           };
+          const longWordsSmall: StyledTokens = shared;
           const longWordsTokensSmall =
             layout.calculateFinalTokens(longWordsSmall);
 
           const longWordsLarge: StyledTokens = {
-            children: ["abba bbabbabab abababbaba a"],
-            tags: "",
-            style: { wordWrap: true, wordWrapWidth: 300, fontSize: 64 },
+            ...shared,
+            style: { ...shared.style, fontSize: 64 },
           };
           const longWordsTokensLarge =
             layout.calculateFinalTokens(longWordsLarge);
 
           expect(longWordsTokensSmall.length).toBe(2);
-          expect(longWordsTokensLarge.length).toBe(3);
+          expect(longWordsTokensLarge.length).toBe(4);
 
-          expect(
-            layout.getBoundsNested(longWordsTokensSmall).width
-          ).toBeLessThanOrEqual(300);
-          expect(
-            layout.getBoundsNested(longWordsTokensLarge).width
-          ).toBeGreaterThan(300);
+          const longestWordSmall = longWordsTokensSmall.flat(2)[4];
+          const longestWordLarge = longWordsTokensLarge.flat(2)[4];
+
+          expect(longestWordSmall.bounds.width).toBeLessThanOrEqual(300);
+          expect(longestWordLarge.bounds.width).toBeGreaterThan(300);
+        });
+
+        it("When the first word in the string is very very long, it should not wrap.", () => {
+          const text = ["aaaaaaaaaaaaaaaaaaaa bbb ccc"];
+          const www = 300;
+          const style = { fontSize: 64, wordWrap: true, wordWrapWidth: www };
+          const firstWordLong = layout.calculateFinalTokens({
+            children: text,
+            tags: "",
+            style,
+          });
+
+          const longWord = firstWordLong.flat(2)[0];
+          expect(longWord.bounds.x).toBe(0);
+          expect(longWord.bounds.width).toBeGreaterThan(www);
+
+          // expect 2 lines
+          expect(firstWordLong.length).toBe(2);
+          // expect 1 word in the first line.
+          expect(firstWordLong[0]).toHaveLength(1);
+          expect(firstWordLong[0][0][0].content).toBe("aaaaaaaaaaaaaaaaaaaa");
+        });
+
+        describe("If the last word in the string should make the line wrap, it should wrap. (Issue 100)", () => {
+          const www = 300;
+          const style = {
+            tags: "",
+            children: [""],
+            style: {
+              align: "left" as Align,
+              fontSize: 64,
+              wordWrap: true,
+              wordWrapWidth: www,
+            },
+          };
+
+          test("If the length of the entire text is less than wordWrapWidth, it should not wrap.", () => {
+            style.children = ["aa bb aa"];
+            const shouldNotWrap = layout.calculateFinalTokens(style);
+            const [, , , space, aa] = shouldNotWrap.flat(2);
+            const totalWidth =
+              space.bounds.x + space.bounds.width + aa.bounds.width;
+
+            expect(space.content).toBe(" ");
+            expect(aa.content).toBe("aa");
+
+            expect(totalWidth).toBeLessThan(www);
+            // expect 1 line
+            expect(shouldNotWrap).toHaveLength(1);
+            // expect 5 words
+            expect(shouldNotWrap.flat(2)).toHaveLength(5);
+          });
+
+          test("If the last word makes the first line longer than the wordWrapWidth, it should wrap with the last word on a line by itself.", () => {
+            style.children = ["aaa bbb aaa"];
+            const shouldWrap = layout.calculateFinalTokens(style);
+
+            const [, , , space, aaa] = shouldWrap.flat(2);
+            const totalWidth =
+              space.bounds.x + space.bounds.width + aaa.bounds.width;
+
+            expect(space.content).toBe(" ");
+            expect(aaa.content).toBe("aaa");
+
+            // "aaa" is at the same x position on each line.
+            expect(shouldWrap[0][0][0].bounds.x).toBe(
+              shouldWrap[1][0][0].bounds.x
+            );
+
+            expect(totalWidth).toBeGreaterThan(www);
+            // expect 2 lines
+            expect(shouldWrap).toHaveLength(2);
+            // expect 5 words
+            expect(shouldWrap.flat(2)).toHaveLength(5);
+          });
+          test("If the last word makes line longer than the wordWrapWidth, but not on the first line of text, it should wrap with the last word on a line by itself.", () => {
+            style.children = ["aaa bbb aaa bbb aaa"];
+            const shouldWrapTwice = layout.calculateFinalTokens(style);
+
+            const [, , , , , , , space, aaa] = shouldWrapTwice.flat(2);
+            const totalWidth =
+              space.bounds.x + space.bounds.width + aaa.bounds.width;
+
+            expect(space.content).toBe(" ");
+            expect(aaa.content).toBe("aaa");
+
+            // "aaa" is at the same x position on each line.
+            expect(shouldWrapTwice[0][0][0].bounds.x).toBe(
+              shouldWrapTwice[1][0][0].bounds.x
+            );
+            expect(shouldWrapTwice[1][0][0].bounds.x).toBe(
+              shouldWrapTwice[2][0][0].bounds.x
+            );
+
+            expect(totalWidth).toBeGreaterThan(www);
+            // expect 3 lines
+            expect(shouldWrapTwice).toHaveLength(3);
+            // expect 9 words
+            expect(shouldWrapTwice.flat(2)).toHaveLength(9);
+          });
+        });
+
+        it("Should align last row correctly when center or right aligned (fix issue where the last line isn't in alignment)", () => {
+          const style = {
+            children: ["aaaa bbb aaaa bbb aaaa bbb"],
+            tags: "",
+            style: {
+              align: "left" as Align,
+              fontSize: 64,
+              wordWrap: true,
+              wordWrapWidth: 300,
+            },
+          };
+          // aaaa and bbb should be positioned the same for top and bottom line.
+          const left = layout.calculateFinalTokens(style);
+          style.style.align = "right" as Align;
+          const right = layout.calculateFinalTokens(style);
+          style.style.align = "center" as Align;
+          const center = layout.calculateFinalTokens(style);
+
+          expect(left).toHaveLength(3);
+          expect(left[0][2][0].bounds.x).toBe(left[1][2][0].bounds.x);
+          expect(left[0][2][0].bounds.x).toBe(left[2][2][0].bounds.x);
+
+          expect(right).toHaveLength(3);
+          expect(right[0][2][0].bounds.x).toBe(right[1][2][0].bounds.x);
+          expect(right[0][2][0].bounds.x).toBe(right[2][2][0].bounds.x);
+
+          expect(center).toHaveLength(3);
+          expect(center[0][2][0].bounds.x).toBe(center[1][2][0].bounds.x);
+          expect(center[0][2][0].bounds.x).toBe(center[2][2][0].bounds.x);
         });
 
         it("When wordWrap is true but wordWrapWidth is undefined, 0, negative, or NaN, it is unbounded.", () => {

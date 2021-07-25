@@ -550,7 +550,7 @@ The quick, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
                 align: "right",
               },
             };
-            let wrapping = new TaggedText(wrappingText, wrappingStyle);
+            let wrapping = new TaggedText(wrappingText, wrappingStyle, {});
 
             const nonWrappingText = `This one doesn't have \`wordWrap\` so it just keeps going and going and going off the edge!`;
             const nonWrappingStyle = {
