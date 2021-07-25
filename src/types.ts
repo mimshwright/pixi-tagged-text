@@ -238,7 +238,8 @@ export const isWhitespaceToken = flatEvery(_isWhitespaceToken);
 
 export const _isNewlineToken = (t: FinalToken): t is NewlineFinalToken =>
   t !== undefined && _isTextToken(t) && isNewline(t.content);
-export const isNewlineToken = flatEvery(_isNewlineToken);
+export const isNewlineToken = (t?: FinalToken): boolean =>
+  t === undefined ? false : flatEvery(_isNewlineToken)(t);
 
 export const isNotWhitespaceToken = complement(isWhitespaceToken);
 

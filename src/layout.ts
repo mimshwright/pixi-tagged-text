@@ -431,31 +431,46 @@ const layout = (
   let wordWidth = 0;
   let word: WordToken = [];
   let line: LineToken = [];
-  const lines: ParagraphToken = [];
-  let tallestHeight = 0;
+  const allLines: ParagraphToken = [];
+  let tallestHeightInLine = 0;
 
-  function finalizeLineAndMoveCursorToNextLine() {
-    // finalize Line
-    lines.push(line);
+  function addWordBufferToLineBuffer() {
+    if (word !== undefined && word.length > 0) {
+      // add word to line
+      line.push(word);
+    }
+
+    // reset word buffer
+    word = [];
+    wordWidth = 0;
+  }
+
+  function addLineToListOfLines() {
+    allLines.push(line);
     line = [];
+  }
+
+  function addLineToListOfLinesAndMoveCursorToNextLine(token: FinalToken) {
+    // finalize Line
+    addLineToListOfLines();
 
     // move cursor to next line
     cursor.x = 0;
-    cursor.y = cursor.y + tallestHeight;
+    cursor.y = cursor.y + tallestHeightInLine;
 
     // reset tallestHeight
-    tallestHeight = 0;
+    tallestHeightInLine = 0;
+    setTallestHeight(token);
   }
 
-  function setTallestHeight(token: FinalToken): void {
-    tallestHeight = Math.max(
-      tallestHeight,
-      token.fontProperties.fontSize,
-      lineSpacing
-    );
+  function setTallestHeight(token?: FinalToken): void {
+    const fontSize = token?.fontProperties?.fontSize ?? 0;
+    const height = token?.bounds?.height ?? 0;
+
+    tallestHeightInLine = Math.max(tallestHeightInLine, fontSize, lineSpacing);
     // Don't try to measure the height of newline tokens
     if (isNewlineToken(token) === false) {
-      tallestHeight = Math.max(tallestHeight, token.bounds.height);
+      tallestHeightInLine = Math.max(tallestHeightInLine, height);
     }
   }
 
@@ -468,11 +483,11 @@ const layout = (
     cursor.x += token.bounds.width;
   }
 
-  function positionWordAtCursorAndAdvanceCursor(): void {
+  function positionWordBufferAtCursorAndAdvanceCursor(): void {
     word.forEach(positionTokenAtCursorAndAdvanceCursor);
   }
 
-  function wordShouldWrap(): boolean {
+  function wordInBufferExceedsLineLength(): boolean {
     return cursor.x + wordWidth > maxWidth;
   }
 
@@ -480,80 +495,75 @@ const layout = (
     return token.style[IMG_DISPLAY_PROPERTY] === "block";
   }
 
-  function addTokenToWord(token: FinalToken): void {
+  function addTokenToWordAndUpdateWordWidth(token: FinalToken): void {
     // add the token to the current word buffer.
     word.push(token);
     wordWidth += token.bounds.width;
   }
 
-  function finalizeWord() {
-    if (word !== undefined && word.length > 0) {
-      // add word to line
-      line.push(word);
-    }
-
-    // reset word buffer
-    word = [];
-    wordWidth = 0;
-  }
-
+  let token;
   for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    const isLastToken = i === tokens.length - 1;
+    token = tokens[i];
+    const isFirstToken = i === 0;
     const isWhitespace = isWhitespaceToken(token);
     const isImage = isSpriteToken(token);
-    const isEndOfWord = isWhitespace || isImage;
+    const isWordEndingToken = isWhitespace || isImage;
+    const previousWord = word[0];
+    const previousWordIsBlockImage = previousWord && isBlockImage(previousWord);
+    const previousWordIsWhitespace =
+      previousWord && isWhitespaceToken(previousWord);
+    const previousWordIsNewline = previousWord && isNewlineToken(previousWord);
 
-    setTallestHeight(token);
+    // if this is a character that splits up words, like a whitespace or image.
+    // This block essentially operates on the previous word.
+    if (
+      isFirstToken === false &&
+      (isWordEndingToken || previousWordIsWhitespace)
+    ) {
+      // finalize the previous word.
 
-    // the current word is finished, position the segments in the word buffer.
-    if (isEndOfWord) {
-      // if it exceeds the wrap width, wrap it to next line.
-      // Note, the word will only move to the next line once when it encounters an end of word token like a space or image.
-      if (wordShouldWrap()) {
-        finalizeLineAndMoveCursorToNextLine();
+      // if the previous word exceeds the wrap width, wrap it to next line.
+      // Note, if this is the first word in a line, the word will only move to the next line once when it encounters an end of word token like a space or image.
+      const wordInBufferIsFirstWord = i === 1;
+      if (
+        wordInBufferExceedsLineLength() &&
+        wordInBufferIsFirstWord === false &&
+        previousWordIsNewline === false
+      ) {
+        addLineToListOfLinesAndMoveCursorToNextLine(token);
       }
 
       // move the word segments to the cursor location
-      positionWordAtCursorAndAdvanceCursor();
-
-      finalizeWord();
+      positionWordBufferAtCursorAndAdvanceCursor();
+      addWordBufferToLineBuffer();
     }
 
-    setTallestHeight(token);
-    addTokenToWord(token);
+    setTallestHeight(previousWord);
 
-    if (isWhitespace) {
-      // position the whitespace.
-      positionTokenAtCursorAndAdvanceCursor(token);
+    // If the token is a newline character,
+    // move the cursor to next line (after adding it to the line it was written on)
+    if (previousWordIsNewline || previousWordIsBlockImage) {
+      addLineToListOfLinesAndMoveCursorToNextLine(token);
+    }
 
-      finalizeWord();
+    addTokenToWordAndUpdateWordWidth(token);
+  }
 
-      // If the token is a newline character,
-      // move the cursor to next line.
-      if (isNewlineToken(token)) {
-        finalizeLineAndMoveCursorToNextLine();
-      }
-    } else {
-      // if non-whitespace...
-
-      if (isImage) {
-        if (isBlockImage(token)) {
-          finalizeLineAndMoveCursorToNextLine();
-          positionWordAtCursorAndAdvanceCursor();
-        }
-      }
-      if (isLastToken) {
-        if (wordShouldWrap()) {
-          finalizeLineAndMoveCursorToNextLine();
-        }
-        positionWordAtCursorAndAdvanceCursor();
-        line.push(word);
-        lines.push(line);
-      }
+  // After we reach the last token, add it to the word and finalize both buffers.
+  if (wordInBufferExceedsLineLength()) {
+    if (token) {
+      addLineToListOfLinesAndMoveCursorToNextLine(token);
     }
   }
-  const collapsedWhitespace = collapseWhitespacesOnEndOfLines(lines);
+  if (word.length > 0) {
+    positionWordBufferAtCursorAndAdvanceCursor();
+    addWordBufferToLineBuffer();
+  }
+  if (line.length > 0) {
+    addLineToListOfLines();
+  }
+
+  const collapsedWhitespace = collapseWhitespacesOnEndOfLines(allLines);
   const alignedLines = alignLines(align, maxWidth, collapsedWhitespace);
   const valignedLines = verticalAlignInLines(alignedLines, lineSpacing);
 
