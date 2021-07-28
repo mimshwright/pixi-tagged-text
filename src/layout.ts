@@ -504,57 +504,38 @@ const layout = (
   let token;
   for (let i = 0; i < tokens.length; i++) {
     token = tokens[i];
-    const isFirstToken = i === 0;
     const isWhitespace = isWhitespaceToken(token);
+    const isNewline = isNewlineToken(token);
     const isImage = isSpriteToken(token);
     const isWordEndingToken = isWhitespace || isImage;
-    const previousWord = word[0];
-    const previousWordIsBlockImage = previousWord && isBlockImage(previousWord);
-    const previousWordIsWhitespace =
-      previousWord && isWhitespaceToken(previousWord);
-    const previousWordIsNewline = previousWord && isNewlineToken(previousWord);
 
-    // if this is a character that splits up words, like a whitespace or image.
-    // This block essentially operates on the previous word.
-    if (
-      isFirstToken === false &&
-      (isWordEndingToken || previousWordIsWhitespace)
-    ) {
-      // finalize the previous word.
-
-      // if the previous word exceeds the wrap width, wrap it to next line.
-      // Note, if this is the first word in a line, the word will only move to the next line once when it encounters an end of word token like a space or image.
-      const wordInBufferIsFirstWord = i === 1;
-      if (
-        wordInBufferExceedsLineLength() &&
-        wordInBufferIsFirstWord === false &&
-        previousWordIsNewline === false
-      ) {
-        addLineToListOfLinesAndMoveCursorToNextLine(token);
-      }
-
-      // move the word segments to the cursor location
+    if (isWordEndingToken) {
       positionWordBufferAtCursorAndAdvanceCursor();
       addWordBufferToLineBuffer();
     }
 
-    setTallestHeight(previousWord);
+    addTokenToWordAndUpdateWordWidth(token);
+    setTallestHeight(token);
 
-    // If the token is a newline character,
-    // move the cursor to next line (after adding it to the line it was written on)
-    if (previousWordIsNewline || previousWordIsBlockImage) {
-      addLineToListOfLinesAndMoveCursorToNextLine(token);
+    // always immediately add whitespace to the line.
+    if (isWhitespace) {
+      positionWordBufferAtCursorAndAdvanceCursor();
+      addWordBufferToLineBuffer();
     }
 
-    addTokenToWordAndUpdateWordWidth(token);
+    // If the token is a newline character,
+    // move the cursor to next line immediately
+    if (isNewline || isBlockImage(token)) {
+      addLineToListOfLinesAndMoveCursorToNextLine(token);
+    } else if (wordInBufferExceedsLineLength()) {
+      // don't wrap if it's the first word in the line.
+      if (line.length > 0) {
+        addLineToListOfLinesAndMoveCursorToNextLine(token);
+      }
+    }
   }
 
   // After we reach the last token, add it to the word and finalize both buffers.
-  if (wordInBufferExceedsLineLength()) {
-    if (token) {
-      addLineToListOfLinesAndMoveCursorToNextLine(token);
-    }
-  }
   if (word.length > 0) {
     positionWordBufferAtCursorAndAdvanceCursor();
     addWordBufferToLineBuffer();

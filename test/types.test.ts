@@ -112,7 +112,7 @@ describe("Type validation", () => {
       expect(isNewlineToken(spriteToken)).toBeFalsy();
       expect(isNewlineToken(spaceToken)).toBeFalsy();
     });
-    it("Should word recursively.", () => {
+    it("Should work recursively.", () => {
       expect(
         isNewlineToken([newlineToken, [newlineToken], newlineToken])
       ).toBeTruthy();

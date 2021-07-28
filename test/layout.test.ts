@@ -379,6 +379,70 @@ aa bb aa`;
           ).toBeGreaterThan(www);
         });
 
+        describe("When the line width is about exactly the same as wordWrapWidth the last space appears on the next line. It should not include the final space in a line in the overall layout calculus. It should appear after the last word in the line and have a width of 0. (Issue 100)", () => {
+          // This string will wrap right after the comma.
+          const text = "XXXX XXXXX, XX XXXX.";
+          const style = {
+            fontFamily: "arial",
+            fontSize: 24,
+            align: "left" as Align,
+            wordWrap: true,
+            wordWrapWidth: 200,
+          };
+          const spaceWrap = {
+            children: [text],
+            style,
+            tags: "",
+          };
+
+          const tokens = layout.calculateFinalTokens(spaceWrap);
+          const [line0, line1] = tokens;
+          test("First line contains first 2 words and final space before wrap", () => {
+            expect(line0).toHaveLength(6);
+          });
+          test("Second line contains the final word.", () => {
+            expect(line1).toHaveLength(1);
+          });
+
+          const [
+            ,
+            ,
+            ,
+            earlierSpace,
+            lastWordFirstLine,
+            finalSpace,
+            firstWordSecondLine,
+          ] = tokens.flat(2);
+          test("Check that the line is wrapping at the right place.", () => {
+            const lastWordRightEdge =
+              lastWordFirstLine.bounds.x + lastWordFirstLine.bounds.width;
+            expect(lastWordRightEdge).toBeLessThan(200);
+            expect(
+              lastWordRightEdge + firstWordSecondLine.bounds.width
+            ).toBeGreaterThan(200);
+          });
+          test("Spaces are defined as expected", () => {
+            expect(earlierSpace.content).toBe(" ");
+            expect(finalSpace.content).toBe(" ");
+          });
+          test("Space has width 0", () => {
+            expect(earlierSpace.bounds.width).toBeGreaterThan(0);
+            expect(finalSpace.bounds.width).toBe(0);
+          });
+          test("Space is at the end of the first line", () => {
+            expect(finalSpace.bounds.y).toBe(0);
+          });
+
+          test("Words are defined as expected", () => {
+            expect(lastWordFirstLine.content).toBe("XX");
+            expect(firstWordSecondLine.content).toBe("XXXX.");
+          });
+          test("XX is at the start of the second line", () => {
+            expect(firstWordSecondLine.bounds.x).toBe(0);
+            expect(firstWordSecondLine.bounds.y).toBeGreaterThan(0);
+          });
+        });
+
         it("When wordWrap is true, text can sometimes be larger than wordWrapWidth if a single word is very long.", () => {
           const shared = {
             children: ["abba bbabb abababbaba a"],
@@ -422,9 +486,10 @@ aa bb aa`;
 
           // expect 2 lines
           expect(firstWordLong.length).toBe(2);
-          // expect 1 word in the first line.
-          expect(firstWordLong[0]).toHaveLength(1);
+          // expect 1 word and a space in the first line.
+          expect(firstWordLong[0]).toHaveLength(2);
           expect(firstWordLong[0][0][0].content).toBe("aaaaaaaaaaaaaaaaaaaa");
+          expect(firstWordLong[0][1][0].content).toBe(" ");
         });
 
         describe("If the last word in the string should make the line wrap, it should wrap. (Issue 100)", () => {
