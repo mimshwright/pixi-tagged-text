@@ -56,6 +56,24 @@ describe("TaggedText", () => {
       expect(t.tagStyles).toHaveProperty("b");
     });
 
+    describe("defaultStyles", () => {
+      it("Should define some styles by default like text color: black.", () => {
+        const text = new TaggedText("Hello");
+        expect(text.defaultStyle.fill).toEqual(0);
+      });
+      it("Should provide the default styles as a static value.", () => {
+        const defaultStyles = TaggedText.defaultStyles;
+        expect(defaultStyles).toHaveProperty("default");
+        expect(defaultStyles.default).toHaveProperty("align", "left");
+        expect(defaultStyles.default).toHaveProperty("fill", 0);
+      });
+      it("defaultStyles should not be editable.", () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        expect(() => (TaggedText.defaultStyles = {})).toThrow();
+        expect(TaggedText.defaultStyles).toHaveProperty("default");
+      });
+    });
     describe("constructor takes a list of options.", () => {
       describe("debug", () => {
         const control = new TaggedText("Test <b><i>test</i></b>", style);

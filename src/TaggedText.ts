@@ -61,8 +61,15 @@ const DEBUG = {
     dropShadow: true,
   },
 };
+const DEFAULT_STYLE_SET = { default: DEFAULT_STYLE };
 
+Object.freeze(DEFAULT_STYLE_SET);
+Object.freeze(DEFAULT_STYLE);
 export default class TaggedText extends PIXI.Sprite {
+  public static get defaultStyles(): TextStyleSet {
+    return DEFAULT_STYLE_SET;
+  }
+
   // todo: allow setting options after the constructor is called. Make sure to call update()
   /** Settings for the TaggedText component. */
   private _options: TaggedTextOptions;
