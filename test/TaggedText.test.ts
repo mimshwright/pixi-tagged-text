@@ -74,6 +74,23 @@ describe("TaggedText", () => {
         expect(TaggedText.defaultStyles).toHaveProperty("default");
       });
     });
+    describe("defaultOptions", () => {
+      it("Should define some options by default like text debug:false.", () => {
+        const text = new TaggedText("Hello");
+        expect(text.options.debug).toBeFalsy();
+      });
+      it("Should provide the default options as a static value.", () => {
+        const defaultOptions = TaggedText.defaultOptions;
+        expect(defaultOptions).toHaveProperty("splitStyle", "words");
+        expect(defaultOptions).toHaveProperty("debug", false);
+      });
+      it("defaultOptions should not be editable.", () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        expect(() => (TaggedText.defaultOptions = {})).toThrow();
+        expect(TaggedText.defaultOptions).toHaveProperty("splitStyle");
+      });
+    });
     describe("constructor takes a list of options.", () => {
       describe("debug", () => {
         const control = new TaggedText("Test <b><i>test</i></b>", style);

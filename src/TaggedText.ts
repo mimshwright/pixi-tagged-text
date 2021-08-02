@@ -69,6 +69,9 @@ export default class TaggedText extends PIXI.Sprite {
   public static get defaultStyles(): TextStyleSet {
     return DEFAULT_STYLE_SET;
   }
+  public static get defaultOptions(): TaggedTextOptions {
+    return DEFAULT_OPTIONS;
+  }
 
   // todo: allow setting options after the constructor is called. Make sure to call update()
   /** Settings for the TaggedText component. */
