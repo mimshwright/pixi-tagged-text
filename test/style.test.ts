@@ -673,6 +673,40 @@ describe("style module", () => {
         underlineOffset: 0,
       });
     });
+
+    it(`Should use the decorationColor and decorationThickness instead of fill color and default thickness if it's defined.`, () => {
+      const overunder: TextStyleExtended = {
+        textDecoration: "overline underline",
+        fill: "#FF6600",
+        decorationColor: "#669966",
+        decorationThickness: 5,
+      };
+
+      expect(style.convertDecorationToLineProps(overunder)).toMatchObject({
+        fill: "#FF6600",
+        textDecoration: "overline underline",
+        overlineColor: "#669966",
+        overlineThickness: 5,
+        overlineOffset: 0,
+        underlineColor: "#669966",
+        underlineThickness: 5,
+        underlineOffset: 0,
+      });
+
+      overunder.underlineColor = "#9900FF";
+      overunder.underlineThickness = 1;
+      overunder.underlineOffset = 10;
+      expect(style.convertDecorationToLineProps(overunder)).toMatchObject({
+        fill: "#FF6600",
+        textDecoration: "overline underline",
+        overlineColor: "#669966",
+        overlineThickness: 5,
+        overlineOffset: 0,
+        underlineColor: "#9900FF",
+        underlineThickness: 1,
+        underlineOffset: 10,
+      });
+    });
   });
 
   describe("extractDecorations()", () => {

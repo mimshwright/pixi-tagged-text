@@ -203,10 +203,15 @@ export const convertDecorationToLineProps = (
   style: TextStyleExtended
 ): TextStyleExtended => {
   const { textDecoration } = style;
-  const defaultColor = style.fill || DEFAULT_STYLE.fill;
+
   if (textDecoration === undefined || textDecoration === "normal") {
     return style;
   }
+
+  const { decorationColor, decorationThickness } = style;
+  const defaultColor = decorationColor || style.fill || DEFAULT_STYLE.fill;
+  const defaultThickness = decorationThickness || 1;
+  const defaultOffset = 0;
 
   function mergeDecoration(
     decorationLineType: TextDecorationValue,
@@ -217,9 +222,9 @@ export const convertDecorationToLineProps = (
         [`${decorationLineTypeCamelCase}Color`]:
           style[`${decorationLineTypeCamelCase}Color`] ?? defaultColor,
         [`${decorationLineTypeCamelCase}Thickness`]:
-          style[`${decorationLineTypeCamelCase}Thickness`] ?? 1,
+          style[`${decorationLineTypeCamelCase}Thickness`] ?? defaultThickness,
         [`${decorationLineTypeCamelCase}Offset`]:
-          style[`${decorationLineTypeCamelCase}Offset`] ?? 0,
+          style[`${decorationLineTypeCamelCase}Offset`] ?? defaultOffset,
       };
     }
     return {};
