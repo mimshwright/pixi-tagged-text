@@ -53,7 +53,9 @@ The style objects are modified versions (supersets) of `PIXI.TextStyle` (referre
 - `fontScaleHeight` - Percentage to scale the font e.g. `1.25` = 125%
 - `imgSrc` - ID of image to include in this tag (see `imgMap` under Options section)
 - `imgDisplay` - How should the image be displayed. `"block"` is no scaling, `"icon"` scales the image to match the text-size and appear inline.
-- `textDecoration` - Adds lines (e.g. underlines) to your text. Either `"normal"` or one or more of `"underline"`, `"overline"`, `"line-through"` (as a space separated string). Can also be set using the more fine-grained properties below. By default, decorations have `color` that matches the `fill` color of the text, `thickness` of `1` and `offset` `0`. **Note: You may need to enabled the `drawWhitespace` option in `options` to avoid seeing gaps in your text decorations between words.**
+- `textDecoration` - (i.e. underlines) Adds lines under, over, or through your text. Possible values are either `"normal"` or one or more of `"underline"`, `"overline"`, `"line-through"` (as a space separated string). Can also be set using the more fine-grained properties below. By default, decorations have `color` that matches the `fill` color of the text, `thickness` of `1` and `offset` `0`. **Note: You may need to enabled the `drawWhitespace` option in `options` to avoid seeing gaps in your text decorations between words.**
+- `decorationColor` - overrides the default color (`fill`) for all decorations.
+- `decorationThickness` - overrides the default thickness (`1`) for all decorations.
 - `underlineColor`
 - `underlineThickness`
 - `underlineOffset`
