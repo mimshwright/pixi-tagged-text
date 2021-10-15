@@ -45,7 +45,7 @@
     "canvas": "^2.8.0",
     "eslint": "^7.26.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "fs-extra": "^10.0.0",
     "http-server": "^0.12.3",
     "husky": "^7.0.0",
