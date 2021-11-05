@@ -225,6 +225,11 @@ describe("layout module", () => {
         },
       ]);
     });
+    it("should not throw if there is only whitespace (Issue #171)", () => {
+      expect(() => {
+        layout.alignJustify(maxLineWidth)([]);
+      }).not.toThrow();
+    });
   });
 
   describe("splitAroundWhitespace()", () => {
@@ -1096,6 +1101,25 @@ aa bb aa`;
       it("Should unset styles when there are no styles", () => {
         expect(how[0].style).not.toHaveProperty("fontWeight");
       });
+    });
+  });
+
+  describe("end to end conversion", () => {
+    const textToTags = parseTagsNew;
+    const tagsToStyles = mapTagsToStyles;
+
+    it("Should not throw when align is justify and text is whitespace.", () => {
+      expect(() => {
+        const text = "  ";
+        const styles: TextStyleSet = {
+          default: {
+            align: "justify",
+          },
+        };
+        const tagTokens = textToTags(text, Object.keys(styles));
+        const styleTokens = tagsToStyles(tagTokens, styles);
+        layout.calculateFinalTokens(styleTokens);
+      }).not.toThrow();
     });
   });
 
