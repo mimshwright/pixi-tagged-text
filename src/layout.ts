@@ -153,7 +153,7 @@ export const concatBounds = (
 };
 
 const getCombinedBounds = (bounds: Bounds[]): Bounds =>
-  bounds.reduce(concatBounds);
+  bounds.reduce(concatBounds, { x: NaN, y: NaN, width: NaN, height: NaN });
 
 export const getBoundsNested: Unary<Nested<FinalToken>, Bounds> = flatReduce<
   FinalToken,
