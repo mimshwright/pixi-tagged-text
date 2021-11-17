@@ -37,6 +37,7 @@ export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debugConsole: false,
   splitStyle: "words",
   imgMap: {},
+  scaleIcons: true,
   skipUpdates: false,
   skipDraw: false,
   drawWhitespace: false,
@@ -431,7 +432,7 @@ export default class TaggedText extends PIXI.Sprite {
   public update(skipDraw?: boolean): ParagraphToken {
     // Determine default style properties
     const tagStyles = this.tagStyles;
-    const { splitStyle } = this.options;
+    const { splitStyle, scaleIcons } = this.options;
     const spriteTemplates = this.options.imgMap && this.spriteTemplates;
     // const wordWrapWidth = this.defaultStyle.wordWrap
     //   ? this.defaultStyle.wordWrapWidth
@@ -456,7 +457,11 @@ export default class TaggedText extends PIXI.Sprite {
     // Measure font for each style
     // Measure each segment
     // Create the text segments, position and add them. (draw)
-    const newFinalTokens = calculateFinalTokens(styledTokens, splitStyle);
+    const newFinalTokens = calculateFinalTokens(
+      styledTokens,
+      splitStyle,
+      scaleIcons
+    );
 
     this._tokens = newFinalTokens;
     this._needsDraw = true;
@@ -526,6 +531,7 @@ export default class TaggedText extends PIXI.Sprite {
       }
       if (isSpriteToken(t)) {
         displayObject = t.content as PIXI.Sprite;
+
         this.sprites.push(displayObject as PIXI.Sprite);
         this.spriteContainer.addChild(displayObject);
       }

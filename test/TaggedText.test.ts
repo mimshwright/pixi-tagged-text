@@ -769,6 +769,32 @@ Line 4`);
         expect(tall.width / normal.width).toBeCloseTo(1, 0);
         expect(tall.height / normal.height).toBeCloseTo(1.5, 1);
       });
+
+      test("icons should scale with the text unless the scaleIcons flag is false.", () => {
+        const text = "<icon />A<wide><icon />A</wide>";
+        const style: TextStyleSet = {
+          default: { fontSize: 30 },
+          wide: { fontScaleWidth: 2.0 },
+          icon: { imgDisplay: "icon" },
+        };
+        const options = { imgMap: { icon } };
+        const iconTest = new TaggedText(text, style, options);
+
+        const [icon0, , icon1] = iconTest.tokensFlat;
+
+        expect(icon0.bounds.width).toEqual(icon0.bounds.height);
+        expect(icon1.bounds.width).toEqual(icon1.bounds.height * 2);
+
+        const iconTestNoScale = new TaggedText(text, style, {
+          ...options,
+          scaleIcons: false,
+        });
+
+        const [icon0NoScale, , icon1NoScale] = iconTestNoScale.tokensFlat;
+        expect(icon0NoScale.bounds.width).toEqual(icon0NoScale.bounds.height);
+        expect(icon1NoScale.bounds.width).toEqual(icon1NoScale.bounds.height);
+      });
+
       test("bogus values are handled correctly.", () => {
         const wideStyle = {
           default: { fontSize: 20 },

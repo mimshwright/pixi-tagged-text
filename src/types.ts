@@ -50,6 +50,7 @@ export interface TaggedTextOptions {
   debugConsole?: boolean;
   splitStyle?: SplitStyle;
   imgMap?: ImageSourceMap;
+  scaleIcons?: boolean;
   skipUpdates?: boolean;
   skipDraw?: boolean;
   drawWhitespace?: boolean;

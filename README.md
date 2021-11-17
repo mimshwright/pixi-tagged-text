@@ -37,7 +37,7 @@ You can get the text with tags stripped out with the `.untaggedText` implicit ge
 - Self-closing tags are ok e.g. `<img />`
 - Nesting tags is supported. Closing tags must match in a FILO order as opening tags. `<b>bold <i>bold italic</i></b>`
 - Attibutes added to tags will override any existing styles on the tag. `<b>bold</b> <b fontStyle="italic">bold italic</b>`
-- Tags that do not have a matching style are NOT treated as tags. `<i><bold>just italic!</bold></i>` would render as _<bold>just italic!</bold>_ if there were a style for `i` but not `bold`.
+- Tags that do not have a matching style are NOT treated as tags. `<i><bold>just italic!</bold></i>` would render as _&lt;bold&gt;just italic!&lt;/bold&gt;_ if there were a style for `i` but not `bold`.
 - No tag definitions are included by default. e.g. `<b>` won't be bold unless you include a style for `b` tags.
 
 #### Styles
@@ -92,6 +92,7 @@ The third parameter in the TaggedText constructor is a set of options.
 - `debugConsole` - If `true`, logs debug information to the console during `draw()`. default is `false`.
 - `splitStyle` - Allows you to specify how the text should be split into `PIXI.Text` objects when rendered. This would affect things like animations that operate on each individual piece of text within the component. Possible values are are `"words"` (default) and `"characters"`.
 - `imgMap` - An object that maps string ids like `"myImage"` to Sprite objects like `PIXI.Sprite.from("./myImage.png")`. This id will be used in the `imgSrc` style property to make a tag with that id render the sprite. As of v2.1.4, in addition to Sprites, you can also use any value supported by `Sprite.from()` or `Texture.from()` (including ImageHTMLElement or url strings). When a style contains `imgSrc="myImage"`, the matching sprite is used. By default, each of the keys you provide here will automatically be added as a style in the `tagStyles` (equivalent to `{ myImage: { imgSrc: "myImage"}}`) so you can add a tag `<myImage />`. default is `{}`.
+- `scaleIcons` - When `true`, images in the imgMap that use `imgDisplay: icon` will scale with the text when `fontScaleWidth` or `fontScaleHeight` are set. Default is `true`.
 - `drawWhitespace` - When `true`, whitespace characters are rendered as their own Text objects. Default is `false`.
 - `wrapEmoji` - When `true`, emoji characters are automatically wrapped in a special tag `<__EMOJI__>` which allows the user to specify styles for emoji only. A base style is automatically defined for `__EMOJI__` that sets the `font-family` to `sans-serif`. This helps to solve some issues with rendering on certain fonts that don't handle emojis well. Default is `true`. (This feature may be removed in future updates)
 - `skipUpdates` - When `true`, `update()` will not be called when text or styles are changed; it must be called explicitly or overridden using the skipUpdate parameter in functions such as `setText()`. default is `false`.

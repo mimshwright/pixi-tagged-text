@@ -580,7 +580,8 @@ export const splitText = (s: string, splitStyle: SplitStyle): string[] => {
 
 export const calculateFinalTokens = (
   styledTokens: StyledTokens,
-  splitStyle: SplitStyle = "words"
+  splitStyle: SplitStyle = "words",
+  scaleIcons = true
 ): ParagraphToken => {
   // Create a text field to use for measurements.
   const sizer = new PIXI.Text("");
@@ -680,6 +681,15 @@ export const calculateFinalTokens = (
           if (h > 1 && sprite.scale.y === 1) {
             const ratio = (fontProperties.ascent / h) * ICON_SCALE_BASE;
             sprite.scale.set(ratio);
+          }
+
+          if (scaleIcons) {
+            const {
+              fontScaleWidth: scaleX = 1.0,
+              fontScaleHeight: scaleY = 1.0,
+            } = style;
+            sprite.scale.x *= scaleX;
+            sprite.scale.y *= scaleY;
           }
         }
 
