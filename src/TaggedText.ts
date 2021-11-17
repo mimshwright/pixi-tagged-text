@@ -37,6 +37,7 @@ export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debugConsole: false,
   splitStyle: "words",
   imgMap: {},
+  scaleIcons: true,
   skipUpdates: false,
   skipDraw: false,
   drawWhitespace: false,
@@ -526,6 +527,7 @@ export default class TaggedText extends PIXI.Sprite {
       }
       if (isSpriteToken(t)) {
         displayObject = t.content as PIXI.Sprite;
+
         this.sprites.push(displayObject as PIXI.Sprite);
         this.spriteContainer.addChild(displayObject);
       }
