@@ -159,14 +159,14 @@ const selfClosingTagSearch = (() => {
       // attribute group
       group(any(not(TAG_SLASH, TAG_CLOSE))) +
       TAG_SELF_CLOSE,
-    `gs`
+    `g`
   );
 })();
 
 export const wrapEmoji = (input: string): string => {
   const emojiRegex = new RegExp(
     `((<|</)[^>]*)?(${getEmojiRegex().source})+`,
-    "gums"
+    "gum"
   );
 
   return input.replaceAll(emojiRegex, (match, tagStart) => {
