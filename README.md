@@ -51,6 +51,7 @@ The style objects are modified versions (supersets) of `PIXI.TextStyle` (referre
 - `textTransform` - Options are `"normal"`, `"capitalize"`, `"uppercase"`, `"lowercase"`
 - `fontScaleWidth` - Percentage to scale the font e.g. `0.5` = 50%
 - `fontScaleHeight` - Percentage to scale the font e.g. `1.25` = 125%
+- `paragraphSpacing` - Additional spacing between paragraphs that is added when you use an explicit carriage return rather than letting the text wrap at the end of a line. Default is `0`. Can also be negative.
 - `imgSrc` - ID of image to include in this tag (see `imgMap` under Options section)
 - `imgDisplay` - How should the image be displayed. `"block"` is no scaling, `"icon"` scales the image to match the text-size and appear inline.
 - `textDecoration` - (i.e. underlines) Adds lines under, over, or through your text. Possible values are either `"normal"` or one or more of `"underline"`, `"overline"`, `"line-through"` (as a space separated string). Can also be set using the more fine-grained properties below. By default, decorations have `color` that matches the `fill` color of the text, `thickness` of `1` and `offset` `0`. **Note: You may need to enabled the `drawWhitespace` option in `options` to avoid seeing gaps in your text decorations between words.**
