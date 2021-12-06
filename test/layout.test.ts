@@ -1,4 +1,3 @@
-import { TextStyleExtended } from "./../dist/types.d";
 import {
   Align,
   createEmptyFinalToken,
@@ -7,6 +6,8 @@ import {
   StyledToken,
   StyledTokens,
   TextStyleSet,
+  TextStyleExtended,
+  LineToken,
 } from "./../src/types";
 import { splitText } from "./../src/layout";
 import * as PIXI from "pixi.js";
@@ -1104,10 +1105,9 @@ aa bb aa`;
     });
   });
 
+  const textToTags = parseTagsNew;
+  const tagsToStyles = mapTagsToStyles;
   describe("end to end conversion", () => {
-    const textToTags = parseTagsNew;
-    const tagsToStyles = mapTagsToStyles;
-
     it("Should not throw when align is justify and text is whitespace.", () => {
       expect(() => {
         const text = "  ";
@@ -1120,6 +1120,99 @@ aa bb aa`;
         const styleTokens = tagsToStyles(tagTokens, styles);
         layout.calculateFinalTokens(styleTokens);
       }).not.toThrow();
+    });
+  });
+
+  describe("paragraphSpacing", () => {
+    const text = `line0
+line1\nline2 goes on until it wraps to line3
+<negative>line4
+line5</negative>`;
+
+    const stylesControl: TextStyleSet = {
+      default: {
+        fontSize: 16,
+        wordWrap: true,
+        wordWrapWidth: 150,
+      },
+      negative: {},
+    };
+    const styles: TextStyleSet = {
+      default: { ...stylesControl.default, paragraphSpacing: 10 },
+      negative: {
+        paragraphSpacing: -10,
+      },
+    };
+
+    const tagTokensControl = textToTags(text, Object.keys(stylesControl));
+    const tagTokens = textToTags(text, Object.keys(styles));
+    const styleTokensControl = mapTagsToStyles(tagTokensControl, stylesControl);
+    const styleTokens = mapTagsToStyles(tagTokens, styles);
+    const tokensControl = layout.calculateFinalTokens(styleTokensControl);
+    const tokens = layout.calculateFinalTokens(styleTokens);
+    const [
+      line0Control,
+      line1Control,
+      line2Control,
+      line3Control,
+      line4Control,
+      line5Control,
+    ] = tokensControl;
+    const [line0, line1, line2, line3, line4, line5] = tokens;
+
+    const yOf = (line: LineToken) => line[0][0].bounds.y;
+    const distanceBetween = (lineB: LineToken, lineA: LineToken) =>
+      yOf(lineB) - yOf(lineA);
+
+    const { ascent, descent } = line0Control[0][0].fontProperties;
+    const lineSpacing = ascent + descent;
+
+    const distanceBetweenNormalLines = distanceBetween(line3, line2);
+    const distanceBetweenParagraphs = distanceBetween(line1, line0);
+    const distanceBetweenParagraphsSlashN = distanceBetween(line2, line1);
+    const distanceBetweenParagraphsNegative = distanceBetween(line5, line4);
+
+    test("Control works as expected", () => {
+      expect(line0Control[0][0].content).toBe("line0");
+      expect(line1Control[0][0].content).toBe("line1");
+      expect(line2Control[0][0].content).toBe("line2");
+      expect(line3Control[0][0].content).toBe("wraps");
+      expect(line3Control[4][0].content).toBe("line3");
+      expect(line4Control[0][0].content).toBe("line4");
+      expect(line5Control[0][0].content).toBe("line5");
+
+      expect(yOf(line0Control)).toBe(lineSpacing * 0);
+      expect(yOf(line1Control)).toBe(lineSpacing * 1);
+      expect(yOf(line2Control)).toBe(lineSpacing * 2);
+      expect(yOf(line3Control)).toBe(lineSpacing * 3);
+      expect(yOf(line4Control)).toBe(lineSpacing * 4);
+      expect(yOf(line5Control)).toBe(lineSpacing * 5);
+    });
+    test("That line breaks happen as expected", () => {
+      expect(line0[0][0].content).toBe("line0");
+      expect(line1[0][0].content).toBe("line1");
+      expect(line2[0][0].content).toBe("line2");
+      expect(line3[0][0].content).toBe("wraps");
+      expect(line3[4][0].content).toBe("line3");
+      expect(line4[0][0].content).toBe("line4");
+      expect(line5[0][0].content).toBe("line5");
+    });
+    it("Should draw the first line at 0", () => {
+      expect(yOf(line0)).toBe(0);
+    });
+    it("Shouldn't change normal lines without hard returns", () => {
+      expect(distanceBetweenNormalLines).toBe(lineSpacing);
+    });
+    it("Should add extra space after newline characters when you use paragraphSpacing.", () => {
+      expect(distanceBetweenParagraphs).toBe(distanceBetweenNormalLines + 10);
+    });
+    it("Should work the same for \\n or newlines in template strings.", () => {
+      expect(distanceBetweenParagraphs).toBe(distanceBetweenParagraphsSlashN);
+    });
+    it("Should work with negative values.", () => {
+      expect(distanceBetweenParagraphsNegative).toBe(
+        distanceBetweenNormalLines - 10
+      );
     });
   });
 

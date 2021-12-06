@@ -129,6 +129,7 @@ export interface TextStyleExtended
   textDecoration?: TextDecoration;
   fontScaleWidth?: number;
   fontScaleHeight?: number;
+  paragraphSpacing?: number;
 }
 
 export interface TextDecorationMetrics {
