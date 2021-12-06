@@ -306,8 +306,9 @@ export const verticalAlignInLines = (
   overrideValign?: VAlign
 ): ParagraphToken => {
   let previousTallestToken: FinalToken = createEmptyFinalToken();
-
   let previousLineBottom = 0;
+  let paragraphModifier = 0;
+
   const newLines: ParagraphToken = [];
 
   for (const line of lines) {
@@ -315,18 +316,21 @@ export const verticalAlignInLines = (
     // const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
 
     let tallestToken: FinalToken = getTallestToken(line);
-    let tallestHeight = tallestToken.bounds?.height ?? 0;
-    let tallestAscent = tallestToken.fontProperties?.ascent ?? 0;
+    // Note, paragraphModifier from previous line applied here.
+    let tallestHeight = (tallestToken.bounds?.height ?? 0) + paragraphModifier;
+    let tallestAscent =
+      (tallestToken.fontProperties?.ascent ?? 0) + paragraphModifier;
+    paragraphModifier = 0;
+
+    const lastToken = line[line.length - 1][0];
+    if (isNewlineToken(lastToken)) {
+      // Note, this will get applied on the NEXT line
+      paragraphModifier = tallestToken.style.paragraphSpacing ?? 0;
+    }
     if (isSpriteToken(tallestToken)) {
       tallestHeight += tallestToken.fontProperties.descent;
       tallestAscent = tallestToken.bounds.height;
     }
-
-    // const previousTallestHeight = previousTallestToken.bounds.height;
-
-    // if (line.length === 1 && isWhitespaceToken(line[0])) {
-    //   tallestHeight = previousTallestHeight;
-    // }
 
     if (tallestHeight === 0) {
       tallestToken = previousTallestToken;
@@ -337,13 +341,6 @@ export const verticalAlignInLines = (
     for (const word of line) {
       const newWord: WordToken = [];
       for (const segment of word) {
-        if (isNewlineToken(segment)) {
-          const newToken = {
-            ...segment,
-          };
-          newWord.push(newToken);
-          continue;
-        }
         const { bounds, fontProperties, style } = segment;
         const height = bounds.height;
 
@@ -353,6 +350,15 @@ export const verticalAlignInLines = (
         let { ascent } = fontProperties;
         if (isSpriteToken(segment)) {
           ascent = segment.bounds.height;
+        }
+
+        if (isNewlineToken(segment)) {
+          const newToken = {
+            ...segment,
+          };
+          newToken.bounds.y = previousLineBottom + tallestAscent - ascent;
+          newWord.push(newToken);
+          continue;
         }
 
         let newY = 0;
@@ -387,13 +393,6 @@ export const verticalAlignInLines = (
   }
 
   return newLines;
-
-  // ? lines.map(valignTop)
-  //   : valign === "middle"
-  //   ? lines.map(valignMiddle)
-  //   : valign === "bottom"
-  //   ? lines.map(valignBottom)
-  //   : lines;
 };
 
 export const collapseWhitespacesOnEndOfLines = (
@@ -468,6 +467,7 @@ const layout = (
     const height = token?.bounds?.height ?? 0;
 
     tallestHeightInLine = Math.max(tallestHeightInLine, fontSize, lineSpacing);
+
     // Don't try to measure the height of newline tokens
     if (isNewlineToken(token) === false) {
       tallestHeightInLine = Math.max(tallestHeightInLine, height);
