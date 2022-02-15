@@ -1,6 +1,6 @@
 {
   "name": "pixi-tagged-text",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "TaggedText for pixi.js",
   "author": "Mims Wright, JT Smith, tleunen",
   "license": "MIT",
@@ -48,6 +48,7 @@
     "ansi-regex": "^5.0.1",
     "argos-cli": "0.3.3",
     "canvas": "^2.8.0",
+    "cz-conventional-changelog": "3.3.0",
     "eslint": "^7.26.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
@@ -62,7 +63,7 @@
     "opener": "^1.5.1",
     "prettier": "^2.3.0",
     "set-value": "^4.0.1",
-    "standard-version": "^9.3.0",
+    "standard-version": "^9.3.2",
     "ts-jest": "^26.5.6",
     "typescript": "^4.2.4"
   },
@@ -80,5 +81,10 @@
     "lint": "npm run prettier && npm run eslint",
     "prepare": "install-peers && husky install",
     "pre-commit": "npm run lint && npm run test"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
