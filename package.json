@@ -45,7 +45,7 @@
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^4.23.0",
     "@typescript-eslint/parser": "^4.22.1",
-    "ansi-regex": "^5.0.1",
+    "ansi-regex": "^6.0.1",
     "argos-cli": "0.3.3",
     "canvas": "^2.8.0",
     "commitizen": "^4.2.4",
