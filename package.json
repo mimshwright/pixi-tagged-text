@@ -79,7 +79,7 @@
     "prettier:fix": "npm run prettier --write",
     "eslint": "eslint ./src/**/*.ts",
     "lint": "npm run prettier && npm run eslint",
-    "pre-commit": "npm run lint && npm run test",
+    "pre-commit": "npm run prettier:fix && npm run lint && npm run test",
     "commit": "cz",
     "commit-retry": "cz --retry",
     "ci": "npm run commit",
