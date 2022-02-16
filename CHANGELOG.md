@@ -4,15 +4,14 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [2.5.6](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.4...v2.5.6) (2022-02-16)
 
-
 ### Chore
 
-* **changelog:** added a pretteir fix for changelog before commit so it doesn't break ([42e924d](https://github.com/mimshwright/pixi-tagged-text/commit/42e924deedbfc70119465d39b9332f3602a8a759))
-* **deps-dev:** bump @types/emoji-regex from 8.0.0 to 9.2.0 ([780bc63](https://github.com/mimshwright/pixi-tagged-text/commit/780bc63656ab071a9fb9a75febe75215ce00da06))
-* **deps-dev:** bump @types/jest from 27.0.3 to 27.4.0 ([ad7b072](https://github.com/mimshwright/pixi-tagged-text/commit/ad7b0721ad2d594f14b78835e515eb6be8d1d24c))
-* **deps:** bump follow-redirects from 1.14.1 to 1.14.8 ([23db225](https://github.com/mimshwright/pixi-tagged-text/commit/23db22547c2481dbaea3b9778b46fe68906604d6))
-* **deps:** bump nanoid from 3.1.23 to 3.2.0 ([0789c1f](https://github.com/mimshwright/pixi-tagged-text/commit/0789c1faed1fe18e6226f2df884a15250902fbaf))
-* **release:** 2.5.5 ([1aafe85](https://github.com/mimshwright/pixi-tagged-text/commit/1aafe85f60b1f53db4f2504be21a1f088e927e44))
+- **changelog:** added a pretteir fix for changelog before commit so it doesn't break ([42e924d](https://github.com/mimshwright/pixi-tagged-text/commit/42e924deedbfc70119465d39b9332f3602a8a759))
+- **deps-dev:** bump @types/emoji-regex from 8.0.0 to 9.2.0 ([780bc63](https://github.com/mimshwright/pixi-tagged-text/commit/780bc63656ab071a9fb9a75febe75215ce00da06))
+- **deps-dev:** bump @types/jest from 27.0.3 to 27.4.0 ([ad7b072](https://github.com/mimshwright/pixi-tagged-text/commit/ad7b0721ad2d594f14b78835e515eb6be8d1d24c))
+- **deps:** bump follow-redirects from 1.14.1 to 1.14.8 ([23db225](https://github.com/mimshwright/pixi-tagged-text/commit/23db22547c2481dbaea3b9778b46fe68906604d6))
+- **deps:** bump nanoid from 3.1.23 to 3.2.0 ([0789c1f](https://github.com/mimshwright/pixi-tagged-text/commit/0789c1faed1fe18e6226f2df884a15250902fbaf))
+- **release:** 2.5.5 ([1aafe85](https://github.com/mimshwright/pixi-tagged-text/commit/1aafe85f60b1f53db4f2504be21a1f088e927e44))
 
 ### [2.5.5](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.4...v2.5.5) (2022-02-16)
 
