@@ -7,7 +7,6 @@ All notable changes to this project will be documented in this file. See [standa
 ### Chore
 
 - **changelog:** added a .versionrc file for changelog generator ([db73c5e](https://github.com/mimshwright/pixi-tagged-text/commit/db73c5e06af3d038027bd88be6b73913845e4e2b))
-- **changelog:** added config for changelog generator ([10425c4](https://github.com/mimshwright/pixi-tagged-text/commit/10425c48d1781b1d6f1f335c785c203815c34e5d))
 
 ### [2.5.3](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.2...v2.5.3) (2022-02-16)
 
