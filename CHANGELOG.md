@@ -4,13 +4,26 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [2.6.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.6...v2.6.0) (2022-02-16)
 
-### [2.5.6](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.5...v2.5.6) (2022-02-16)
+Since several patches related to the changelog and dependabot updates were released as I configured `standard-version`, I'm combining the following patches into 2.6.0
 
-### Chore
+- [2.5.6](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.5...v2.5.6)
 
+- [2.5.5](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.4...v2.5.5)
+
+- [2.5.4](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.3...v2.5.4)
+
+- [2.5.3](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.2...v2.5.3)
+
+- [2.5.2](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.1...v2.5.2)
+
+- [2.5.1](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.0...v2.5.1)
+
+### Documentation
+
+- **changelog:** retroactively completed the changelog by hand based on git history [7830fb4]
+- **changelog:** Added changelog.
+- **changelog:** Added standard-version and commitizen for automating changelogs.
 - **changelog:** added a pretteir fix for changelog before commit so it doesn't break ([42e924d](https://github.com/mimshwright/pixi-tagged-text/commit/42e924deedbfc70119465d39b9332f3602a8a759))
-
-### [2.5.5](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.4...v2.5.5) (2022-02-16)
 
 ### Chore
 
@@ -18,29 +31,7 @@ All notable changes to this project will be documented in this file. See [standa
 - **deps-dev:** bump @types/jest from 27.0.3 to 27.4.0 ([ad7b072](https://github.com/mimshwright/pixi-tagged-text/commit/ad7b0721ad2d594f14b78835e515eb6be8d1d24c))
 - **deps:** bump follow-redirects from 1.14.1 to 1.14.8 ([23db225](https://github.com/mimshwright/pixi-tagged-text/commit/23db22547c2481dbaea3b9778b46fe68906604d6))
 - **deps:** bump nanoid from 3.1.23 to 3.2.0 ([0789c1f](https://github.com/mimshwright/pixi-tagged-text/commit/0789c1faed1fe18e6226f2df884a15250902fbaf))
-
-### [2.5.4](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.3...v2.5.4) (2022-02-16)
-
-### Chore
-
-- **changelog:** added a .versionrc file for changelog generator ([db73c5e](https://github.com/mimshwright/pixi-tagged-text/commit/db73c5e06af3d038027bd88be6b73913845e4e2b))
-
-### [2.5.3](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.2...v2.5.3) (2022-02-16)
-
-### Chore
-
-- **deps-dev:** Several dependabot updates.
-
-### [2.5.2](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.1...v2.5.2) (2022-02-16)
-
-### Documentation
-
-- **changelog:** retroactively completed the changelog by hand based on git history [7830fb4]
-
-### [2.5.1](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.0...v2.5.1) (2022-02-15)
-
-- chore(changelog): Added changelog.
-- chore(changelog): Added standard-version and commitizen for automating changelogs.
+- **deps-dev:** Several additional dependabot updates
 
 ## [2.5.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.4.0...v2.5.0) (2021-12-06)
 
