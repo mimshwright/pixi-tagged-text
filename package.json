@@ -1,6 +1,6 @@
 {
   "name": "pixi-tagged-text",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "TaggedText for pixi.js",
   "author": "Mims Wright, JT Smith, tleunen",
   "license": "MIT",
@@ -48,6 +48,8 @@
     "ansi-regex": "^5.0.1",
     "argos-cli": "0.3.3",
     "canvas": "^2.8.0",
+    "commitizen": "^4.2.4",
+    "cz-conventional-changelog": "3.3.0",
     "eslint": "^7.26.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
@@ -62,23 +64,33 @@
     "opener": "^1.5.1",
     "prettier": "^2.3.0",
     "set-value": "^4.0.1",
-    "standard-version": "^9.3.0",
+    "standard-version": "^9.3.2",
     "ts-jest": "^26.5.6",
     "typescript": "^4.2.4"
   },
   "scripts": {
-    "demo": "npm run build && http-server . --port 8080 && opener http://localhost:8080/demo/index.html",
+    "prepare": "install-peers && husky install",
     "dev": "microbundle watch -f umd --name TaggedText --external 'pixi.js' --globals 'pixi.js'=PIXI",
-    "build": "microbundle --name TaggedText --external 'pixi.js' --globals  'pixi.js'=PIXI",
-    "prepublishOnly": "npm run build",
-    "release": "standard-version",
     "test": "jest",
     "test:watch": "test --watch",
+    "demo": "npm run build && http-server . --port 8080 && opener http://localhost:8080/demo/index.html",
+    "build": "microbundle --name TaggedText --external 'pixi.js' --globals  'pixi.js'=PIXI",
     "prettier": "prettier -l ./**/*.{ts,js,json,html,css,md}",
     "prettier:fix": "npm run prettier --write",
     "eslint": "eslint ./src/**/*.ts",
     "lint": "npm run prettier && npm run eslint",
-    "prepare": "install-peers && husky install",
-    "pre-commit": "npm run lint && npm run test"
-  }
+    "pre-commit": "npm run lint && npm run test",
+    "commit": "cz",
+    "commit-retry": "cz --retry",
+    "ci": "npm run commit",
+    "cirr": "npm run commit-retry",
+    "prepublishOnly": "npm run build",
+    "release": "standard-version"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "standard-version": {}
 }
