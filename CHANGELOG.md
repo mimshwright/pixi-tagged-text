@@ -2,9 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.4](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.3...v2.5.4) (2022-02-16)
+
+### Chore
+
+- **changelog:** added a .versionrc file for changelog generator ([db73c5e](https://github.com/mimshwright/pixi-tagged-text/commit/db73c5e06af3d038027bd88be6b73913845e4e2b))
+- **changelog:** added config for changelog generator ([10425c4](https://github.com/mimshwright/pixi-tagged-text/commit/10425c48d1781b1d6f1f335c785c203815c34e5d))
+
 ### [2.5.3](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.2...v2.5.3) (2022-02-16)
 
+### Chore
+
+- **deps-dev:** Several dependabot updates.
+
 ### [2.5.2](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.1...v2.5.2) (2022-02-16)
+
+### Documentation
+
+- **changelog:** retroactively completed the changelog by hand based on git history [7830fb4]
 
 ### [2.5.1](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.0...v2.5.1) (2022-02-15)
 
