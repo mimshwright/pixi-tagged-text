@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.6](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.5...v2.5.6) (2022-02-16)
+
+### Chore
+
+- **changelog:** added a pretteir fix for changelog before commit so it doesn't break ([42e924d](https://github.com/mimshwright/pixi-tagged-text/commit/42e924deedbfc70119465d39b9332f3602a8a759))
+
 ### [2.5.5](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.4...v2.5.5) (2022-02-16)
 
 ### Chore
