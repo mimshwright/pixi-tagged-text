@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.7.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.6.0...v2.7.0) (2022-02-17)
+
+### Features
+
+- **adjustFontBaseline:** Added basic support for overriding font properties. ([52db534](https://github.com/mimshwright/pixi-tagged-text/commit/52db534d574cc9fcc94569ca2b90899f493abe98)), closes [#108](https://github.com/mimshwright/pixi-tagged-text/issues/108)
+
 ## [2.6.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.5.6...v2.6.0) (2022-02-16)
 
 Since several patches related to the changelog and dependabot updates were released as I configured `standard-version`, I'm combining the following patches into 2.6.0
