@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import { parseTagsNew, removeTags, EMOJI_TAG } from "./tags";
 import {
   TaggedTextOptions,
   TextStyleSet,
@@ -22,14 +21,16 @@ import {
   isSpriteSource,
   isTextureSource,
 } from "./types";
-import { capitalize } from "./stringUtil";
-import { calculateFinalTokens, getBoundsNested } from "./layout";
+
+import { parseTagsNew, removeTags, EMOJI_TAG } from "./tags";
 import {
   combineAllStyles,
   DEFAULT_STYLE,
   getStyleForTag as getStyleForTagExt,
   mapTagsToStyles,
 } from "./style";
+import { calculateFinalTokens, getBoundsNested } from "./layout";
+import { capitalize } from "./stringUtil";
 import { fontSizeStringToNumber } from "./pixiUtils";
 
 export const DEFAULT_OPTIONS: TaggedTextOptions = {
@@ -460,7 +461,8 @@ export default class TaggedText extends PIXI.Sprite {
     const newFinalTokens = calculateFinalTokens(
       styledTokens,
       splitStyle,
-      scaleIcons
+      scaleIcons,
+      this.options.adjustFontBaseline
     );
 
     this._tokens = newFinalTokens;

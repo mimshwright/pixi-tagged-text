@@ -244,6 +244,101 @@ describe("TaggedText", () => {
           }).toThrow();
         });
       });
+      describe("adjustFontBaseline", () => {
+        const text = "<a>a</a><b>b</b><c>c</c>";
+        const style: TextStyleSet = {
+          default: { valign: "baseline" },
+          a: { fontFamily: "Arial", fontSize: 16 },
+          b: { fontFamily: "Georgia", fontSize: 14 },
+          c: { fontFamily: "Georgia", fontSize: 28 },
+        };
+        const aPercent = 0.5;
+        const bPixels = 4;
+        const cPixels = bPixels;
+        const options = {
+          adjustFontBaseline: { Arial: `${aPercent * 100}%`, Georgia: bPixels },
+        };
+        const control = new TaggedText(text, style, {});
+        const adjustFontBaseline = new TaggedText(text, style, options);
+
+        const [aControl, bControl, cControl] = control.tokensFlat;
+        const [a, b, c] = adjustFontBaseline.tokensFlat;
+
+        const aControlAscent = aControl.fontProperties.ascent;
+        const bControlAscent = bControl.fontProperties.ascent;
+        const cControlAscent = cControl.fontProperties.ascent;
+
+        const aAscent = a.fontProperties.ascent;
+        const bAscent = b.fontProperties.ascent;
+        const cAscent = c.fontProperties.ascent;
+
+        const tallestHeight = control.textContainer.height;
+        const baselineControl = Math.max(
+          aControlAscent,
+          bControlAscent,
+          cControlAscent
+        );
+
+        const baseline = Math.max(aAscent, bAscent, cAscent);
+
+        test("Check positions and size of text in control sample.", () => {
+          expect(aControl.style.fontFamily).toBe("Arial");
+          expect(aControl.style.fontSize).toBe(16);
+          expect(aControlAscent).toBe(15);
+          expect(aControl.fontProperties.descent).toBe(4);
+          expect(aControl.fontProperties.fontSize).toBe(19);
+
+          expect(bControl.style.fontFamily).toBe("Georgia");
+          expect(bControl.style.fontSize).toBe(14);
+          expect(bControlAscent).toBe(13);
+          expect(bControl.fontProperties.descent).toBe(4);
+          expect(bControl.fontProperties.fontSize).toBe(17);
+
+          expect(cControl.style.fontFamily).toBe("Georgia");
+          expect(cControl.style.fontSize).toBe(28);
+          expect(cControlAscent).toBe(26);
+          expect(cControl.fontProperties.descent).toBe(7);
+          expect(cControl.fontProperties.fontSize).toBe(33);
+
+          expect(tallestHeight).toBe(cControl.fontProperties.fontSize);
+          expect(baselineControl).toBe(cControlAscent);
+
+          expect(aControl.bounds.y).toBe(baselineControl - aControlAscent);
+          expect(bControl.bounds.y).toBe(baselineControl - bControlAscent);
+          expect(cControl.bounds.y).toBe(baselineControl - cControlAscent);
+        });
+
+        test("Check expected baseline position.", () => {
+          expect(baseline).toBe(cAscent);
+          expect(baseline).toBe(baselineControl + cPixels);
+          expect(baseline).toBe(30);
+        });
+
+        it('Should adjust "Arial" by 50% of the ascent.', () => {
+          const aOffset = aAscent - aControlAscent;
+          const aY = a.bounds.y;
+
+          expect(aControlAscent).toBe(15);
+          expect(aAscent).toBe(aControlAscent * (1 + aPercent));
+          expect(aAscent).toBe(22.5);
+          expect(aOffset).toBe(7.5);
+
+          expect(aY).toBe(baseline - aAscent);
+        });
+
+        it('Should adjust "Georgia" by 4 pixels.', () => {
+          const bOffset = bPixels;
+          const cOffset = cPixels;
+
+          const bY = b.bounds.y;
+          const cY = c.bounds.y;
+
+          expect(c.fontProperties.fontSize).toBe(tallestHeight);
+
+          expect(bY).toBe(baselineControl - bAscent + bOffset);
+          expect(cY).toBe(baselineControl - cAscent + cOffset);
+        });
+      });
 
       describe("drawWhitespace", () => {
         const noDrawWhitespace = new TaggedText("a b\nc", {});

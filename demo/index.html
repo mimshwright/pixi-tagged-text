@@ -5,6 +5,13 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.9/pixi.js"></script>
 
@@ -58,9 +65,9 @@
 <ml>multiline</ml>
 and <ms>multistyle</ms> text for
 <pixi>Pixi.js!</pixi>`;
+
             const basicStyle = {
               default: {
-                fontFamily: "Arial",
                 fontSize: "24px",
                 fill: "#cccccc",
                 align: "center",
@@ -68,6 +75,7 @@ and <ms>multistyle</ms> text for
               ml: {
                 fontStyle: "italic",
                 fill: "#ff8888",
+                fontSize: "40px",
               },
               ms: {
                 fontWeight: "bold",
@@ -80,7 +88,7 @@ and <ms>multistyle</ms> text for
               },
             };
 
-            const basic = new TaggedText(basicText, basicStyle);
+            const basic = new TaggedText(basicText, basicStyle, {});
 
             createDemo("basic", basic);
           </script>
@@ -713,6 +721,64 @@ You can also set <code>debugConsole: true</code> if you want to log information 
           </script>
         </div>
       </div>
+      <!--
+      <div class="example">
+        <div class="code">
+          <h2>adjustFontBaseline</h2>
+          <pre><code class="js"></code></pre>
+        </div>
+
+        <div class="pixi" id="adjustFontBaseline">
+          <script>
+            // adjustFontBaselines
+            const adjustFontBaselineText = `If you need to, you can manually adjust where the font sits on the baseline.
+You can use pixel values...
+<beep fontSize="10">beep</beep> <beep fontSize="20">beep</beep> <beep fontSize="30">beep</beep> <beep fontSize="40">beep</beep> <beep fontSize="50">beep</beep> +20px
+<baap fontSize="10">baap</baap> <baap fontSize="20">baap</baap> <baap fontSize="30">baap</baap> <baap fontSize="40">baap</baap> <baap fontSize="50">baap</baap> -10px
+
+...or percentages (of the ascender height)
+<boop fontSize="10">boop</boop> <boop fontSize="20">boop</boop> <boop fontSize="30">boop</boop> <boop fontSize="40">boop</boop> <boop fontSize="50">boop</boop> +100%
+
+This is designed to help with fonts which don't align correctly with the baseline so rather than being a style property, it's a mapping of font-family values to their offsets as part of the options object.`;
+
+            const adjustFontBaselineStyle = {
+              default: {
+                fontSize: "18px",
+                fill: "#FFFFFF",
+                align: "center",
+                paragraphSpacing: 20,
+              },
+              beep: {
+                fill: "#FFFF33",
+                fontFamily: "Courier New",
+              },
+              baap: {
+                fill: "#FF9966",
+                fontFamily: "Courier",
+              },
+              boop: {
+                fill: "#33FFFF",
+                fontFamily: "Georgia",
+              },
+            };
+
+            const adjustFontBaseline = new TaggedText(
+              adjustFontBaselineText,
+              adjustFontBaselineStyle,
+              {
+                debug: true,
+                adjustFontBaseline: {
+                  "Courier New": 20,
+                  Courier: -10,
+                  Georgia: "100%",
+                },
+              }
+            );
+
+            createDemo("adjustFontBaseline", adjustFontBaseline);
+          </script>
+        </div>
+      </div> -->
       <!--div class="example">
         <div class="code">
           <h2>Interaction Events</h2>

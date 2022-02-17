@@ -41,6 +41,9 @@ export const isSpriteSource = (s: ImageSource): s is SpriteSource =>
 export const isTextureSource = (s: ImageSource): s is TextureSource =>
   s instanceof HTMLImageElement || s instanceof PIXI.BaseTexture;
 
+export type FontProperty = string | number;
+export type FontMap = Record<string, FontProperty>;
+
 export type ImageSourceMap = Record<string, ImageSource>;
 export type ImageMap = Record<string, PIXI.Sprite>;
 
@@ -49,6 +52,7 @@ export interface TaggedTextOptions {
   debug?: boolean;
   debugConsole?: boolean;
   splitStyle?: SplitStyle;
+  adjustFontBaseline?: FontMap;
   imgMap?: ImageSourceMap;
   scaleIcons?: boolean;
   skipUpdates?: boolean;
@@ -63,7 +67,6 @@ export interface TaggedTextOptions {
 export const IMG_REFERENCE_PROPERTY = "imgSrc";
 export const IMG_DISPLAY_PROPERTY = "imgDisplay";
 
-// todo: add text-transform: uppercase
 export type Thickness = number;
 export type Color = string | number;
 export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
@@ -247,3 +250,8 @@ export const isNotWhitespaceToken = complement(isWhitespaceToken);
 
 export const isEmptyObject = <T extends unknown>(a: T): boolean =>
   a instanceof Object && Object.keys(a).length === 0;
+
+export const isPercent = (s: string): boolean => s.trim().endsWith("%");
+
+export const percentStringToNumber = (s: string): number =>
+  isPercent(s) ? Number(s.trim().slice(0, -1)) / 100 : NaN;
