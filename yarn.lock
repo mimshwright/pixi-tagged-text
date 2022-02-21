@@ -2368,7 +2368,7 @@ caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001219, caniuse-lite@^1.0.30001230:
   resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001284.tgz"
   integrity sha512-t28SKa7g6kiIQi6NHeOcKrOrGMzCRrXvlasPwWC26TH2QNdglgzQIRUuJ0cR3NeQPH+5jpuveeeSFDLm2zbkEw==
 
-canvas@^2.8.0:
+canvas@^2.9.0:
   version "2.9.0"
   resolved "https://registry.yarnpkg.com/canvas/-/canvas-2.9.0.tgz#7df0400b141a7e42e597824f377935ba96880f2a"
   integrity sha512-0l93g7uxp7rMyr7H+XRQ28A3ud0dKIUTIEkUe1Dxh4rjUYN7B93+SjC3r1PDKA18xcQN87OFGgUnyw7LSgNLSQ==

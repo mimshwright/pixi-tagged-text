@@ -35,7 +35,7 @@
     "2d"
   ],
   "peerDependencies": {
-    "pixi.js": "^5.3.9"
+    "pixi.js": "^6.2.2"
   },
   "dependencies": {
     "emoji-regex": "9.2.2"
@@ -47,7 +47,7 @@
     "@typescript-eslint/parser": "^4.22.1",
     "ansi-regex": "^6.0.1",
     "argos-cli": "0.3.3",
-    "canvas": "^2.8.0",
+    "canvas": "^2.9.0",
     "commitizen": "^4.2.4",
     "cz-conventional-changelog": "3.3.0",
     "eslint": "^7.26.0",

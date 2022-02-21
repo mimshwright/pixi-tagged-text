@@ -619,7 +619,7 @@ export default class TaggedText extends PIXI.Sprite {
         finalScaleWidth = 1.0;
       }
 
-      const fs = textField.style.fontSize;
+      const fs = textField.style.fontSize ?? 0;
       const fontSizePx =
         (typeof fs === "string" ? fontSizeStringToNumber(fs) : fs) *
         largerScale;
