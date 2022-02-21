@@ -4,6 +4,7 @@ import {
   TagWithAttributes,
   TextStyleExtended,
   TextStyleSet,
+  IFontMetrics,
   IMG_REFERENCE_PROPERTY,
   IMG_DISPLAY_PROPERTY,
   ImageMap,
@@ -241,7 +242,7 @@ export const convertDecorationToLineProps = (
 export const extractDecorations = (
   style: TextStyleExtended,
   textBounds: Bounds,
-  fontProperties: PIXI.IFontMetrics
+  fontProperties: IFontMetrics
 ): TextDecorationMetrics[] => {
   const { ascent, descent } = fontProperties;
   const baseline = ascent;

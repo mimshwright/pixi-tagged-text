@@ -187,10 +187,17 @@ export interface StyledToken
 }
 
 export type StyledTokens = StyledToken;
+
+export interface IFontMetrics {
+  ascent: number;
+  descent: number;
+  fontSize: number;
+}
+
 export interface FinalToken {
   content: TextToken | SpriteToken;
   bounds: Rectangle;
-  fontProperties: PIXI.IFontMetrics;
+  fontProperties: IFontMetrics;
   style: TextStyleExtended;
   tags: string;
   textDecorations?: TextDecorationMetrics[];
