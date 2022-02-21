@@ -199,6 +199,12 @@ yarn install
 yarn build
 ```
 
+Yarn should automatically install peer dependencies (including the very important pixi.js) but in my experience, you may have to run `yarn install` again after adding any additional packages.
+
+### VSCode Users
+
+If you're using the [vscode-jest extension](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest), you may need [some additional packages](https://github.com/Automattic/node-canvas#compiling) to get the tests to run in your IDE. If you're on a Mac you can use `brew bundle install` to install these packages.
+
 ## Demo
 
 You can view some examples using the command:

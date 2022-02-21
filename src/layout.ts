@@ -21,6 +21,7 @@ import {
   SpriteToken,
   SplitStyle,
   TextStyleExtended,
+  IFontMetrics,
   isNewlineToken,
   isWhitespaceToken,
   IMG_DISPLAY_PROPERTY,
@@ -589,7 +590,7 @@ export const calculateFinalTokens = (
   const sizer = new PIXI.Text("");
   const defaultStyle = styledTokens.style;
 
-  let fontProperties: PIXI.IFontMetrics;
+  let fontProperties: IFontMetrics;
 
   const generateFinalTokenFromStyledToken =
     (style: TextStyleExtended, tags: string) =>
