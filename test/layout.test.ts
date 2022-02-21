@@ -839,28 +839,28 @@ aa bb aa`;
       it("Shouldn't affect non-strked text. ", () => {
         expect(normal.content).toBe("A");
         expect(normal.style.strokeThickness ?? 0).toBe(0);
-        expect(normal.bounds.height).toBe(23);
-        expect(normal.fontProperties.ascent).toBe(18);
+        expect(normal.bounds.height).toBe(24);
+        expect(normal.fontProperties.ascent).toBe(19);
         expect(normal.fontProperties.descent).toBe(5);
-        expect(normal.fontProperties.fontSize).toBe(23);
+        expect(normal.fontProperties.fontSize).toBe(24);
       });
 
       it("Should take the stroke into account when determining the size and the fontProperties (for baseline).", () => {
         expect(stroked.content).toBe("B");
         expect(stroked.style.strokeThickness).toBe(40);
-        expect(stroked.bounds.height).toBe(63);
-        expect(stroked.fontProperties.ascent).toBe(38);
+        expect(stroked.bounds.height).toBe(64);
+        expect(stroked.fontProperties.ascent).toBe(39);
         expect(stroked.fontProperties.descent).toBe(25);
-        expect(stroked.fontProperties.fontSize).toBe(63);
+        expect(stroked.fontProperties.fontSize).toBe(64);
       });
 
       it("Should not affect any other stroked text. Sometimes this happens when fontProperties are shared. ", () => {
         expect(alsoStroked.content).toBe("C");
         expect(alsoStroked.style.strokeThickness).toBe(40);
-        expect(alsoStroked.bounds.height).toBe(63);
-        expect(alsoStroked.fontProperties.ascent).toBe(38);
+        expect(alsoStroked.bounds.height).toBe(64);
+        expect(alsoStroked.fontProperties.ascent).toBe(39);
         expect(alsoStroked.fontProperties.descent).toBe(25);
-        expect(alsoStroked.fontProperties.fontSize).toBe(63);
+        expect(alsoStroked.fontProperties.fontSize).toBe(64);
       });
     });
 
@@ -902,10 +902,10 @@ aa bb aa`;
       const H = scaled.bounds.height;
 
       it("Default should be 1x scale for X and Y.", () => {
-        expect(W).toBe(88);
-        expect(H).toBe(34);
-        expect(unscaled.bounds.width).toBe(122);
-        expect(unscaled.bounds.height).toBe(34);
+        expect(W).toBe(87);
+        expect(H).toBe(35);
+        expect(unscaled.bounds.width).toBe(121);
+        expect(unscaled.bounds.height).toBe(35);
 
         const def = makeExample({ fontScaleWidth: 1, fontScaleHeight: 1 });
         const scaleSetToDefaultValues = layout
