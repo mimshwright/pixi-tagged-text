@@ -1,6 +1,8 @@
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
+import iconSrc from "./icon.base64";
+import { iconImage, iconTexture, icon } from "./testIcon";
 import {
   Align,
   SplitStyle,
@@ -8,17 +10,8 @@ import {
   ImageDisplayMode,
   TextStyleSet,
 } from "../src/types";
-import iconSrc from "./icon.base64";
 
 describe("TaggedText", () => {
-  const ICON_SRC = `data:image/png;base64,${iconSrc}`;
-  const iconImage = new Image();
-  iconImage.src = ICON_SRC;
-  iconImage.width = 128;
-  iconImage.height = 128;
-  const iconTexture = PIXI.Texture.from(iconImage, { width: 128, height: 128 });
-  const icon = PIXI.Sprite.from(iconTexture);
-
   const style: TextStyleSet = {
     default: {
       fontSize: 10,

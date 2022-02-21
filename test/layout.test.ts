@@ -1,3 +1,4 @@
+import { cloneSprite } from "./../src/pixiUtils";
 import {
   Align,
   createEmptyFinalToken,
@@ -15,6 +16,7 @@ import * as PIXI from "pixi.js";
 import * as layout from "../src/layout";
 import * as style from "../src/style";
 import * as tags from "../src/tags";
+import { icon } from "./testIcon";
 
 const R = (...args: number[]) => new PIXI.Rectangle(...args);
 
@@ -1179,11 +1181,11 @@ line5</negative>`;
         children: ["Hello, world!"],
         tags: "",
         style: noStyle,
-      };
+      } as StyledTokens;
       const styledTokens = {
         ...unstyledTokens,
         style: letterSpacingStyle,
-      };
+      } as StyledTokens;
 
       const charSplitControl = layout.calculateFinalTokens(
         unstyledTokens,
@@ -1289,6 +1291,45 @@ line5</negative>`;
               content: "e",
               bounds: { x: HTestWidth, width: eControlWidth + LS },
             });
+          });
+        });
+
+        describe("icons with(( letterSpacing", () => {
+          const createIcon = (letterSpacing: number): StyledTokens =>
+            ({
+              tags: "icon",
+              children: [cloneSprite(icon)],
+              style: { imgDisplay: "icon", letterSpacing },
+            } as StyledTokens);
+
+          const createTokens = (letterSpacing: number): ParagraphToken =>
+            layout.calculateFinalTokens({
+              children: [
+                createIcon(letterSpacing),
+                createIcon(letterSpacing),
+                createIcon(letterSpacing),
+              ],
+              tags: "",
+              style: {},
+            } as StyledTokens);
+
+          const iconsControl = createTokens(0);
+          const iconsTest = createTokens(LS);
+          const [aControl, bControl, cControl] = iconsControl.flat(2);
+          const [a, b, c] = iconsTest.flat(2);
+
+          const w = aControl.bounds.width;
+
+          test("control case shouldn't add space between icons.", () => {
+            expect(aControl.bounds.x).toBe(0);
+            expect(bControl.bounds.x).toBe(w);
+            expect(cControl.bounds.x).toBe(w * 2);
+          });
+
+          it("Should add letterSpacing between icons", () => {
+            expect(a.bounds.x).toBe(0);
+            expect(b.bounds.x).toBe(w + LS);
+            expect(c.bounds.x).toBe(2 * (w + LS));
           });
         });
       });
