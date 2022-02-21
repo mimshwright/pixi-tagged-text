@@ -1,5 +1,5 @@
 module.exports = {
   preset: "ts-jest",
-  testEnvironment: "jsdom",
-  setupFiles: ["jest-canvas-mock"],
+  runner: "@jest-runner/electron",
+  testEnvironment: "@jest-runner/electron/environment",
 };
