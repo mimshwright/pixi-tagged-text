@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.7.1](https://github.com/mimshwright/pixi-tagged-text/compare/v2.7.0...v2.7.1) (2022-02-21)
+
+### Bug Fixes
+
+- **letterspacing for icon images:** added letterSpacing between icon images ([8332d08](https://github.com/mimshwright/pixi-tagged-text/commit/8332d08ec96087fd936d25bd500d7a4b6444f901)), closes [#194](https://github.com/mimshwright/pixi-tagged-text/issues/194)
+- **letterspacing:** improved support for letterSpacing ([006bafe](https://github.com/mimshwright/pixi-tagged-text/commit/006bafeae3f3ab634307893c0faec63636810658)), closes [#203](https://github.com/mimshwright/pixi-tagged-text/issues/203)
+
+### Chore
+
+- **tests:** removed a skipped test ([db83523](https://github.com/mimshwright/pixi-tagged-text/commit/db8352316b2a54a9cafd587d9de06657b914c851))
+
 ## [2.7.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.6.0...v2.7.0) (2022-02-17)
 
 ### Features
