@@ -209,11 +209,11 @@ describe("tags module", () => {
     });
 
     // fixme
-    it.skip("Shouldn't handle mixed up quotes.", () => {
-      expect(tags.parseAttributes(`foo='bar" bar="baz'`)).toMatchObject({
-        foo: `bar" bar="baz`,
-      });
-    });
+    // it.skip("Shouldn't handle mixed up quotes.", () => {
+    //   expect(tags.parseAttributes(`foo='bar" bar="baz'`)).toMatchObject({
+    //     foo: `bar" bar="baz`,
+    //   });
+    // });
     it("Should return empty object for an empty string.", () => {
       expect(tags.parseAttributes("")).toMatchObject({});
     });

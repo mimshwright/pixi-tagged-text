@@ -106,10 +106,10 @@ and <ms>multistyle</ms> text for
             const url = "100.png";
 
             const imgText = `<h2>Inline Images!</h2>
-Add an image.
+
 <img imgSrc="doot" imgDisplay="inline" /> <img imgSrc="thinking" imgDisplay="inline" />
-Or...
-put an icon <thinking imgDisplay="icon" /> in there, bro!
+
+Or even put an icon <thinking imgDisplay="icon" /><thinking imgDisplay="icon" /><thinking imgDisplay="icon" /> in there, bro!
 
 You can even load from a URL <url /> (if you can figure out the CORS stuff!)`;
             const imgStyle = {
@@ -133,6 +133,8 @@ You can even load from a URL <url /> (if you can figure out the CORS stuff!)`;
             const imgTaggedText = new TaggedText(imgText, imgStyle, {
               // debug: true,
               // debugConsole: true,
+              // splitStyle: "characters",
+              // splitStyle: "words",
               imgMap: { thinking, doot, url },
             });
 
@@ -151,7 +153,7 @@ You can even load from a URL <url /> (if you can figure out the CORS stuff!)`;
             const emojiText = `<h2>🙆🏾‍♀️ EMOJI 🆗*</h2>
 <warning>*But unfortunately, will render differently on different browsers & OSes</warning>
 
-The quick, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
+The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
 
 <big>💯👯‍♂️🔥</big>
 

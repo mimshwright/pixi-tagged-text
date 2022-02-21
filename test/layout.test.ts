@@ -1,3 +1,4 @@
+import { cloneSprite } from "./../src/pixiUtils";
 import {
   Align,
   createEmptyFinalToken,
@@ -5,6 +6,7 @@ import {
   ParagraphToken,
   StyledToken,
   StyledTokens,
+  SplitStyle,
   TextStyleSet,
   TextStyleExtended,
   LineToken,
@@ -12,14 +14,20 @@ import {
 import { splitText } from "./../src/layout";
 import * as PIXI from "pixi.js";
 import * as layout from "../src/layout";
-import { mapTagsToStyles } from "../src/style";
-import { parseTagsNew } from "../src/tags";
-import { SplitStyle } from "../src/types";
+import * as style from "../src/style";
+import * as tags from "../src/tags";
+import { icon } from "./testIcon";
 
 const R = (...args: number[]) => new PIXI.Rectangle(...args);
 
+const textToTags = tags.parseTagsNew;
+const tagsToStyles = style.mapTagsToStyles;
+const stylesToLayout = layout.calculateFinalTokens;
+
 describe("layout module", () => {
   const maxLineWidth = 500;
+
+  const noStyle = {} as TextStyleExtended;
 
   describe("updateOffsetForNewLine()", () => {
     const offset = new PIXI.Point(35, 100);
@@ -169,6 +177,7 @@ describe("layout module", () => {
       expect(result).toMatchObject(expected);
     });
   });
+
   describe("alignCenter()", () => {
     it("should align a single line of text to the right.", () => {
       const line = [R(0, 0, 100, 20), R(100, 0, 150, 20), R(250, 0, 100, 20)];
@@ -210,6 +219,7 @@ describe("layout module", () => {
         layout.alignJustify(maxLineWidth)([...line, zeroWidth])
       ).toMatchObject([...result, zeroWidth]);
     });
+
     it("should create a new object rather than editing the original.", () => {
       expect(result[0]).not.toBe(line[0]);
       expect(line[2]).toHaveProperty("x", 175);
@@ -218,6 +228,7 @@ describe("layout module", () => {
     it("should return an empty object if given an empty object.", () => {
       expect(layout.alignJustify(maxLineWidth)([])).toEqual([]);
     });
+
     it("should return the first object positioned left if there is only one element.", () => {
       expect(layout.alignJustify(maxLineWidth)([line[4]])).toMatchObject([
         {
@@ -226,10 +237,25 @@ describe("layout module", () => {
         },
       ]);
     });
-    it("should not throw if there is only whitespace (Issue #171)", () => {
-      expect(() => {
-        layout.alignJustify(maxLineWidth)([]);
-      }).not.toThrow();
+
+    describe("whitespace and alignJustify() (Issue #171)", () => {
+      it("Should not throw when align is justify and text is only whitespace.", () => {
+        expect(() => {
+          layout.alignJustify(maxLineWidth)([]);
+        }).not.toThrow();
+
+        expect(() => {
+          const text = "  ";
+          const styles: TextStyleSet = {
+            default: {
+              align: "justify",
+            },
+          };
+          const tagTokens = textToTags(text, Object.keys(styles));
+          const styleTokens = tagsToStyles(tagTokens, styles);
+          layout.calculateFinalTokens(styleTokens);
+        }).not.toThrow();
+      });
     });
   });
 
@@ -309,6 +335,126 @@ describe("layout module", () => {
       expect(() => {
         splitText("abc", "bogus" as SplitStyle);
       }).toThrow();
+    });
+  });
+
+  describe("verticalAlignInLines()", () => {
+    const fontProperties = { ascent: 20, descent: 10, fontSize: 30 };
+    const lines = [
+      // Line 0
+      [
+        // Word 0
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(0, 0, 100, 20),
+          },
+        ],
+        // Word 1
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(100, 0, 100, 40),
+          },
+        ],
+      ],
+      // Line 1
+      [
+        // Word 0
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(0, 40, 100, 30),
+          },
+        ],
+        // Word 1
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(100, 40, 100, 20),
+          },
+        ],
+        // Word 2
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(200, 40, 100, 10),
+          },
+        ],
+      ],
+      // Line 2
+      [
+        // Word 0
+        [
+          // Segment 0
+          {
+            ...createEmptyFinalToken(),
+            fontProperties,
+            bounds: R(0, 70, 100, 20),
+          },
+        ],
+      ],
+    ];
+
+    const top = layout.verticalAlignInLines(lines, 0, "top");
+    const lineSpacing = layout.verticalAlignInLines(lines, 100, "top");
+    const bottom = layout.verticalAlignInLines(lines, 0, "bottom");
+    const middle = layout.verticalAlignInLines(lines, 0, "middle");
+    it("should position text vertically in a line so that it fits correctly.", () => {
+      expect(top).toMatchObject([
+        [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
+        [
+          [{ bounds: { y: 40 } }],
+          [{ bounds: { y: 40 } }],
+          [{ bounds: { y: 40 } }],
+        ],
+        [[{ bounds: { y: 70 } }]],
+      ]);
+      expect(lineSpacing).toMatchObject([
+        [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
+        [
+          [{ bounds: { y: 140 } }],
+          [{ bounds: { y: 140 } }],
+          [{ bounds: { y: 140 } }],
+        ],
+        [[{ bounds: { y: 270 } }]],
+      ]);
+      expect(bottom).toMatchObject([
+        [[{ bounds: { y: 20 } }], [{ bounds: { y: 0 } }]],
+        [
+          [{ bounds: { y: 40 } }],
+          [{ bounds: { y: 50 } }],
+          [{ bounds: { y: 60 } }],
+        ],
+        [[{ bounds: { y: 70 } }]],
+      ]);
+      expect(middle).toMatchObject([
+        [[{ bounds: { y: 10 } }], [{ bounds: { y: 0 } }]],
+        [
+          [{ bounds: { y: 40 } }],
+          [{ bounds: { y: 45 } }],
+          [{ bounds: { y: 50 } }],
+        ],
+        [[{ bounds: { y: 70 } }]],
+      ]);
+    });
+    it("should create a new object rather than editing the original.", () => {
+      expect(top[0]).not.toBe(lines[0]);
+      expect(top[0][0]).not.toBe(lines[0][0]);
+      expect(middle[0]).not.toBe(lines[0]);
+      expect(middle[0][0]).not.toBe(lines[0][0]);
+      expect(bottom[0]).not.toBe(lines[0]);
+      expect(bottom[0][0]).not.toBe(lines[0][0]);
     });
   });
 
@@ -809,13 +955,14 @@ aa bb aa`;
     });
 
     describe("splitStyle", () => {
-      const lws = {
-        children: ["Lines, words, & segments!"],
-        tags: "",
-        style: {},
-      };
-      const result = layout.calculateFinalTokens(lws);
       it("Should split on whitespace by default", () => {
+        const lws = {
+          children: ["Lines, words, & segments!"],
+          tags: "",
+          style: noStyle,
+        };
+        const result = layout.calculateFinalTokens(lws);
+
         expect(result).toHaveLength(1);
         // line 0
         // ["Lines,", " ", "words,", " ", "&", " ", "segmemnts!" ]
@@ -836,11 +983,19 @@ aa bb aa`;
           [{ content: "segments!" }],
         ]);
       });
+
       it("Should split on character if specified", () => {
-        const helloWorld = { children: ["Hello, world!"], tags: "", style: {} };
-        expect(
-          layout.calculateFinalTokens(helloWorld, "characters")
-        ).toMatchObject([
+        const helloWorldStyledTokens = {
+          children: ["Hello, world!"],
+          tags: "",
+          style: noStyle,
+        };
+        const helloWorld = layout.calculateFinalTokens(
+          helloWorldStyledTokens,
+          "characters"
+        );
+
+        expect(helloWorld).toMatchObject([
           [
             [
               { content: "H" },
@@ -861,6 +1016,11 @@ aa bb aa`;
             ],
           ],
         ]);
+      });
+      describe("Should respect letterSpacing property under splitStyle='characters'", () => {
+        test("See section below labeled `letterSpacing`", () => {
+          expect(true).toBeTruthy();
+        });
       });
     });
 
@@ -920,419 +1080,439 @@ aa bb aa`;
       });
     });
 
-    describe("end to end conversion", () => {
-      const textToTags = parseTagsNew;
-      const tagsToStyles = mapTagsToStyles;
-      const stylesToLayout = layout.calculateFinalTokens;
-
-      const text =
-        "<b>Hello, <i>World!</i></b>\nHow are you? I'm <b>S</b>U<b>P</b>E<b>R</b>!";
-      const styles: TextStyleSet = {
-        default: {
-          fontFamily: "arial",
-        },
-        b: { fontWeight: "700" },
-        i: { fontStyle: "italic" },
-      };
-      const tagTokens = textToTags(text, Object.keys(styles));
-      const styleTokens = tagsToStyles(tagTokens, styles);
-      const finalTokens = stylesToLayout(styleTokens);
-
-      const [line0, line1] = finalTokens;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [hello, s0, world, n0] = line0;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [how, s1, are, s2, you, s3, im, s4, superWord] = line1;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [s, u, p, e, r, bang] = superWord;
-
-      it("Should have default styles for styleTokens", () => {
-        expect(styleTokens.style).toMatchObject(styles.default);
-      });
-
-      it("Most words should have length 0 but Should treat SuPeR! as one word", () => {
-        expect(hello).toHaveLength(1);
-        expect(s0).toHaveLength(1);
-        expect(n0).toHaveLength(1);
-
-        expect(superWord).toHaveLength(6);
-        expect(s).toHaveProperty("tags", "b");
-        expect(u).toHaveProperty("tags", "");
-      });
-
-      it("Should give similar size properties to text with the same styles and same text.", () => {
-        const [space1] = s1;
-        const [space2] = s2;
-        expect(space1.style).toBe(space2.style);
-        expect(space1.content).toBe(space2.content);
-        expect(space1.tags).toBe(space2.tags);
-        expect(space1.bounds.width).toBe(space2.bounds.width);
-        expect(space1.bounds.height).toBe(space2.bounds.height);
-        expect(space1.fontProperties).toMatchObject(space2.fontProperties);
-      });
-
-      it("Should fully convert text to final tokens.", () => {
-        const d = styles.default;
-        const b = { ...styles.default, ...styles.b };
-        const bi = { ...styles.default, ...styles.b, ...styles.i };
-
-        expect(finalTokens).toMatchObject(
-          // all lines
-          [
-            // line 0
-            [
-              // word 0
-              [
-                // segment 0
-                {
-                  content: "Hello,",
-                  style: b,
-                  tags: "b",
-                },
-              ],
-              // word 1
-              [
-                {
-                  content: " ",
-                  style: b,
-                  tags: "b",
-                },
-              ],
-              // word 2
-              [
-                {
-                  content: "World!",
-                  style: bi,
-                  tags: "b,i",
-                },
-              ],
-              // word 3
-              [
-                {
-                  content: "\n",
-                  style: d,
-                  tags: "",
-                },
-              ],
-            ],
-            // line 1
-            [
-              [
-                {
-                  content: "How",
-                  style: d,
-                },
-              ],
-              [
-                {
-                  content: " ",
-                  style: d,
-                },
-              ],
-              [
-                {
-                  content: "are",
-                  style: d,
-                },
-              ],
-              [
-                {
-                  content: " ",
-                  style: d,
-                },
-              ],
-              [
-                {
-                  content: "you?",
-                  style: d,
-                },
-              ],
-              [
-                {
-                  content: " ",
-                  style: d,
-                },
-              ],
-              [
-                {
-                  content: "I'm",
-                  style: d,
-                },
-              ],
-              [
-                {
-                  content: " ",
-                  style: d,
-                },
-              ],
-              // word 8 has multiple segments
-              [
-                // segment 0
-                {
-                  content: "S",
-                  style: b,
-                  tags: "b",
-                },
-                {
-                  content: "U",
-                  style: d,
-                  tags: "",
-                },
-                {
-                  content: "P",
-                  style: b,
-                },
-                {
-                  content: "E",
-                  style: d,
-                },
-                {
-                  content: "R",
-                  style: b,
-                },
-                {
-                  content: "!",
-                  style: d,
-                },
-              ],
-            ],
-          ]
-        );
-      });
-      it("Should unset styles when there are no styles", () => {
-        expect(how[0].style).not.toHaveProperty("fontWeight");
-      });
-    });
-  });
-
-  const textToTags = parseTagsNew;
-  const tagsToStyles = mapTagsToStyles;
-  describe("end to end conversion", () => {
-    it("Should not throw when align is justify and text is whitespace.", () => {
-      expect(() => {
-        const text = "  ";
-        const styles: TextStyleSet = {
-          default: {
-            align: "justify",
-          },
-        };
-        const tagTokens = textToTags(text, Object.keys(styles));
-        const styleTokens = tagsToStyles(tagTokens, styles);
-        layout.calculateFinalTokens(styleTokens);
-      }).not.toThrow();
-    });
-  });
-
-  describe("paragraphSpacing", () => {
-    const text = `line0
+    describe("paragraphSpacing", () => {
+      const text = `line0
 line1\nline2 goes on until it wraps to line3
 <negative>line4
 line5</negative>`;
 
-    const stylesControl: TextStyleSet = {
-      default: {
-        fontSize: 16,
-        wordWrap: true,
-        wordWrapWidth: 150,
-      },
-      negative: {},
-    };
-    const styles: TextStyleSet = {
-      default: { ...stylesControl.default, paragraphSpacing: 10 },
-      negative: {
-        paragraphSpacing: -10,
-      },
-    };
+      const stylesControl: TextStyleSet = {
+        default: {
+          fontSize: 16,
+          wordWrap: true,
+          wordWrapWidth: 150,
+        },
+        negative: {},
+      };
+      const styles: TextStyleSet = {
+        default: { ...stylesControl.default, paragraphSpacing: 10 },
+        negative: {
+          paragraphSpacing: -10,
+        },
+      };
 
-    const tagTokensControl = textToTags(text, Object.keys(stylesControl));
-    const tagTokens = textToTags(text, Object.keys(styles));
-    const styleTokensControl = mapTagsToStyles(tagTokensControl, stylesControl);
-    const styleTokens = mapTagsToStyles(tagTokens, styles);
-    const tokensControl = layout.calculateFinalTokens(styleTokensControl);
-    const tokens = layout.calculateFinalTokens(styleTokens);
-    const [
-      line0Control,
-      line1Control,
-      line2Control,
-      line3Control,
-      line4Control,
-      line5Control,
-    ] = tokensControl;
-    const [line0, line1, line2, line3, line4, line5] = tokens;
+      const tagTokensControl = textToTags(text, Object.keys(stylesControl));
+      const tagTokens = textToTags(text, Object.keys(styles));
+      const styleTokensControl = tagsToStyles(tagTokensControl, stylesControl);
+      const styleTokens = tagsToStyles(tagTokens, styles);
+      const tokensControl = layout.calculateFinalTokens(styleTokensControl);
+      const tokens = layout.calculateFinalTokens(styleTokens);
+      const [
+        line0Control,
+        line1Control,
+        line2Control,
+        line3Control,
+        line4Control,
+        line5Control,
+      ] = tokensControl;
+      const [line0, line1, line2, line3, line4, line5] = tokens;
 
-    const yOf = (line: LineToken) => line[0][0].bounds.y;
-    const distanceBetween = (lineB: LineToken, lineA: LineToken) =>
-      yOf(lineB) - yOf(lineA);
+      const yOf = (line: LineToken) => line[0][0].bounds.y;
+      const distanceBetween = (lineB: LineToken, lineA: LineToken) =>
+        yOf(lineB) - yOf(lineA);
 
-    const { ascent, descent } = line0Control[0][0].fontProperties;
-    const lineSpacing = ascent + descent;
+      const { ascent, descent } = line0Control[0][0].fontProperties;
+      const lineSpacing = ascent + descent;
 
-    const distanceBetweenNormalLines = distanceBetween(line3, line2);
-    const distanceBetweenParagraphs = distanceBetween(line1, line0);
-    const distanceBetweenParagraphsSlashN = distanceBetween(line2, line1);
-    const distanceBetweenParagraphsNegative = distanceBetween(line5, line4);
+      const distanceBetweenNormalLines = distanceBetween(line3, line2);
+      const distanceBetweenParagraphs = distanceBetween(line1, line0);
+      const distanceBetweenParagraphsSlashN = distanceBetween(line2, line1);
+      const distanceBetweenParagraphsNegative = distanceBetween(line5, line4);
 
-    test("Control works as expected", () => {
-      expect(line0Control[0][0].content).toBe("line0");
-      expect(line1Control[0][0].content).toBe("line1");
-      expect(line2Control[0][0].content).toBe("line2");
-      expect(line3Control[0][0].content).toBe("wraps");
-      expect(line3Control[4][0].content).toBe("line3");
-      expect(line4Control[0][0].content).toBe("line4");
-      expect(line5Control[0][0].content).toBe("line5");
+      test("Control works as expected", () => {
+        expect(line0Control[0][0].content).toBe("line0");
+        expect(line1Control[0][0].content).toBe("line1");
+        expect(line2Control[0][0].content).toBe("line2");
+        expect(line3Control[0][0].content).toBe("wraps");
+        expect(line3Control[4][0].content).toBe("line3");
+        expect(line4Control[0][0].content).toBe("line4");
+        expect(line5Control[0][0].content).toBe("line5");
 
-      expect(yOf(line0Control)).toBe(lineSpacing * 0);
-      expect(yOf(line1Control)).toBe(lineSpacing * 1);
-      expect(yOf(line2Control)).toBe(lineSpacing * 2);
-      expect(yOf(line3Control)).toBe(lineSpacing * 3);
-      expect(yOf(line4Control)).toBe(lineSpacing * 4);
-      expect(yOf(line5Control)).toBe(lineSpacing * 5);
+        expect(yOf(line0Control)).toBe(lineSpacing * 0);
+        expect(yOf(line1Control)).toBe(lineSpacing * 1);
+        expect(yOf(line2Control)).toBe(lineSpacing * 2);
+        expect(yOf(line3Control)).toBe(lineSpacing * 3);
+        expect(yOf(line4Control)).toBe(lineSpacing * 4);
+        expect(yOf(line5Control)).toBe(lineSpacing * 5);
+      });
+      test("That line breaks happen as expected", () => {
+        expect(line0[0][0].content).toBe("line0");
+        expect(line1[0][0].content).toBe("line1");
+        expect(line2[0][0].content).toBe("line2");
+        expect(line3[0][0].content).toBe("wraps");
+        expect(line3[4][0].content).toBe("line3");
+        expect(line4[0][0].content).toBe("line4");
+        expect(line5[0][0].content).toBe("line5");
+      });
+      it("Should draw the first line at 0", () => {
+        expect(yOf(line0)).toBe(0);
+      });
+      it("Shouldn't change normal lines without hard returns", () => {
+        expect(distanceBetweenNormalLines).toBe(lineSpacing);
+      });
+      it("Should add extra space after newline characters when you use paragraphSpacing.", () => {
+        expect(distanceBetweenParagraphs).toBe(distanceBetweenNormalLines + 10);
+      });
+      it("Should work the same for \\n or newlines in template strings.", () => {
+        expect(distanceBetweenParagraphs).toBe(distanceBetweenParagraphsSlashN);
+      });
+      it("Should work with negative values.", () => {
+        expect(distanceBetweenParagraphsNegative).toBe(
+          distanceBetweenNormalLines - 10
+        );
+      });
     });
-    test("That line breaks happen as expected", () => {
-      expect(line0[0][0].content).toBe("line0");
-      expect(line1[0][0].content).toBe("line1");
-      expect(line2[0][0].content).toBe("line2");
-      expect(line3[0][0].content).toBe("wraps");
-      expect(line3[4][0].content).toBe("line3");
-      expect(line4[0][0].content).toBe("line4");
-      expect(line5[0][0].content).toBe("line5");
-    });
-    it("Should draw the first line at 0", () => {
-      expect(yOf(line0)).toBe(0);
-    });
-    it("Shouldn't change normal lines without hard returns", () => {
-      expect(distanceBetweenNormalLines).toBe(lineSpacing);
-    });
-    it("Should add extra space after newline characters when you use paragraphSpacing.", () => {
-      expect(distanceBetweenParagraphs).toBe(distanceBetweenNormalLines + 10);
-    });
-    it("Should work the same for \\n or newlines in template strings.", () => {
-      expect(distanceBetweenParagraphs).toBe(distanceBetweenParagraphsSlashN);
-    });
-    it("Should work with negative values.", () => {
-      expect(distanceBetweenParagraphsNegative).toBe(
-        distanceBetweenNormalLines - 10
+
+    describe("letterSpacing", () => {
+      const LS = 10;
+      const letterSpacingStyle = { letterSpacing: LS } as TextStyleExtended;
+
+      const unstyledTokens = {
+        children: ["Hello, world!"],
+        tags: "",
+        style: noStyle,
+      } as StyledTokens;
+      const styledTokens = {
+        ...unstyledTokens,
+        style: letterSpacingStyle,
+      } as StyledTokens;
+
+      const charSplitControl = layout.calculateFinalTokens(
+        unstyledTokens,
+        "characters"
       );
+      const charSplitTest = layout.calculateFinalTokens(
+        styledTokens,
+        "characters"
+      );
+      const wordSplitControl = layout.calculateFinalTokens(
+        unstyledTokens,
+        "words"
+      );
+      const wordSplitTest = layout.calculateFinalTokens(styledTokens, "words");
+
+      describe("Should respect letterSpacing property with various splitStyles", () => {
+        describe("splitStyle='words' with letterSpacing'", () => {
+          const controlTokens = wordSplitControl;
+          const testTokens = wordSplitTest;
+
+          const [helloControl, spaceControl, worldControl] =
+            controlTokens.flat(2);
+          const [helloTest, spaceTest, worldTest] = testTokens.flat(2);
+
+          const helloControlWidth = helloControl.bounds.width;
+          const spaceControlWidth = spaceControl.bounds.width;
+          const worldControlWidth = worldControl.bounds.width;
+
+          const helloTestWidth = helloTest.bounds.width;
+          const spaceTestWidth = spaceTest.bounds.width;
+
+          it("Should add letterspacing to spaces.", () => {
+            expect(spaceTestWidth).toEqual(spaceControlWidth + LS);
+          });
+
+          test("check control - positions of non letterspaced text", () => {
+            expect(helloControl).toMatchObject({
+              content: "Hello,",
+              bounds: { x: 0 },
+            });
+            expect(worldControl).toMatchObject({
+              content: "world!",
+              bounds: { x: helloControlWidth + spaceControlWidth },
+            });
+          });
+          test("check positoins of letterspaced text", () => {
+            expect(helloTest).toMatchObject({
+              content: "Hello,",
+              bounds: {
+                x: 0,
+                width:
+                  helloControlWidth + (helloTest.content as string).length * LS,
+              },
+            });
+            expect(worldTest).toMatchObject({
+              content: "world!",
+              bounds: {
+                x: helloTestWidth + spaceTestWidth,
+                width:
+                  worldControlWidth + (worldTest.content as string).length * LS,
+              },
+            });
+          });
+        });
+        describe("splitStyle='characters' with letterSpacing'", () => {
+          const controlTokens = charSplitControl;
+          const testTokens = charSplitTest;
+
+          const [HControl, eControl, , , , , spaceControl] =
+            controlTokens.flat(2);
+          const [HTest, eTest, , , , , spaceTest] = testTokens.flat(2);
+
+          const HControlWidth = HControl.bounds.width;
+          const eControlWidth = eControl.bounds.width;
+          const spaceControlWidth = spaceControl.bounds.width;
+
+          const HTestWidth = HTest.bounds.width;
+          const spaceTestWidth = spaceTest.bounds.width;
+
+          it("Should add letterspacing to spaces.", () => {
+            expect(spaceControl.content).toBe(" ");
+            expect(spaceTest.content).toBe(" ");
+            expect(spaceTestWidth).toEqual(spaceControlWidth + LS);
+          });
+
+          test("check control - positions of non letterspaced text", () => {
+            expect(HControl).toMatchObject({
+              content: "H",
+              bounds: { x: 0 },
+            });
+            expect(eControl).toMatchObject({
+              content: "e",
+              bounds: { x: HControlWidth },
+            });
+          });
+
+          test("check positoins of letterspaced text", () => {
+            expect(HTest).toMatchObject({
+              content: "H",
+              bounds: { x: 0, width: HControlWidth + LS },
+            });
+            expect(eTest).toMatchObject({
+              content: "e",
+              bounds: { x: HTestWidth, width: eControlWidth + LS },
+            });
+          });
+        });
+
+        describe("icons with(( letterSpacing", () => {
+          const createIcon = (letterSpacing: number): StyledTokens =>
+            ({
+              tags: "icon",
+              children: [cloneSprite(icon)],
+              style: { imgDisplay: "icon", letterSpacing },
+            } as StyledTokens);
+
+          const createTokens = (letterSpacing: number): ParagraphToken =>
+            layout.calculateFinalTokens({
+              children: [
+                createIcon(letterSpacing),
+                createIcon(letterSpacing),
+                createIcon(letterSpacing),
+              ],
+              tags: "",
+              style: {},
+            } as StyledTokens);
+
+          const iconsControl = createTokens(0);
+          const iconsTest = createTokens(LS);
+          const [aControl, bControl, cControl] = iconsControl.flat(2);
+          const [a, b, c] = iconsTest.flat(2);
+
+          const w = aControl.bounds.width;
+
+          test("control case shouldn't add space between icons.", () => {
+            expect(aControl.bounds.x).toBe(0);
+            expect(bControl.bounds.x).toBe(w);
+            expect(cControl.bounds.x).toBe(w * 2);
+          });
+
+          it("Should add letterSpacing between icons", () => {
+            expect(a.bounds.x).toBe(0);
+            expect(b.bounds.x).toBe(w + LS);
+            expect(c.bounds.x).toBe(2 * (w + LS));
+          });
+        });
+      });
     });
   });
 
-  describe("verticalAlignInLines()", () => {
-    const fontProperties = { ascent: 20, descent: 10, fontSize: 30 };
-    const lines = [
-      // Line 0
-      [
-        // Word 0
-        [
-          // Segment 0
-          {
-            ...createEmptyFinalToken(),
-            fontProperties,
-            bounds: R(0, 0, 100, 20),
-          },
-        ],
-        // Word 1
-        [
-          // Segment 0
-          {
-            ...createEmptyFinalToken(),
-            fontProperties,
-            bounds: R(100, 0, 100, 40),
-          },
-        ],
-      ],
-      // Line 1
-      [
-        // Word 0
-        [
-          // Segment 0
-          {
-            ...createEmptyFinalToken(),
-            fontProperties,
-            bounds: R(0, 40, 100, 30),
-          },
-        ],
-        // Word 1
-        [
-          // Segment 0
-          {
-            ...createEmptyFinalToken(),
-            fontProperties,
-            bounds: R(100, 40, 100, 20),
-          },
-        ],
-        // Word 2
-        [
-          // Segment 0
-          {
-            ...createEmptyFinalToken(),
-            fontProperties,
-            bounds: R(200, 40, 100, 10),
-          },
-        ],
-      ],
-      // Line 2
-      [
-        // Word 0
-        [
-          // Segment 0
-          {
-            ...createEmptyFinalToken(),
-            fontProperties,
-            bounds: R(0, 70, 100, 20),
-          },
-        ],
-      ],
-    ];
+  describe("end to end conversion", () => {
+    const text =
+      "<b>Hello, <i>World!</i></b>\nHow are you? I'm <b>S</b>U<b>P</b>E<b>R</b>!";
+    const styles: TextStyleSet = {
+      default: {
+        fontFamily: "arial",
+      },
+      b: { fontWeight: "700" },
+      i: { fontStyle: "italic" },
+    };
+    const tagTokens = textToTags(text, Object.keys(styles));
+    const styleTokens = tagsToStyles(tagTokens, styles);
+    const finalTokens = stylesToLayout(styleTokens);
 
-    const top = layout.verticalAlignInLines(lines, 0, "top");
-    const lineSpacing = layout.verticalAlignInLines(lines, 100, "top");
-    const bottom = layout.verticalAlignInLines(lines, 0, "bottom");
-    const middle = layout.verticalAlignInLines(lines, 0, "middle");
-    it("should position text vertically in a line so that it fits correctly.", () => {
-      expect(top).toMatchObject([
-        [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
-        [
-          [{ bounds: { y: 40 } }],
-          [{ bounds: { y: 40 } }],
-          [{ bounds: { y: 40 } }],
-        ],
-        [[{ bounds: { y: 70 } }]],
-      ]);
-      expect(lineSpacing).toMatchObject([
-        [[{ bounds: { y: 0 } }], [{ bounds: { y: 0 } }]],
-        [
-          [{ bounds: { y: 140 } }],
-          [{ bounds: { y: 140 } }],
-          [{ bounds: { y: 140 } }],
-        ],
-        [[{ bounds: { y: 270 } }]],
-      ]);
-      expect(bottom).toMatchObject([
-        [[{ bounds: { y: 20 } }], [{ bounds: { y: 0 } }]],
-        [
-          [{ bounds: { y: 40 } }],
-          [{ bounds: { y: 50 } }],
-          [{ bounds: { y: 60 } }],
-        ],
-        [[{ bounds: { y: 70 } }]],
-      ]);
-      expect(middle).toMatchObject([
-        [[{ bounds: { y: 10 } }], [{ bounds: { y: 0 } }]],
-        [
-          [{ bounds: { y: 40 } }],
-          [{ bounds: { y: 45 } }],
-          [{ bounds: { y: 50 } }],
-        ],
-        [[{ bounds: { y: 70 } }]],
-      ]);
+    const [line0, line1] = finalTokens;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [hello, s0, world, n0] = line0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [how, s1, are, s2, you, s3, im, s4, superWord] = line1;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [s, u, p, e, r, bang] = superWord;
+
+    it("Should have default styles for styleTokens", () => {
+      expect(styleTokens.style).toMatchObject(styles.default);
     });
-    it("should create a new object rather than editing the original.", () => {
-      expect(top[0]).not.toBe(lines[0]);
-      expect(top[0][0]).not.toBe(lines[0][0]);
-      expect(middle[0]).not.toBe(lines[0]);
-      expect(middle[0][0]).not.toBe(lines[0][0]);
-      expect(bottom[0]).not.toBe(lines[0]);
-      expect(bottom[0][0]).not.toBe(lines[0][0]);
+
+    it("Most words should have length 0 but Should treat SuPeR! as one word", () => {
+      expect(hello).toHaveLength(1);
+      expect(s0).toHaveLength(1);
+      expect(n0).toHaveLength(1);
+
+      expect(superWord).toHaveLength(6);
+      expect(s).toHaveProperty("tags", "b");
+      expect(u).toHaveProperty("tags", "");
+    });
+
+    it("Should give similar size properties to text with the same styles and same text.", () => {
+      const [space1] = s1;
+      const [space2] = s2;
+      expect(space1.style).toBe(space2.style);
+      expect(space1.content).toBe(space2.content);
+      expect(space1.tags).toBe(space2.tags);
+      expect(space1.bounds.width).toBe(space2.bounds.width);
+      expect(space1.bounds.height).toBe(space2.bounds.height);
+      expect(space1.fontProperties).toMatchObject(space2.fontProperties);
+    });
+
+    it("Should fully convert text to final tokens.", () => {
+      const d = styles.default;
+      const b = { ...styles.default, ...styles.b };
+      const bi = { ...styles.default, ...styles.b, ...styles.i };
+
+      expect(finalTokens).toMatchObject(
+        // all lines
+        [
+          // line 0
+          [
+            // word 0
+            [
+              // segment 0
+              {
+                content: "Hello,",
+                style: b,
+                tags: "b",
+              },
+            ],
+            // word 1
+            [
+              {
+                content: " ",
+                style: b,
+                tags: "b",
+              },
+            ],
+            // word 2
+            [
+              {
+                content: "World!",
+                style: bi,
+                tags: "b,i",
+              },
+            ],
+            // word 3
+            [
+              {
+                content: "\n",
+                style: d,
+                tags: "",
+              },
+            ],
+          ],
+          // line 1
+          [
+            [
+              {
+                content: "How",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: " ",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: "are",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: " ",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: "you?",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: " ",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: "I'm",
+                style: d,
+              },
+            ],
+            [
+              {
+                content: " ",
+                style: d,
+              },
+            ],
+            // word 8 has multiple segments
+            [
+              // segment 0
+              {
+                content: "S",
+                style: b,
+                tags: "b",
+              },
+              {
+                content: "U",
+                style: d,
+                tags: "",
+              },
+              {
+                content: "P",
+                style: b,
+              },
+              {
+                content: "E",
+                style: d,
+              },
+              {
+                content: "R",
+                style: b,
+              },
+              {
+                content: "!",
+                style: d,
+              },
+            ],
+          ],
+        ]
+      );
+    });
+    it("Should unset styles when there are no styles", () => {
+      expect(how[0].style).not.toHaveProperty("fontWeight");
     });
   });
 });

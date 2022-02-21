@@ -672,6 +672,11 @@ export const calculateFinalTokens = (
             fontProperties.ascent += offset;
           }
 
+          const { letterSpacing } = style;
+          if (letterSpacing) {
+            bounds.width += letterSpacing;
+          }
+
           return {
             content: str,
             style,
@@ -713,6 +718,12 @@ export const calculateFinalTokens = (
 
         // handle images
         const bounds = rectFromContainer(sprite);
+
+        const { letterSpacing } = style;
+        if (letterSpacing && isIcon) {
+          bounds.width += letterSpacing;
+        }
+
         output.push({
           content: sprite,
           style,
