@@ -1,0 +1,7 @@
+brew "pkg-config"
+brew "cairo"
+brew "pango"
+brew "libpng"
+brew "jpeg"
+brew "giflib"
+brew "librsvg"

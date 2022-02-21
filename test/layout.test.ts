@@ -24,6 +24,11 @@ const textToTags = tags.parseTagsNew;
 const tagsToStyles = style.mapTagsToStyles;
 const stylesToLayout = layout.calculateFinalTokens;
 
+const toBeBetween = (actual: number, a: number, b: number) => {
+  expect(actual).toBeGreaterThanOrEqual(a);
+  expect(actual).toBeLessThanOrEqual(b);
+};
+
 describe("layout module", () => {
   const maxLineWidth = 500;
 
@@ -839,28 +844,28 @@ aa bb aa`;
       it("Shouldn't affect non-strked text. ", () => {
         expect(normal.content).toBe("A");
         expect(normal.style.strokeThickness ?? 0).toBe(0);
-        expect(normal.bounds.height).toBe(24);
-        expect(normal.fontProperties.ascent).toBe(19);
+        toBeBetween(normal.bounds.height, 23, 24);
+        toBeBetween(normal.fontProperties.ascent, 18, 19);
         expect(normal.fontProperties.descent).toBe(5);
-        expect(normal.fontProperties.fontSize).toBe(24);
+        toBeBetween(normal.fontProperties.fontSize, 23, 24);
       });
 
       it("Should take the stroke into account when determining the size and the fontProperties (for baseline).", () => {
         expect(stroked.content).toBe("B");
         expect(stroked.style.strokeThickness).toBe(40);
-        expect(stroked.bounds.height).toBe(64);
-        expect(stroked.fontProperties.ascent).toBe(39);
+        toBeBetween(stroked.bounds.height, 63, 64);
+        toBeBetween(stroked.fontProperties.ascent, 38, 39);
         expect(stroked.fontProperties.descent).toBe(25);
-        expect(stroked.fontProperties.fontSize).toBe(64);
+        toBeBetween(stroked.fontProperties.fontSize, 63, 64);
       });
 
       it("Should not affect any other stroked text. Sometimes this happens when fontProperties are shared. ", () => {
         expect(alsoStroked.content).toBe("C");
         expect(alsoStroked.style.strokeThickness).toBe(40);
-        expect(alsoStroked.bounds.height).toBe(64);
-        expect(alsoStroked.fontProperties.ascent).toBe(39);
+        toBeBetween(alsoStroked.bounds.height, 63, 64);
+        toBeBetween(alsoStroked.fontProperties.ascent, 38, 39);
         expect(alsoStroked.fontProperties.descent).toBe(25);
-        expect(alsoStroked.fontProperties.fontSize).toBe(64);
+        toBeBetween(alsoStroked.fontProperties.fontSize, 63, 64);
       });
     });
 
@@ -902,10 +907,10 @@ aa bb aa`;
       const H = scaled.bounds.height;
 
       it("Default should be 1x scale for X and Y.", () => {
-        expect(W).toBe(87);
-        expect(H).toBe(35);
-        expect(unscaled.bounds.width).toBe(121);
-        expect(unscaled.bounds.height).toBe(35);
+        toBeBetween(W, 87, 88);
+        toBeBetween(H, 34, 35);
+        toBeBetween(unscaled.bounds.width, 121, 122);
+        toBeBetween(unscaled.bounds.height, 34, 35);
 
         const def = makeExample({ fontScaleWidth: 1, fontScaleHeight: 1 });
         const scaleSetToDefaultValues = layout
