@@ -46,6 +46,7 @@ You can get the text with tags stripped out with the `.untaggedText` implicit ge
 
 The style objects are modified versions (supersets) of `PIXI.TextStyle` (referred to as `TextStyleExtended` in the source code). In addition to [the properties allowed in TextStyle](https://pixijs.download/dev/docs/PIXI.TextStyle.html), the following extended properties are added.
 
+- Everything in [`PIXI.TextStyle`](https://pixijs.download/dev/docs/PIXI.TextStyle.html)
 - `align` - Same as `TextStyle` but adds the `"justify"` option
 - `valign` - Options are `"top"`, `"middle"`, `"bottom"`, `"baseline"`
 - `textTransform` - Options are `"normal"`, `"capitalize"`, `"uppercase"`, `"lowercase"`
