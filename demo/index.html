@@ -61,22 +61,34 @@
         <div class="pixi" id="basic">
           <script>
             // Basics
-            const basicText =
-              "<small>Small text</small> + <baseline>baseline adjustment</baseline> = <super>superscript</super>";
+            const basicText = `Let's make some
+<ml>multiline</ml>
+and <ms>multistyle</ms> text for
+<pixi>Pixi.js!</pixi>`;
 
             const basicStyle = {
-              default: { fontSize: 24, fill: "white" },
-              small: { fontSize: 12 },
-              baseline: { adjustBaseline: 15 },
-              super: {
-                fontSize: 12,
-                adjustBaseline: 15,
+              default: {
+                fontSize: "24px",
+                fill: "#cccccc",
+                align: "center",
+              },
+              ml: {
+                fontStyle: "italic",
+                fill: "#ff8888",
+                fontSize: "40px",
+              },
+              ms: {
+                fontWeight: "bold",
+                fill: "#4488ff",
+                fontSize: "40px",
+              },
+              pixi: {
+                fontSize: "64px",
+                fill: "#efefef",
               },
             };
 
-            const basic = new TaggedText(basicText, basicStyle, {
-              adjustFontBaseline: { verdana: -15 },
-            });
+            const basic = new TaggedText(basicText, basicStyle, {});
 
             createDemo("basic", basic);
           </script>
