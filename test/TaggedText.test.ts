@@ -307,29 +307,82 @@ describe("TaggedText", () => {
           expect(baseline).toBe(30);
         });
 
-        it('Should adjust "Arial" by 50% of the ascent.', () => {
-          const aOffset = aAscent - aControlAscent;
-          const aY = a.bounds.y;
+        describe("It changes where the font is rendered in relation to the baseline by some number of pixels.", () => {
+          it('Should adjust "Arial" by 50% of the ascent.', () => {
+            const aOffset = aAscent - aControlAscent;
+            const aY = a.bounds.y;
 
-          expect(aControlAscent).toBe(15);
-          expect(aAscent).toBe(aControlAscent * (1 + aPercent));
-          expect(aAscent).toBe(22.5);
-          expect(aOffset).toBe(7.5);
+            expect(aControlAscent).toBe(15);
+            expect(aAscent).toBe(aControlAscent * (1 + aPercent));
+            expect(aAscent).toBe(22.5);
+            expect(aOffset).toBe(7.5);
 
-          expect(aY).toBe(baseline - aAscent);
+            expect(aY).toBe(baseline - aAscent);
+          });
+
+          it('Should adjust "Georgia" by 4 pixels.', () => {
+            const bOffset = bPixels;
+            const cOffset = cPixels;
+
+            const bY = b.bounds.y;
+            const cY = c.bounds.y;
+
+            expect(c.fontProperties.fontSize).toBe(tallestHeight);
+
+            expect(bY).toBe(baselineControl - bAscent + bOffset);
+            expect(cY).toBe(baselineControl - cAscent + cOffset);
+          });
         });
+      });
 
-        it('Should adjust "Georgia" by 4 pixels.', () => {
-          const bOffset = bPixels;
-          const cOffset = cPixels;
+      describe("adjustBaseline", () => {
+        describe("adjustBaseline is exactly like adjustFontBaseline except it's style property that affects each tag", () => {
+          const str =
+            "<small>Small text</small> + <baseline>baseline adjustment</baseline> = <super>superscript</super>";
+          const styles = {
+            default: { fontSize: 16, fontFamily: "arial" },
+            small: { fontSize: 8 },
+            baseline: { adjustBaseline: 10 },
+            super: { fontSize: 8, adjustBaseline: 10 },
+          };
 
-          const bY = b.bounds.y;
-          const cY = c.bounds.y;
+          const text = new TaggedText(str, styles);
+          const tokens = text.tokensFlat;
+          const small = tokens[0];
+          const superscript = tokens[tokens.length - 1];
 
-          expect(c.fontProperties.fontSize).toBe(tallestHeight);
+          test("check control case", () => {
+            expect(small.content).toBe("Small");
+            expect(small.fontProperties).toMatchObject({
+              fontSize: 10,
+              ascent: 8,
+              descent: 2,
+            });
+            expect(small.bounds.height).toBe(10);
+          });
+          it('Should adjust "superscript" by 10px', () => {
+            expect(superscript.content).toBe("superscript");
+            expect(superscript.fontProperties).toMatchObject({
+              fontSize: 10,
+              ascent: 18,
+              descent: 2,
+            });
+          });
+          it("Should combine with adjustFontBaseline", () => {
+            const textWithFontAdjustment = new TaggedText(str, styles, {
+              adjustFontBaseline: { arial: 10 },
+            });
+            const doubleSuper =
+              textWithFontAdjustment.tokensFlat[
+                textWithFontAdjustment.tokensFlat.length - 1
+              ];
 
-          expect(bY).toBe(baselineControl - bAscent + bOffset);
-          expect(cY).toBe(baselineControl - cAscent + cOffset);
+            expect(doubleSuper.content).toBe("superscript");
+            expect(doubleSuper.fontProperties).toMatchObject({
+              ...superscript.fontProperties,
+              ascent: superscript.fontProperties.ascent + 10,
+            });
+          });
         });
       });
 

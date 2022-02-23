@@ -127,9 +127,13 @@ export interface TextDecorationStyles
 }
 
 export interface VerticalAlignStyles {
-  lineSpacing?: number;
   valign?: VAlign;
+}
+
+export interface VerticalSpacingStyles {
+  lineSpacing?: number;
   paragraphSpacing?: number;
+  adjustBaseline?: number;
 }
 export interface FontScaleStyles {
   fontScaleWidth?: number;
@@ -144,6 +148,7 @@ export interface TextStyleExtended
     ImageStyles,
     TextDecorationStyles,
     VerticalAlignStyles,
+    VerticalSpacingStyles,
     FontScaleStyles,
     TextTransformStyles {}
 
