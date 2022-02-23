@@ -47,19 +47,19 @@ export const DEFAULT_OPTIONS: TaggedTextOptions = {
 
 // TODO: make customizable
 const DEBUG = {
-  WORD_STROKE_COLOR: 0xffcccc, // #FCC
-  WORD_FILL_COLOR: 0xeeeeee, // #EEE
-  TEXT_FIELD_STROKE_COLOR: 0xff00ff, // #F0F
-  WHITESPACE_COLOR: 0xcccccc, // #CCC
-  WHITESPACE_STROKE_COLOR: 0xaaaaaa, // #AAA
-  BASELINE_COLOR: 0xffff99, // #FF9
-  LINE_COLOR: 0xffff00, // #FF0
-  OUTLINE_COLOR: 0xffcccc, // #FCC
-  OUTLINE_SHADOW_COLOR: 0x000000, // #000
+  WORD_STROKE_COLOR: 0xffcccc,
+  WORD_FILL_COLOR: 0xeeeeee,
+  TEXT_FIELD_STROKE_COLOR: 0xff00ff,
+  WHITESPACE_COLOR: 0xcccccc,
+  WHITESPACE_STROKE_COLOR: 0xaaaaaa,
+  BASELINE_COLOR: 0xffff99,
+  LINE_COLOR: 0xffff00,
+  OUTLINE_COLOR: 0xffcccc,
+  OUTLINE_SHADOW_COLOR: 0x000000,
   TEXT_STYLE: {
     fontFamily: "courier",
     fontSize: 10,
-    fill: 0xffffff, // #FFF
+    fill: 0xffffff,
     dropShadow: true,
   },
 };

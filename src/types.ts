@@ -88,6 +88,7 @@ export type TextDecoration =
 export interface TextStyle
   extends Record<string, unknown>,
     Partial<PIXI.TextStyle> {
+  // Overridden properties
   align?: Align;
   fontStyle?: FontStyle;
 }
@@ -121,19 +122,35 @@ export interface LineThroughStyle {
 export interface TextDecorationStyles
   extends UnderlineStyle,
     OverlineStyle,
-    LineThroughStyle {}
+    LineThroughStyle {
+  textDecoration?: TextDecoration;
+}
+
+export interface VerticalAlignStyles {
+  valign?: VAlign;
+}
+
+export interface VerticalSpacingStyles {
+  lineSpacing?: number;
+  paragraphSpacing?: number;
+  adjustBaseline?: number;
+}
+export interface FontScaleStyles {
+  fontScaleWidth?: number;
+  fontScaleHeight?: number;
+}
+export interface TextTransformStyles {
+  textTransform?: TextTransform;
+}
+
 export interface TextStyleExtended
   extends TextStyle,
     ImageStyles,
-    TextDecorationStyles {
-  lineSpacing?: number;
-  valign?: VAlign;
-  textTransform?: TextTransform;
-  textDecoration?: TextDecoration;
-  fontScaleWidth?: number;
-  fontScaleHeight?: number;
-  paragraphSpacing?: number;
-}
+    TextDecorationStyles,
+    VerticalAlignStyles,
+    VerticalSpacingStyles,
+    FontScaleStyles,
+    TextTransformStyles {}
 
 export interface TextDecorationMetrics {
   color: Color;

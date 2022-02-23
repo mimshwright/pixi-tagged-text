@@ -33,7 +33,6 @@ import {
   isNotWhitespaceToken,
   VAlign,
   createEmptyFinalToken,
-  FontProperty,
   FontMap,
 } from "./types";
 
@@ -659,19 +658,12 @@ export const calculateFinalTokens = (
             fontProperties
           );
 
-          const fontBaselineAdjustment = getAdjustFontBaselineForToken(
+          const baselineAdjustment = getBaselineAdjustment(
             style,
-            adjustFontBaseline
+            adjustFontBaseline,
+            fontProperties.ascent
           );
-
-          if (fontBaselineAdjustment !== null) {
-            const offset = getBaselineAdjustment(
-              fontBaselineAdjustment,
-              fontProperties.ascent
-            );
-
-            fontProperties.ascent += offset;
-          }
+          fontProperties.ascent += baselineAdjustment;
 
           const { letterSpacing } = style;
           if (letterSpacing) {
@@ -776,33 +768,27 @@ export const calculateFinalTokens = (
 };
 
 export const getBaselineAdjustment = (
-  fontAdjustment: FontProperty,
+  style: TextStyleExtended,
+  fontBaselineMap: FontMap = {},
   ascent: number
 ): number => {
-  if (typeof fontAdjustment === "string") {
-    const percentPair = fontAdjustment.split("%");
+  const fontFamily = style.fontFamily?.toString() ?? "";
+  const adjustBaseline = style.adjustBaseline ?? 0;
+  const adjustFontBaseline = fontBaselineMap[fontFamily] ?? null;
+
+  let finalValue = adjustBaseline;
+  if (typeof adjustFontBaseline === "string") {
+    const percentPair = adjustFontBaseline.split("%");
     const isPercent = percentPair.length > 1;
     const value = Number(percentPair[0]);
 
     if (isPercent) {
-      return ascent * (value / 100);
+      finalValue += ascent * (value / 100);
     } else {
-      return value;
+      finalValue += value;
     }
   } else {
-    return Number(fontAdjustment);
+    finalValue += Number(adjustFontBaseline);
   }
-};
-
-export const getAdjustFontBaselineForToken = (
-  style: TextStyleExtended,
-  adjustFontBaseline?: FontMap
-): FontProperty | null => {
-  if (style && adjustFontBaseline !== undefined) {
-    const fontFamily = style.fontFamily?.toString() ?? "";
-
-    return adjustFontBaseline[fontFamily] ?? null;
-  } else {
-    return null;
-  }
+  return finalValue;
 };
