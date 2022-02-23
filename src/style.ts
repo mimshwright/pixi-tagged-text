@@ -30,7 +30,6 @@ export const DEFAULT_STYLE: TextStyleExtended = {
   [IMG_DISPLAY_PROPERTY]: "inline",
   wordWrap: true,
   wordWrapWidth: 500,
-  lineSpacing: 0,
   fill: 0x000000,
 };
 
