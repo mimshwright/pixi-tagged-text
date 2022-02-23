@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.0.0...v3.1.0) (2022-02-23)
+
+### Features
+
+- **adjustbaseline:** added a style property 'adjustBaseline' ([a3d7c4c](https://github.com/mimshwright/pixi-tagged-text/commit/a3d7c4c473d4cb39ad2ae870fed15b4040e6b164)), closes [#108](https://github.com/mimshwright/pixi-tagged-text/issues/108)
+
+### Documentation
+
+- **readme:** clarified in README that styles inherit from PIXI.TextStyle ([0cba2b9](https://github.com/mimshwright/pixi-tagged-text/commit/0cba2b970d920ea19fd962810417c188bf7054ca)), closes [#193](https://github.com/mimshwright/pixi-tagged-text/issues/193)
+
 ## [3.0.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.7.1...v3.0.0) (2022-02-21)
 
 ### ⚠ BREAKING CHANGES
