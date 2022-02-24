@@ -627,58 +627,6 @@ describe("TaggedText", () => {
     });
   });
 
-  describe("valign", () => {
-    describe("Specific issue with vertical text align", () => {
-      describe("Should apply styles across the entire text field correctly.", () => {
-        const valignText = `<top>1<code>Top</code>2 <small>Vertical</small> <img/> Alignment.</top>`;
-
-        const valignStyle = {
-          default: {
-            fontFamily: "Arial",
-            fontSize: "24px",
-            fill: "#cccccc",
-            align: "left" as Align,
-          },
-          code: {
-            fontFamily: "Courier",
-            fontSize: "36px",
-            fill: "#ff8888",
-          },
-          small: { fontSize: "14px" },
-          top: { valign: "top" as VAlign },
-          img: { imgSrc: "valignImg", imgDisplay: "icon" as ImageDisplayMode },
-        };
-
-        const valignImg = PIXI.Sprite.from(iconSrc);
-
-        const valign = new TaggedText(valignText, valignStyle, {
-          imgMap: { valignImg },
-        });
-
-        const tokens = valign.tokens[0];
-        test("Top code tag", () => {
-          expect(tokens[0][0].tags).toBe("top");
-          expect(tokens[0][1].tags).toBe("top,code");
-          expect(tokens[0][2].tags).toBe("top");
-        });
-        test("Top small tag", () => {
-          expect(tokens[2][0].tags).toBe("top,small");
-        });
-        test("img tag", () => {
-          expect(tokens[4][0].tags).toBe("top,img");
-        });
-        test("plain (top) tag", () => {
-          expect(tokens[6][0].tags).toBe("top");
-        });
-        test("Top spaces", () => {
-          expect(tokens[1][0].tags).toBe("top");
-          expect(tokens[3][0].tags).toBe("top");
-          expect(tokens[5][0].tags).toBe("top");
-        });
-      });
-    });
-  });
-
   describe("text", () => {
     const singleLine = new TaggedText("Line 1", style);
     const doubleLine = new TaggedText(
@@ -1062,6 +1010,76 @@ Line 4`);
     it("spriteTemplates are not the same as the objects in sprites or spriteContainer, the latter are clones of the spriteTemplates.", () => {
       expect(t.spriteTemplates[0]).not.toBe(t.sprites[0]);
       expect(t.spriteTemplates[0]).not.toBe(t.spriteContainer.getChildAt(0));
+    });
+  });
+
+  describe("valign", () => {
+    describe("Specific issue with vertical text align", () => {
+      describe("Should apply styles across the entire text field correctly.", () => {
+        const valignText = `<top>1<code>Top</code>2 <small>Vertical</small> <img/> Alignment.</top>`;
+
+        const valignStyle = {
+          default: {
+            fontFamily: "Arial",
+            fontSize: "24px",
+            fill: "#cccccc",
+            align: "left" as Align,
+          },
+          code: {
+            fontFamily: "Courier",
+            fontSize: "36px",
+            fill: "#ff8888",
+          },
+          small: { fontSize: "14px" },
+          top: { valign: "top" as VAlign },
+          img: { imgSrc: "valignImg", imgDisplay: "icon" as ImageDisplayMode },
+        };
+
+        const valignImg = PIXI.Sprite.from(iconSrc);
+
+        const valign = new TaggedText(valignText, valignStyle, {
+          imgMap: { valignImg },
+        });
+
+        const tokens = valign.tokens[0];
+        test("Top code tag", () => {
+          expect(tokens[0][0].tags).toBe("top");
+          expect(tokens[0][1].tags).toBe("top,code");
+          expect(tokens[0][2].tags).toBe("top");
+        });
+        test("Top small tag", () => {
+          expect(tokens[2][0].tags).toBe("top,small");
+        });
+        test("img tag", () => {
+          expect(tokens[4][0].tags).toBe("top,img");
+        });
+        test("plain (top) tag", () => {
+          expect(tokens[6][0].tags).toBe("top");
+        });
+        test("Top spaces", () => {
+          expect(tokens[1][0].tags).toBe("top");
+          expect(tokens[3][0].tags).toBe("top");
+          expect(tokens[5][0].tags).toBe("top");
+        });
+      });
+    });
+  });
+
+  describe("TaggedText should support percentage font sizes #107", () => {
+    it("Should allow me to create a TaggedText with percentage font size. 100% == 10px", () => {
+      const text = "Hello, World!";
+      const style = { default: { fontSize: "100%" } };
+
+      expect(() => {
+        new TaggedText(text, style);
+      }).not.toThrow();
+
+      const t = new TaggedText(text, style);
+
+      expect(t.textFields[0].width).toBeGreaterThan(1);
+      expect(t.textFields[0].height).toBe(12);
+      expect(t.tokensFlat[0].style.fontSize).toBe("100%");
+      expect(t.tokensFlat[0].fontProperties.fontSize).toBe(10);
     });
   });
 });
