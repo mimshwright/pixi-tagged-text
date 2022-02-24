@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.1.0...v3.2.0) (2022-02-24)
+
+### Chore
+
+- **deps:** upgraded Pixi to latest version 6.2.x ([377caa1](https://github.com/mimshwright/pixi-tagged-text/commit/377caa12f9a34221e4d96e285028c0fecc886cdc))
+- **deps:** Upgraded pixi.js to latest version 6 release ([d168353](https://github.com/mimshwright/pixi-tagged-text/commit/d16835378c82c6758646970722bec10a6b52aef7))
+
 ## [3.1.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.0.0...v3.1.0) (2022-02-23)
 
 ### Features
