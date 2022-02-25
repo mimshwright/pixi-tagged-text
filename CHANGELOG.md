@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Bug Fixes
 
-- **errormessaging:** added target to errorMessage ([3451653](https://github.com/mimshwright/pixi-tagged-text/commit/3451653016718f282e12683a9398209db03ba608)), closes [#204](https://github.com/mimshwright/pixi-tagged-text/issues/204)
+- **warnings:** added target to errorMessage ([3451653](https://github.com/mimshwright/pixi-tagged-text/commit/3451653016718f282e12683a9398209db03ba608)), closes [#204](https://github.com/mimshwright/pixi-tagged-text/issues/204)
 
 ## [3.3.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.2.0...v3.3.0) (2022-02-25)
 
