@@ -32,6 +32,7 @@ import {
 import { calculateFinalTokens, getBoundsNested } from "./layout";
 import { capitalize } from "./stringUtil";
 import { fontSizeStringToNumber } from "./pixiUtils";
+import { logWarning as _logWarning } from "./errorMessaging";
 
 export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debug: false,
@@ -43,6 +44,8 @@ export const DEFAULT_OPTIONS: TaggedTextOptions = {
   skipDraw: false,
   drawWhitespace: false,
   wrapEmoji: true,
+  errorHandler: undefined,
+  supressConsole: false,
 };
 
 // TODO: make customizable
@@ -204,7 +207,8 @@ export default class TaggedText extends PIXI.Sprite {
     // Override some settings on default styles.
     if (tag === "default" && this.defaultStyle[IMG_REFERENCE_PROPERTY]) {
       // prevents accidentally setting all text to images.
-      console.error(
+      this.logWarning(
+        `${IMG_REFERENCE_PROPERTY}-on-default`,
         `Style "${IMG_REFERENCE_PROPERTY}" can not be set on the "default" style because it will add images to EVERY tag!`
       );
       this.defaultStyle[IMG_REFERENCE_PROPERTY] = undefined;
@@ -297,6 +301,12 @@ export default class TaggedText extends PIXI.Sprite {
   public get debugContainer(): PIXI.Container {
     return this._debugContainer;
   }
+
+  private logWarning = (code: string, message: string): void =>
+    _logWarning(this.options.errorHandler, this.options.supressConsole)(
+      code,
+      message
+    );
 
   constructor(
     text = "",
@@ -446,7 +456,8 @@ export default class TaggedText extends PIXI.Sprite {
     const tagTokensNew = parseTagsNew(
       this.text,
       Object.keys(this.tagStyles),
-      this.options.wrapEmoji
+      this.options.wrapEmoji,
+      this.logWarning
     );
     // Assign styles to each segment.
     const styledTokens = mapTagsToStyles(
@@ -544,8 +555,9 @@ export default class TaggedText extends PIXI.Sprite {
     });
 
     if (drawWhitespace === false && drewDecorations) {
-      console.warn(
-        "Warning: you may want to set the `drawWhitespace` option to `true` when using textDecoration (e.g. underlines) otherwise, spaces will not have text decorations."
+      this.logWarning(
+        "text-decoration-and-whitespace",
+        "Text decorations, such as underlines, will not appear under whitespace unless the `drawWhitespace` option is set to `true`."
       );
     }
 
@@ -567,7 +579,8 @@ export default class TaggedText extends PIXI.Sprite {
         color = "0x" + color.substring(1);
         color = parseInt(color, 16) as number;
       } else {
-        throw new Error(
+        this.logWarning(
+          "invalid-color",
           "Sorry, at this point, only hex colors are supported for textDecorations like underlines. Please use either a hex number like 0x66FF33 or a string like '#66FF33'"
         );
       }

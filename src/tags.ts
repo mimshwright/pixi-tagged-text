@@ -1,4 +1,5 @@
 import getEmojiRegex from "emoji-regex/es2015/RGI_Emoji";
+import { logWarning } from "./errorMessaging";
 
 import { last } from "./functionalUtils";
 import {
@@ -10,6 +11,8 @@ import {
   TextToken,
   isEmptyObject,
 } from "./types";
+
+const defaultLogWarning = logWarning();
 
 // TODO: this can probably be just a static value without all the options and parameters.
 // Seems doing one pass will be enough to gather all relevant info.
@@ -210,7 +213,8 @@ export const tagMatchToTagToken = (tag: TagMatchData): TagToken => {
 
 export const createTokensNew = (
   segments: string[],
-  tags: TagMatchData[]
+  tags: TagMatchData[],
+  logWarningFunction = defaultLogWarning
 ): (TagToken | TextToken)[] => {
   const rootTokens: CompositeToken<TagToken | TextToken> = { children: [] };
   if (segments[0] !== "") {
@@ -242,7 +246,8 @@ export const createTokensNew = (
     }
   }
   if (tokenStack.length > 1) {
-    console.warn(
+    logWarningFunction(
+      "unclosed-tags",
       `Found ${tokenStack.length - 1} unclosed tags in\n${tokenStack
         .map((token) => token.tag)
         .join("-")}`
@@ -263,8 +268,10 @@ export const containsEmoji = (input: string): boolean =>
  */
 export const parseTagsNew = (
   input: string,
-  tagNamesToMatch?: string[],
-  shouldWrapEmoji?: boolean
+  tagNamesToMatch: string[] = [],
+  shouldWrapEmoji = false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+  logWarningFunction = defaultLogWarning
 ): CompositeToken<TagToken | TextToken> => {
   // TODO: Warn the user if tags were found that are not defined in the tagStyles.
 
@@ -286,7 +293,7 @@ export const parseTagsNew = (
 
   const segments = extractSegments(input, tagMatches);
 
-  const tokens = createTokensNew(segments, tagMatches);
+  const tokens = createTokensNew(segments, tagMatches, logWarningFunction);
 
   return { children: tokens };
 };
