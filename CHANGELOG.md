@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.3.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.2.0...v3.3.0) (2022-02-25)
+
+### Features
+
+- **warnings:** added an errorHandler in the options ([89bf6c8](https://github.com/mimshwright/pixi-tagged-text/commit/89bf6c85a7e4ad5a1fe84bf398d5f1035000812e)), closes [#204](https://github.com/mimshwright/pixi-tagged-text/issues/204)
+
+### Refactors
+
+- **pixiutils:** removed an unused function from pixiUtils ([8b03623](https://github.com/mimshwright/pixi-tagged-text/commit/8b036232dced07a2bfc80e0b7948a8e591b76eef))
+
+### Chore
+
+- **tests:** mocked the console object in tests ([0d3266e](https://github.com/mimshwright/pixi-tagged-text/commit/0d3266ee466dfc6e4921ac6581b22c716c4307a9)), closes [#204](https://github.com/mimshwright/pixi-tagged-text/issues/204)
+
 ## [3.2.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.1.0...v3.2.0) (2022-02-24)
 
 ### Chore
