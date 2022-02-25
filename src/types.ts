@@ -16,6 +16,13 @@ export type Bounds = Rectangle;
 
 export type Nested<T> = T | Array<Nested<T>>;
 
+export type ErrorMessageType = "warning" | "error";
+export interface ErrorMessage {
+  type: ErrorMessageType;
+  code: string;
+  message: string;
+}
+
 ///// OPTIONS
 
 export type SpriteSource =
@@ -48,6 +55,8 @@ export type ImageSourceMap = Record<string, ImageSource>;
 export type ImageMap = Record<string, PIXI.Sprite>;
 
 export type SplitStyle = "words" | "characters";
+
+export type ErrorHandler = (e: ErrorMessage) => void;
 export interface TaggedTextOptions {
   debug?: boolean;
   debugConsole?: boolean;
@@ -59,6 +68,8 @@ export interface TaggedTextOptions {
   skipDraw?: boolean;
   drawWhitespace?: boolean;
   wrapEmoji?: boolean;
+  errorHandler?: ErrorHandler;
+  supressConsole?: boolean;
 }
 
 ///// STYLE PROPERTIES

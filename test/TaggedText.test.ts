@@ -9,6 +9,7 @@ import {
   VAlign,
   ImageDisplayMode,
   TextStyleSet,
+  ErrorMessage,
 } from "../src/types";
 
 describe("TaggedText", () => {
@@ -122,20 +123,16 @@ describe("TaggedText", () => {
       });
 
       describe("debugConsole", () => {
-        const control = new TaggedText("Test <b>test</b>", style);
-        const debug = new TaggedText(
-          "This <b>should appear</b> in console!",
-          style,
-          {
+        it("It should log debug info to console.", () => {
+          const consoleSpy = jest.spyOn(console, "log");
+          new TaggedText("This <b>should appear</b> in console!", style, {
             debugConsole: true,
-          }
-        );
-
-        it("It should log debug info to console. Can't automate this test so just look in the console.", () => {
-          expect(debug).toBeDefined();
+          });
+          expect(consoleSpy).toHaveBeenCalled();
         });
 
-        it("Should have debug set to false by default.", () => {
+        it("Should have debugCosole set to false by default.", () => {
+          const control = new TaggedText("Test <b>test</b>", style);
           expect(control.options.debugConsole).toBeFalsy();
         });
       });
@@ -857,16 +854,20 @@ Line 4`);
         expect(textFields[0].getChildAt(0)).toBeInstanceOf(PIXI.Graphics);
       });
 
-      it('Should throw an error if you try to use a color name like "red" for the underline.', () => {
-        expect(() => {
-          new TaggedText(
-            "a <b>c</b> d",
-            {
-              b: { underlineColor: "red", textDecoration: "underline" },
-            },
-            { drawWhitespace: true }
-          );
-        }).toThrow();
+      it('Should log an error if you try to use a color name like "red" for the underline.', () => {
+        const errorHandler = ({ code, message, type }: ErrorMessage) => {
+          expect(code).toBe("invalid-color");
+          expect(typeof message).toBe("string");
+          expect(type).toBe("warning");
+        };
+
+        new TaggedText(
+          "a <b>c</b> d",
+          {
+            b: { underlineColor: "red", textDecoration: "underline" },
+          },
+          { drawWhitespace: true, errorHandler }
+        );
       });
 
       it("If the default style is empty, use the default text color (black)", () => {
