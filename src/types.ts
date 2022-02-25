@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import TaggedText from "./TaggedText";
 import { complement, flatEvery } from "./functionalUtils";
 
 ///// GENERAL PURPOSE
@@ -21,6 +22,7 @@ export interface ErrorMessage {
   type: ErrorMessageType;
   code: string;
   message: string;
+  target?: TaggedText;
 }
 
 ///// OPTIONS

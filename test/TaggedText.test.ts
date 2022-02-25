@@ -855,14 +855,23 @@ Line 4`);
       });
 
       it('Should log an error if you try to use a color name like "red" for the underline.', () => {
-        const errorHandler = ({ code, message, type }: ErrorMessage) => {
+        const text = "a <b>c</b> d";
+
+        const errorHandler = ({
+          code,
+          message,
+          type,
+          target,
+        }: ErrorMessage) => {
           expect(code).toBe("invalid-color");
           expect(typeof message).toBe("string");
           expect(type).toBe("warning");
+          expect(target).toBeInstanceOf(TaggedText);
+          expect(target?.text).toBe(text);
         };
 
         new TaggedText(
-          "a <b>c</b> d",
+          text,
           {
             b: { underlineColor: "red", textDecoration: "underline" },
           },
