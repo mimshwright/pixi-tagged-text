@@ -303,10 +303,11 @@ export default class TaggedText extends PIXI.Sprite {
   }
 
   private logWarning = (code: string, message: string): void =>
-    _logWarning(this.options.errorHandler, this.options.supressConsole)(
-      code,
-      message
-    );
+    _logWarning(
+      this.options.errorHandler,
+      this.options.supressConsole,
+      this
+    )(code, message);
 
   constructor(
     text = "",
