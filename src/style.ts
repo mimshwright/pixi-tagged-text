@@ -20,17 +20,22 @@ import {
   TextDecorationMetrics,
   Thickness,
   Color,
+  FontSize,
+  measurementValueToComponents,
+  MeasurementUnit,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 
 export const DEFAULT_STYLE: TextStyleExtended = {
-  align: "left",
   valign: "baseline",
+  dropShadowColor: 0x000000,
+  fill: 0x000000,
+  fontSize: 26,
+  stroke: 0x000000,
   [IMG_DISPLAY_PROPERTY]: "inline",
   wordWrap: true,
   wordWrapWidth: 500,
-  fill: 0x000000,
 };
 
 /**
@@ -129,6 +134,21 @@ export const getStyleForTags = (
   return styleCache[tagHash];
 };
 
+export const interpretFontSize = (
+  baseFontSize: FontSize,
+  fontSize: FontSize
+): FontSize => {
+  const { value: baseValue, unit: baseUnit } =
+    measurementValueToComponents(baseFontSize);
+  const { value, unit } = measurementValueToComponents(fontSize);
+
+  if (unit === MeasurementUnit.percent) {
+    const percentage = value / 100;
+    return baseValue * percentage + baseUnit;
+  }
+  return fontSize;
+};
+
 export const mapTagsToStyles = (
   tokens: TagTokens,
   styles: TextStyleSet,
@@ -136,6 +156,7 @@ export const mapTagsToStyles = (
 ): StyledTokens => {
   const defaultStyle: TextStyleExtended = styles.default ?? {};
   const tagStack: TagWithAttributes[] = [];
+  const fontSizeStack: FontSize[] = [];
   const styleCache = {};
 
   const convertTagTokenToStyledToken = (
@@ -149,6 +170,9 @@ export const mapTagsToStyles = (
     let style: TextStyleExtended = defaultStyle;
     let tags = "";
 
+    const currentBaseFontSize =
+      fontSizeStack[fontSizeStack.length - 1] ?? DEFAULT_STYLE.fontSize;
+
     if (tag) {
       // Put the current tag on the stack.
       tagStack.push({ tagName: tag, attributes });
@@ -158,6 +182,14 @@ export const mapTagsToStyles = (
       style = getStyleForTags(tagStack, styles, styleCache);
       style = convertDecorationToLineProps(style);
     }
+
+    if (style.fontSize !== undefined) {
+      style.fontSize = interpretFontSize(currentBaseFontSize, style.fontSize);
+    } else {
+      style.fontSize = currentBaseFontSize;
+    }
+
+    fontSizeStack.push(style.fontSize as FontSize);
 
     const styledToken: StyledToken = {
       style,
@@ -192,6 +224,7 @@ export const mapTagsToStyles = (
 
     // Remove the last tag from the stack
     tagStack.pop();
+    fontSizeStack.pop();
 
     return styledToken;
   };

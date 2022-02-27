@@ -55,12 +55,21 @@ describe("TaggedText", () => {
         const text = new TaggedText("Hello");
         expect(text.defaultStyle.fill).toEqual(0);
       });
-      it("Should provide the default styles as a static value.", () => {
+
+      it("Should provide the default styles for TaggedText as a static value.", () => {
         const defaultStyles = TaggedText.defaultStyles;
         expect(defaultStyles).toHaveProperty("default");
-        expect(defaultStyles.default).toHaveProperty("align", "left");
-        expect(defaultStyles.default).toHaveProperty("fill", 0);
+        expect(defaultStyles.default).toHaveProperty("valign", "baseline");
       });
+
+      it("defaultStyles replaces color names like 'black' with numbers", () => {
+        expect(TaggedText.defaultStyles.default).toHaveProperty("fill", 0);
+      });
+
+      it("defaultStyles uses 26px as a default for fontSize", () => {
+        expect(TaggedText.defaultStyles.default).toHaveProperty("fontSize", 26);
+      });
+
       it("defaultStyles should not be editable.", () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -627,58 +636,6 @@ describe("TaggedText", () => {
     });
   });
 
-  describe("valign", () => {
-    describe("Specific issue with vertical text align", () => {
-      describe("Should apply styles across the entire text field correctly.", () => {
-        const valignText = `<top>1<code>Top</code>2 <small>Vertical</small> <img/> Alignment.</top>`;
-
-        const valignStyle = {
-          default: {
-            fontFamily: "Arial",
-            fontSize: "24px",
-            fill: "#cccccc",
-            align: "left" as Align,
-          },
-          code: {
-            fontFamily: "Courier",
-            fontSize: "36px",
-            fill: "#ff8888",
-          },
-          small: { fontSize: "14px" },
-          top: { valign: "top" as VAlign },
-          img: { imgSrc: "valignImg", imgDisplay: "icon" as ImageDisplayMode },
-        };
-
-        const valignImg = PIXI.Sprite.from(iconSrc);
-
-        const valign = new TaggedText(valignText, valignStyle, {
-          imgMap: { valignImg },
-        });
-
-        const tokens = valign.tokens[0];
-        test("Top code tag", () => {
-          expect(tokens[0][0].tags).toBe("top");
-          expect(tokens[0][1].tags).toBe("top,code");
-          expect(tokens[0][2].tags).toBe("top");
-        });
-        test("Top small tag", () => {
-          expect(tokens[2][0].tags).toBe("top,small");
-        });
-        test("img tag", () => {
-          expect(tokens[4][0].tags).toBe("top,img");
-        });
-        test("plain (top) tag", () => {
-          expect(tokens[6][0].tags).toBe("top");
-        });
-        test("Top spaces", () => {
-          expect(tokens[1][0].tags).toBe("top");
-          expect(tokens[3][0].tags).toBe("top");
-          expect(tokens[5][0].tags).toBe("top");
-        });
-      });
-    });
-  });
-
   describe("text", () => {
     const singleLine = new TaggedText("Line 1", style);
     const doubleLine = new TaggedText(
@@ -1062,6 +1019,185 @@ Line 4`);
     it("spriteTemplates are not the same as the objects in sprites or spriteContainer, the latter are clones of the spriteTemplates.", () => {
       expect(t.spriteTemplates[0]).not.toBe(t.sprites[0]);
       expect(t.spriteTemplates[0]).not.toBe(t.spriteContainer.getChildAt(0));
+    });
+  });
+
+  describe("valign", () => {
+    describe("Specific issue with vertical text align", () => {
+      describe("Should apply styles across the entire text field correctly.", () => {
+        const valignText = `<top>1<code>Top</code>2 <small>Vertical</small> <img/> Alignment.</top>`;
+
+        const valignStyle = {
+          default: {
+            fontFamily: "Arial",
+            fontSize: "24px",
+            fill: "#cccccc",
+            align: "left" as Align,
+          },
+          code: {
+            fontFamily: "Courier",
+            fontSize: "36px",
+            fill: "#ff8888",
+          },
+          small: { fontSize: "14px" },
+          top: { valign: "top" as VAlign },
+          img: { imgSrc: "valignImg", imgDisplay: "icon" as ImageDisplayMode },
+        };
+
+        const valignImg = PIXI.Sprite.from(iconSrc);
+
+        const valign = new TaggedText(valignText, valignStyle, {
+          imgMap: { valignImg },
+        });
+
+        const tokens = valign.tokens[0];
+        test("Top code tag", () => {
+          expect(tokens[0][0].tags).toBe("top");
+          expect(tokens[0][1].tags).toBe("top,code");
+          expect(tokens[0][2].tags).toBe("top");
+        });
+        test("Top small tag", () => {
+          expect(tokens[2][0].tags).toBe("top,small");
+        });
+        test("img tag", () => {
+          expect(tokens[4][0].tags).toBe("top,img");
+        });
+        test("plain (top) tag", () => {
+          expect(tokens[6][0].tags).toBe("top");
+        });
+        test("Top spaces", () => {
+          expect(tokens[1][0].tags).toBe("top");
+          expect(tokens[3][0].tags).toBe("top");
+          expect(tokens[5][0].tags).toBe("top");
+        });
+      });
+    });
+  });
+
+  describe("TaggedText should support percentage font sizes #107", () => {
+    test("default size of text", () => {
+      expect(new TaggedText("a").textFields[0].style.fontSize).toBe(26);
+    });
+
+    const text = "<a>Hello</a> beautiful <b>World<c>!</c></b>";
+    const styleControl = {
+      default: { fontFamily: "arial", fontSize: 26 },
+    };
+
+    const control = new TaggedText(text, styleControl);
+    const controlField = control.textFields[0];
+    const controlToken = control.tokensFlat[0];
+
+    test("control case is a text field with numeric (pixel) size.", () => {
+      expect(controlField.style.fontSize).toBe(26);
+      expect(controlToken.style.fontSize).toBe(26);
+      expect(controlToken.bounds.height).toBe(30);
+      expect(controlToken.fontProperties.ascent).toBe(24);
+      expect(controlToken.fontProperties.descent).toBe(6);
+      expect(controlToken.fontProperties.fontSize).toBe(30);
+    });
+
+    describe("When set on the default style, 100% should equal the default text size, 26px.", () => {
+      const stylePercentage = {
+        default: { ...styleControl.default, fontSize: "100%" },
+      };
+
+      const percentage = new TaggedText(text, stylePercentage);
+      const percentageField = percentage.textFields[0];
+      const percentageToken = percentage.tokensFlat[0];
+
+      it("Should match the size of a 26px text field.", () => {
+        expect(percentageToken.bounds).toMatchObject(controlToken.bounds);
+        expect(percentageToken.fontProperties).toMatchObject(
+          controlToken.fontProperties
+        );
+      });
+
+      it("Should set the internal text field to a pixel size.", () => {
+        expect(percentageField.style.fontSize).toBe("26px");
+      });
+    });
+
+    describe("Rendered sizes of percentages will be different based on context.", () => {
+      const text = `aaa<b>bbb<c>ccc</c>bbb</b>aaa<c>ccc</c>`;
+
+      const style = {
+        default: {
+          fontSize: 10,
+        },
+        b: {
+          fontSize: "300%",
+        },
+        c: {
+          fontSize: "50%",
+        },
+      };
+
+      const nested = new TaggedText(text, style);
+      const [a, b, bc, , , ac] = nested.tokensFlat;
+      it("renders percentages correctly based on context.", () => {
+        expect(a.style.fontSize).toBe(10);
+        expect(b.style.fontSize).toBe("30px");
+        expect(bc.style.fontSize).toBe("15px"); // 50% of 300% of 10px = 15px
+        expect(ac.style.fontSize).toBe("5px"); // 50% of 10px = 5px
+      });
+    });
+
+    describe("Check that non-100% scaling is working as expected.", () => {
+      const text = "<big>big</big> normal <small>small</small>";
+      const styleTest = {
+        default: styleControl.default,
+        big: { fontSize: "1000%" },
+        small: { fontSize: "10%" },
+      };
+
+      const test = new TaggedText(text, styleTest);
+      const [bigField, defaultField, smallField] = test.textFields;
+
+      it("default size is 26", () => {
+        expect(defaultField.height).toBe(30);
+      });
+      it("big tokens is 10x size.", () => {
+        expect(bigField.text).toBe("big");
+        expect(bigField.height).toBe(289);
+      });
+      it("small tokens is 1/10x size.", () => {
+        expect(smallField.text).toBe("small");
+        expect(smallField.height).toBeGreaterThanOrEqual(3);
+        expect(smallField.height).toBeLessThanOrEqual(4);
+      });
+    });
+
+    describe("Any other time 100% equals the size of the text of the enclosing tag. Using the default value of the text.", () => {
+      const styleTest = {
+        default: { fontFamily: "arial", fontSize: 20 },
+        a: { fontSize: "100%" },
+        b: { fontSize: "50px" },
+        c: { fontSize: "200%" },
+      };
+
+      const test = new TaggedText(text, styleTest);
+      const [testField, defaultField] = test.textFields;
+      const [
+        token100percent,
+        defaultToken,
+        ,
+        ,
+        token50px,
+        token200percentOf50px,
+      ] = test.tokensFlat;
+
+      it("100% should match the size of the default style.", () => {
+        expect(testField.height).toBe(defaultField.height);
+        expect(token100percent.fontProperties).toMatchObject(
+          defaultToken.fontProperties
+        );
+      });
+
+      it("Nested % styles should use their parent as a baseline.", () => {
+        expect(token50px.style.fontSize).toBe("50px");
+        expect(token200percentOf50px.style.fontSize).toBe("100px");
+      });
     });
   });
 });
