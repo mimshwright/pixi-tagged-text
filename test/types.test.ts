@@ -11,6 +11,7 @@ import {
   SpriteFinalToken,
   percentStringToNumber,
   isPercent,
+  measurementValueToComponents,
 } from "./../src/types";
 
 describe("Type validation", () => {
@@ -189,6 +190,53 @@ describe("Type validation", () => {
       expect(percentStringToNumber("50%px")).toBeNaN();
       expect(percentStringToNumber("0%px")).toBeNaN();
       expect(percentStringToNumber("100%px")).toBeNaN();
+    });
+  });
+
+  describe("measurementValueToComponents()", () => {
+    it("Should return the measurement value as a number and a unit.", () => {
+      expect(measurementValueToComponents("50px")).toMatchObject({
+        value: 50,
+        unit: "px",
+      });
+      expect(measurementValueToComponents("75%")).toMatchObject({
+        value: 75,
+        unit: "%",
+      });
+    });
+    it("Should default to pixels.", () => {
+      expect(measurementValueToComponents(25)).toMatchObject({
+        value: 25,
+        unit: "px",
+      });
+      expect(measurementValueToComponents("12.5")).toMatchObject({
+        value: 12.5,
+        unit: "px",
+      });
+    });
+    it("Should support any value in MeasurementUnit", () => {
+      const testUnit = (unit: string): void =>
+        expect(measurementValueToComponents(`1${unit}`)).toMatchObject({
+          value: 1,
+          unit,
+        });
+      testUnit("px");
+      testUnit("em");
+      testUnit("rem");
+      testUnit("pt");
+      testUnit("pc");
+      testUnit("in");
+      testUnit("cm");
+      testUnit("mm");
+      testUnit("%");
+    });
+    it("Should return NaN / unknown if the measurement is invalid.", () => {
+      const spyConsole = spyOn(console, "warn");
+      expect(measurementValueToComponents("50furlongs")).toEqual({
+        value: NaN,
+        unit: "unknown",
+      });
+      expect(spyConsole).toHaveBeenCalled();
     });
   });
 });

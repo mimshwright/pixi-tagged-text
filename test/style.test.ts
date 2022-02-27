@@ -16,6 +16,14 @@ describe("style module", () => {
   const texture = PIXI.Texture.from(iconImage);
   const icon = PIXI.Sprite.from(texture);
 
+  describe("default styles", () => {
+    it("should have a public copy of the default text styles", () => {
+      expect(style.DEFAULT_STYLE).toBeDefined();
+      expect(style.DEFAULT_STYLE).toHaveProperty("fill", 0x000000);
+      expect(style.DEFAULT_STYLE).toHaveProperty("fontSize", 26);
+    });
+  });
+
   describe("combineStyles()", () => {
     it("should combine 2 styles into one.", () => {
       expect(
@@ -130,6 +138,22 @@ describe("style module", () => {
         ...tagStyles.strong,
         ...tagStyles.blue,
       });
+    });
+  });
+
+  describe("interpretFontSize()", () => {
+    it("Should consider the parent font size to get the current font size (if it's a percentage)", () => {
+      expect(style.interpretFontSize("20px", "200%")).toBe("40px");
+      expect(style.interpretFontSize("1em", "150%")).toBe("1.5em");
+    });
+    it("Should return the same value if it's not a percentage", () => {
+      expect(style.interpretFontSize("12px", "2em")).toBe("2em");
+      expect(style.interpretFontSize("20px", "30px")).toBe("30px");
+    });
+    it("Should add px as a unit if there was no unit on the base value unless the new value has no unit", () => {
+      expect(style.interpretFontSize(12, "100%")).toBe("12px");
+      expect(style.interpretFontSize("12", "100%")).toBe("12px");
+      expect(style.interpretFontSize(12, 50)).toBe(50);
     });
   });
 
@@ -321,6 +345,101 @@ describe("style module", () => {
             ],
           },
         ],
+      });
+    });
+
+    describe("It should be responsible for percentage based font size styles.", () => {
+      it("Should use 26px as the basis for percentage fontSizes if there are no parent fontSizes.", () => {
+        const styles: TextStyleSet = {
+          default: {},
+          a: { fontSize: "200%" }, // 200% of 26 = 52
+        };
+        const tagTokens: TagTokens = {
+          children: [
+            {
+              tag: "a",
+              children: ["b"],
+            },
+          ],
+        };
+
+        const styledTokens = style.mapTagsToStyles(tagTokens, styles);
+
+        const a = styledTokens.children[0] as StyledToken;
+        expect(styledTokens.style).toMatchObject(styles.default);
+        expect(a.style).toMatchObject({
+          ...styles.default,
+          ...styles.a,
+          fontSize: "52px",
+        });
+      });
+      it("The percentage should be multiplied by the parent font size.", () => {
+        const styles: TextStyleSet = {
+          default: { fontSize: 10 },
+          a: { fontSize: "200%" }, // 200% of 10 = 20
+          b: { fontSize: "75%" }, // 75% of 20 = 15
+          c: { fontSize: "10em" }, // reset base size to 10em
+          d: { fontSize: "10%" }, // 10% of 10em = 1em
+        };
+
+        const tagTokens: TagTokens = {
+          children: [
+            {
+              tag: "a",
+              children: [
+                {
+                  tag: "b",
+                  children: [
+                    {
+                      tag: "c",
+                      children: [
+                        {
+                          tag: "d",
+                          children: ["e"],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        const styledTokens = style.mapTagsToStyles(tagTokens, styles);
+
+        const a = styledTokens.children[0] as StyledToken;
+        const b = a.children[0] as StyledToken;
+        const c = b.children[0] as StyledToken;
+        const d = c.children[0] as StyledToken;
+
+        expect(styledTokens.style).toMatchObject(styles.default);
+        expect(a.style).toMatchObject({
+          ...styles.default,
+          ...styles.a,
+          fontSize: "20px",
+        });
+        expect(b.style).toMatchObject({
+          ...styles.default,
+          ...styles.a,
+          ...styles.b,
+          fontSize: "15px",
+        });
+        expect(c.style).toMatchObject({
+          ...styles.default,
+          ...styles.a,
+          ...styles.b,
+          ...styles.c,
+          fontSize: "10em",
+        });
+        expect(d.style).toMatchObject({
+          ...styles.default,
+          ...styles.a,
+          ...styles.b,
+          ...styles.c,
+          ...styles.d,
+          fontSize: "1em",
+        });
       });
     });
 

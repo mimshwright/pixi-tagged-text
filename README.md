@@ -46,10 +46,13 @@ You can get the text with tags stripped out with the `.untaggedText` implicit ge
 
 The style objects are modified versions (supersets) of `PIXI.TextStyle` (referred to as `TextStyleExtended` in the source code). In addition to [the properties allowed in TextStyle](https://pixijs.download/dev/docs/PIXI.TextStyle.html), the following extended properties are added.
 
+(By the way, there is an excellent [TextStyle visual editor](https://pixijs.io/pixi-text-style/) that you can use to preview how your style will appear. The style objects generated can be used in this component.)
+
 - Everything in [`PIXI.TextStyle`](https://pixijs.download/dev/docs/PIXI.TextStyle.html)
 - `align` - Has all the options from `PIXI.TextStyle` and an additional option, `"justify"`, which tries to keep the width of each line the same.
 - `valign` - Options are `"top"`, `"middle"`, `"bottom"`, `"baseline"`
 - `textTransform` - Options are `"normal"`, `"capitalize"`, `"uppercase"`, `"lowercase"`
+- `fontSize` - Has the added ability to use percentage-based sizes which are based on the `fontSize` in the parent tag. In the example: `<small fontSize="10">small<big fontSize="300%">big</big></small>`, "small" will be 10px and "big" will be 30px. The default `fontSize` is `26`px.
 - `fontScaleWidth` - Percentage to scale the font e.g. `0.5` = 50%
 - `fontScaleHeight` - Percentage to scale the font e.g. `1.25` = 125%
 - `paragraphSpacing` - Additional spacing between paragraphs that is added when you use an explicit carriage return rather than letting the text wrap at the end of a line. Default is `0`. Can also be negative.
@@ -69,7 +72,11 @@ The style objects are modified versions (supersets) of `PIXI.TextStyle` (referre
 - `lineThroughOffset` - Positions the line-through above or below the default location. Default is `0`.
 - `adjustBaseline` - Adjusts the position of the text above or below the baseline. Default is `0`. Also see the `adjustFontBaseline` property in the options.
 
-By the way, there is an excellent [TextStyle visual editor](https://pixijs.io/pixi-text-style/) that you can use to preview how your style will appear. The style objects generated can be used in this component.
+Additionally, the following changes have been made to the default style values:
+
+- `wordWrap`: `false` -> `true`
+- `wordWrapWidth`: `100` -> `500`,
+- `fill`, `stroke`, & `dropShadowColor` - `"black"` -> `0x000000`
 
 ##### 'Default' `default` styles
 

@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 import TaggedText from "./TaggedText";
 import { complement, flatEvery } from "./functionalUtils";
+import { logWarning } from "./errorMessaging";
 
 ///// GENERAL PURPOSE
 
@@ -80,8 +81,33 @@ export interface TaggedTextOptions {
 export const IMG_REFERENCE_PROPERTY = "imgSrc";
 export const IMG_DISPLAY_PROPERTY = "imgDisplay";
 
+export enum MeasurementUnit {
+  default = "px",
+  px = "px",
+  em = "em",
+  rem = "rem",
+  pt = "pt",
+  pc = "pc",
+  in = "in",
+  cm = "cm",
+  mm = "mm",
+  percent = "%",
+  unknown = "unknown",
+}
+
+export const DEFAULT_MEASUREMENT_UNIT: MeasurementUnit =
+  MeasurementUnit.default;
+
+export interface MeasurementComponents {
+  value: number;
+  unit: MeasurementUnit;
+}
+
+export type MeasurementValue = string | number;
+
 export type Thickness = number;
 export type Color = string | number;
+export type FontSize = MeasurementValue;
 export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
 export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
 export type Align = "left" | "right" | "center" | "justify";
@@ -100,10 +126,11 @@ export type TextDecoration =
 
 export interface TextStyle
   extends Record<string, unknown>,
-    Partial<PIXI.TextStyle> {
+    Partial<PIXI.ITextStyle> {
   // Overridden properties
   align?: Align;
   fontStyle?: FontStyle;
+  fontSize?: FontSize;
 }
 
 export interface ImageStyles {
@@ -288,7 +315,55 @@ export const isNotWhitespaceToken = complement(isWhitespaceToken);
 export const isEmptyObject = <T extends unknown>(a: T): boolean =>
   a instanceof Object && Object.keys(a).length === 0;
 
+export const isPixel = (s: string): boolean => s.trim().endsWith("px");
+
+export const isEm = (s: string): boolean => s.trim().endsWith("em");
+
 export const isPercent = (s: string): boolean => s.trim().endsWith("%");
+
+export const pixelToNumber = (s: string): number =>
+  Number(s.trim().slice(0, -2));
+export const emToNumber = pixelToNumber;
 
 export const percentStringToNumber = (s: string): number =>
   isPercent(s) ? Number(s.trim().slice(0, -1)) / 100 : NaN;
+
+export const measurementValueToComponents = (
+  input: MeasurementValue
+): MeasurementComponents => {
+  if (input === undefined) {
+    throw new Error("value is undefined!");
+  }
+
+  if (typeof input === "number") {
+    return { value: input, unit: DEFAULT_MEASUREMENT_UNIT };
+  }
+  input = input.trim();
+
+  const pattern = new RegExp(Object.values(MeasurementUnit).join("|") + "$");
+  const i = input.search(pattern);
+  if (i !== -1) {
+    return {
+      value: parseFloat(input.slice(0, i)),
+      unit: input.slice(i) as MeasurementUnit,
+    };
+  }
+
+  const isAllDigits = input.search(/^[\d.]+$/) === 0;
+  if (isAllDigits) {
+    const forcedNumberConversion = parseFloat(input);
+    if (isNaN(forcedNumberConversion) === false) {
+      return { value: parseFloat(input), unit: DEFAULT_MEASUREMENT_UNIT };
+    }
+  }
+
+  // TOOD: hook into errorHandler
+  logWarning()(
+    "invalid-units",
+    `${input} is not a valid measurement value. Please use one of the following units: ${Object.keys(
+      MeasurementUnit
+    ).join(", ")}`
+  );
+
+  return { value: NaN, unit: MeasurementUnit.unknown };
+};
