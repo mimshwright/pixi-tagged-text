@@ -38,7 +38,7 @@
     "pixi.js": "^6"
   },
   "dependencies": {
-    "emoji-regex": "9.2.2"
+    "emoji-regex": "10.0.1"
   },
   "devDependencies": {
     "@jest-runner/electron": "^3.0.1",
