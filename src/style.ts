@@ -23,6 +23,8 @@ import {
   FontSize,
   measurementValueToComponents,
   MeasurementUnit,
+  Align,
+  AlignClassic,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";

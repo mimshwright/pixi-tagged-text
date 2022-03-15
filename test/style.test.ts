@@ -8,7 +8,7 @@ import {
   TextDecoration,
 } from "./../src/types";
 import * as style from "../src/style";
-import iconSrc from "./icon.base64";
+import iconSrc from "./support/icon.base64";
 
 describe("style module", () => {
   const iconImage = new Image();

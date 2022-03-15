@@ -110,7 +110,14 @@ export type Color = string | number;
 export type FontSize = MeasurementValue;
 export type Fill = Color | string[] | number[] | CanvasGradient | CanvasPattern;
 export type VAlign = "top" | "middle" | "bottom" | "baseline" | number;
-export type Align = "left" | "right" | "center" | "justify";
+export type AlignClassic = "left" | "right" | "center" | "justify";
+export type Align =
+  | AlignClassic
+  | "justify"
+  | "justify-left"
+  | "justify-right"
+  | "justify-center"
+  | "justify-all";
 export type ImageDisplayMode = "icon" | "block" | "inline";
 export type ImageReference = string;
 export type ImageDimensionPercentage = string;
@@ -123,15 +130,6 @@ export type TextDecoration =
   | TextDecorationValue
   | `${TextDecorationValue} ${TextDecorationValue}`
   | `${TextDecorationValue} ${TextDecorationValue} ${TextDecorationValue}`;
-
-export interface TextStyle
-  extends Record<string, unknown>,
-    Partial<PIXI.ITextStyle> {
-  // Overridden properties
-  align?: Align;
-  fontStyle?: FontStyle;
-  fontSize?: FontSize;
-}
 
 export interface ImageStyles {
   [IMG_REFERENCE_PROPERTY]?: ImageReference;
@@ -182,15 +180,20 @@ export interface FontScaleStyles {
 export interface TextTransformStyles {
   textTransform?: TextTransform;
 }
-
 export interface TextStyleExtended
-  extends TextStyle,
+  extends Record<string, unknown>,
+    Partial<Omit<PIXI.ITextStyle, "align">>,
     ImageStyles,
     TextDecorationStyles,
     VerticalAlignStyles,
     VerticalSpacingStyles,
     FontScaleStyles,
-    TextTransformStyles {}
+    TextTransformStyles {
+  // Overridden properties
+  align?: Align;
+  fontStyle?: FontStyle;
+  fontSize?: FontSize;
+}
 
 export interface TextDecorationMetrics {
   color: Color;

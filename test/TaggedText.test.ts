@@ -1,8 +1,8 @@
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
-import iconSrc from "./icon.base64";
-import { iconImage, iconTexture, icon } from "./testIcon";
+import iconSrc from "./support/icon.base64";
+import { iconImage, iconTexture, icon } from "./support/testIcon";
 import {
   Align,
   SplitStyle,
