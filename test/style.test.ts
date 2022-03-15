@@ -915,4 +915,28 @@ describe("style module", () => {
       });
     });
   });
+
+  describe("convertUnsupportedAlignment()", () => {
+    describe("It should convert alignments not supported by PIXI.Text into ones that are supported.", () => {
+      it("Should convert justified types to their classic counterparts", () => {
+        expect(style.convertUnsupportedAlignment("justify")).toBe("left");
+        expect(style.convertUnsupportedAlignment("justify-left")).toBe("left");
+        expect(style.convertUnsupportedAlignment("justify-center")).toBe(
+          "center"
+        );
+        expect(style.convertUnsupportedAlignment("justify-right")).toBe(
+          "right"
+        );
+        expect(style.convertUnsupportedAlignment("justify-all")).toBe("left");
+      });
+      it("Should convert supported types without changing anything.", () => {
+        expect(style.convertUnsupportedAlignment("left")).toBe("left");
+        expect(style.convertUnsupportedAlignment("center")).toBe("center");
+        expect(style.convertUnsupportedAlignment("right")).toBe("right");
+      });
+      it("Should handle undefined alignment without error", () => {
+        expect(style.convertUnsupportedAlignment()).toBeUndefined();
+      });
+    });
+  });
 });

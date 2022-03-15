@@ -49,7 +49,10 @@ The style objects are modified versions (supersets) of `PIXI.TextStyle` (referre
 (By the way, there is an excellent [TextStyle visual editor](https://pixijs.io/pixi-text-style/) that you can use to preview how your style will appear. The style objects generated can be used in this component.)
 
 - Everything in [`PIXI.TextStyle`](https://pixijs.download/dev/docs/PIXI.TextStyle.html)
-- `align` - Has all the options from `PIXI.TextStyle` and an additional option, `"justify"`, which tries to keep the width of each line the same.
+- `align` - Has all the options from `PIXI.TextStyle` plus additional options for justified alignment:
+  - `"justify-left"`, `"justify-right"`, and `"justify-center"` are all types of jutified alignment and they only differ in how they treat the last line of text.
+  - `"justify-all"` justifies all lines of text even the last line.
+  - `"justify"` is an alias for `"justify-left"`.
 - `valign` - Options are `"top"`, `"middle"`, `"bottom"`, `"baseline"`
 - `textTransform` - Options are `"normal"`, `"capitalize"`, `"uppercase"`, `"lowercase"`
 - `fontSize` - Has the added ability to use percentage-based sizes which are based on the `fontSize` in the parent tag. In the example: `<small fontSize="10">small<big fontSize="300%">big</big></small>`, "small" will be 10px and "big" will be 30px. The default `fontSize` is `26`px.

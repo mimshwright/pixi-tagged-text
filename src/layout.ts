@@ -260,11 +260,15 @@ export const alignLines = (
       alignFunction = alignCenter(maxWidth);
       break;
     case "justify":
+    case "justify-left":
+    case "justify-right":
+    case "justify-center":
+    case "justify-all":
       alignFunction = alignJustify(maxWidth);
       break;
     default:
       throw new Error(
-        `Unsupported alignment type ${align}! Use one of : "left", "right", "center", "justify"`
+        `Unsupported alignment type ${align}! Use one of : "left", "right", "center", "justify", "justify-left", "justify-right", justify-center", "justify-all"`
       );
   }
 

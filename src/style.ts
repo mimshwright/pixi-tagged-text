@@ -314,3 +314,23 @@ export const extractDecorations = (
     .filter((x) => x !== undefined) as TextDecorationMetrics[];
   return metrics;
 };
+
+export const convertUnsupportedAlignment = (
+  align?: Align
+): AlignClassic | undefined => {
+  if (align === undefined) {
+    return undefined;
+  }
+  switch (align) {
+    case "justify":
+    case "justify-left":
+    case "justify-all":
+      return "left";
+    case "justify-center":
+      return "center";
+    case "justify-right":
+      return "right";
+    default:
+      return align as AlignClassic;
+  }
+};

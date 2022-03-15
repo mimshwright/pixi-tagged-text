@@ -264,6 +264,32 @@ describe("layout module", () => {
     });
   });
 
+  describe("alignLines()", () => {
+    it("Should throw when given an invalid alignment type.", () => {
+      expect(() => {
+        // @ts-ignore-line
+        layout.alignLines("backwards", 500, []);
+      }).toThrow();
+    });
+
+    it("Should allow all valid alignment types.", () => {
+      const alignments = [
+        "left",
+        "center",
+        "right",
+        "justify",
+        "justify-left",
+        "justify-right",
+        "justify-center",
+        "justify-all",
+      ];
+      alignments.map((a) =>
+        // @ts-ignore-line
+        expect(() => layout.alignLines(a, 500, [])).not.toThrow()
+      );
+    });
+  });
+
   describe("splitAroundWhitespace()", () => {
     it("Should split at every whitespace but not delete the whitespace, keept it.", () => {
       expect(layout.splitAroundWhitespace("a b c")).toMatchObject([
