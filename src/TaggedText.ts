@@ -25,6 +25,7 @@ import {
 import { parseTagsNew, removeTags, EMOJI_TAG } from "./tags";
 import {
   combineAllStyles,
+  convertUnsupportedAlignment,
   DEFAULT_STYLE,
   getStyleForTag as getStyleForTagExt,
   mapTagsToStyles,
@@ -612,7 +613,10 @@ export default class TaggedText extends PIXI.Sprite {
       default:
     }
 
-    const textField = new PIXI.Text(text, token.style);
+    const alignClassic = convertUnsupportedAlignment(token.style.align);
+    const sanitizedStyle = { ...token.style, align: alignClassic };
+
+    const textField = new PIXI.Text(text, sanitizedStyle);
 
     let { fontScaleWidth = 1.0, fontScaleHeight = 1.0 } = token.style;
     fontScaleWidth =

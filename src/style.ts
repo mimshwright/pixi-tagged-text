@@ -23,6 +23,8 @@ import {
   FontSize,
   measurementValueToComponents,
   MeasurementUnit,
+  Align,
+  AlignClassic,
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";
@@ -313,4 +315,24 @@ export const extractDecorations = (
     .map(styleToMetrics)
     .filter((x) => x !== undefined) as TextDecorationMetrics[];
   return metrics;
+};
+
+export const convertUnsupportedAlignment = (
+  align?: Align
+): AlignClassic | undefined => {
+  if (align === undefined) {
+    return undefined;
+  }
+  switch (align) {
+    case "justify":
+    case "justify-left":
+    case "justify-all":
+      return "left";
+    case "justify-center":
+      return "center";
+    case "justify-right":
+      return "right";
+    default:
+      return align as AlignClassic;
+  }
 };

@@ -16,7 +16,7 @@ import * as PIXI from "pixi.js";
 import * as layout from "../src/layout";
 import * as style from "../src/style";
 import * as tags from "../src/tags";
-import { icon } from "./testIcon";
+import { icon } from "./support/testIcon";
 
 const R = (...args: number[]) => new PIXI.Rectangle(...args);
 
@@ -261,6 +261,125 @@ describe("layout module", () => {
           layout.calculateFinalTokens(styleTokens);
         }).not.toThrow();
       });
+    });
+  });
+
+  describe("alignLines()", () => {
+    it("Should throw when given an invalid alignment type.", () => {
+      expect(() => {
+        // @ts-ignore-line
+        layout.alignLines("backwards", 500, []);
+      }).toThrow();
+    });
+
+    it("Should allow all valid alignment types.", () => {
+      const alignments = [
+        "left",
+        "center",
+        "right",
+        "justify",
+        "justify-left",
+        "justify-right",
+        "justify-center",
+        "justify-all",
+      ];
+      alignments.map((a) =>
+        // @ts-ignore-line
+        expect(() => layout.alignLines(a, 500, [])).not.toThrow()
+      );
+    });
+
+    const style: TextStyleExtended = {
+      fontFamily: "Courier",
+      fontSize: 20,
+      wordWrapWidth: 400,
+    };
+    const makeToken = (content: string): FinalToken => ({
+      content,
+      style,
+      bounds: { x: 0, y: 0, width: 100, height: 20 },
+      fontProperties: { ascent: 16, descent: 4, fontSize: 20 },
+      tags: "",
+    });
+    const makeSpace = () => ({
+      ...makeToken(" "),
+      bounds: { x: 0, y: 0, width: 20, height: 20 },
+    });
+    const makeLine = (contents: string[]) =>
+      contents.map((content) =>
+        content === " " ? [makeSpace()] : [makeToken(content)]
+      );
+    const tokens = [
+      makeLine(["12345", " ", "12345", " ", "12345"]),
+      makeLine(["12345", " ", "12345"]),
+    ];
+
+    const leftPos = [
+      [0, 100, 120, 220, 240],
+      [0, 100, 120],
+    ];
+    const rightPos = [
+      [60, 160, 180, 280, 300],
+      [180, 280, 300],
+    ];
+    const centerPos = [
+      [30, 130, 150, 250, 270],
+      [90, 190, 210],
+    ];
+    const justifyPos = [
+      [0, 115, 150, 265, 300],
+      [0, 190, 300],
+    ];
+    const justifyLeftPos = [justifyPos[0], leftPos[1]];
+    const justifyRightPos = [justifyPos[0], rightPos[1]];
+    const justifyCenterPos = [justifyPos[0], centerPos[1]];
+
+    const expectTokens = (tokens: ParagraphToken) => ({
+      toMatchPositions: (positions: number[][]): void =>
+        tokens.forEach((line, lineIndex) =>
+          line.forEach((word, wordIndex) =>
+            expect(word[0].bounds.x).toBe(positions[lineIndex][wordIndex])
+          )
+        ),
+    });
+
+    const align = (align: Align) => layout.alignLines(align, 400, tokens);
+
+    it("Should align lines left aligned.", () => {
+      expectTokens(align("left")).toMatchPositions(leftPos);
+    });
+
+    it("Should align lines right aligned.", () => {
+      // calling align("left") is a little hack to reset the token positions.
+      // I think it has to do with reusing the tokens or bounds objects during testing.
+      align("left");
+      expectTokens(align("right")).toMatchPositions(rightPos);
+    });
+
+    it("Should align lines center aligned.", () => {
+      align("left");
+      expectTokens(align("center")).toMatchPositions(centerPos);
+    });
+    it("Should align lines justify-all aligned.", () => {
+      align("left");
+      expectTokens(align("justify-all")).toMatchPositions(justifyPos);
+    });
+
+    it("Should align lines justify / justify-left.", () => {
+      align("left");
+      expectTokens(align("justify")).toMatchPositions(justifyLeftPos);
+      align("left");
+      expectTokens(align("justify-left")).toMatchPositions(justifyLeftPos);
+    });
+
+    it("Should align lines justify-right.", () => {
+      align("left");
+      expectTokens(align("justify-right")).toMatchPositions(justifyRightPos);
+    });
+
+    it("Should align lines justify-center.", () => {
+      align("left");
+      expectTokens(align("justify-center")).toMatchPositions(justifyCenterPos);
     });
   });
 

@@ -1,4 +1,4 @@
-import { extractDecorations } from "./style";
+import { convertUnsupportedAlignment, extractDecorations } from "./style";
 import { capitalize } from "./stringUtil";
 import {
   last,
@@ -167,7 +167,10 @@ export const getBoundsNested: Unary<Nested<FinalToken>, Bounds> = flatReduce<
   height: NaN,
 });
 
-export const alignLeft = (line: Bounds[]): Bounds[] =>
+type AlignFunction = (line: Bounds[]) => Bounds[];
+type AlignFunctionMaxWidth = (maxWidth: number) => AlignFunction;
+
+export const alignLeft: AlignFunction = (line) =>
   line.reduce(
     (newLine: Bounds[], bounds: Bounds, i: number): Bounds[] =>
       // is first word?
@@ -179,68 +182,62 @@ export const alignLeft = (line: Bounds[]): Bounds[] =>
     []
   );
 
-export const alignRight =
-  (maxWidth: number) =>
-  (line: Bounds[]): Bounds[] =>
-    translateLine({
-      x: maxWidth - lineWidth(line),
-      y: 0,
-    })(alignLeft(line));
+export const alignRight: AlignFunctionMaxWidth = (maxWidth) => (line) =>
+  translateLine({
+    x: maxWidth - lineWidth(line),
+    y: 0,
+  })(alignLeft(line));
 
-export const alignCenter =
-  (maxWidth: number) =>
-  (line: Bounds[]): Bounds[] =>
-    translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(
-      alignLeft(line)
-    );
+export const alignCenter: AlignFunctionMaxWidth = (maxWidth) => (line) =>
+  translateLine({ x: center(lineWidth(line), maxWidth), y: 0 })(
+    alignLeft(line)
+  );
 
-export const alignJustify =
-  (maxLineWidth: number) =>
-  (line: Bounds[]): Bounds[] => {
-    const count = line.length;
-    if (count === 0) {
-      return [];
+export const alignJustify: AlignFunctionMaxWidth = (maxLineWidth) => (line) => {
+  const count = line.length;
+  if (count === 0) {
+    return [];
+  }
+
+  const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
+  const countNonZeroWidthWords = nonZeroWidthWords.length;
+
+  if (countNonZeroWidthWords === 1) {
+    const [first, ...rest] = line;
+    first.x = 0;
+    return [first, ...rest];
+  }
+
+  const result: Bounds[] = [];
+  const combinedBounds = getCombinedBounds(nonZeroWidthWords);
+  const w = combinedBounds.width;
+  const totalSpace = maxLineWidth - w;
+  const spacerWidth = totalSpace / (countNonZeroWidthWords - 1);
+
+  let previousWord;
+  for (let i = 0; i < line.length; i++) {
+    const bounds = line[i];
+    if (bounds.width === 0) {
+      result[i] = { ...bounds };
+      continue;
     }
-
-    const nonZeroWidthWords: Bounds[] = line.filter(({ width }) => width > 0);
-    const countNonZeroWidthWords = nonZeroWidthWords.length;
-
-    if (countNonZeroWidthWords === 1) {
-      const [first, ...rest] = line;
-      first.x = 0;
-      return [first, ...rest];
+    let x;
+    if (previousWord === undefined) {
+      x = 0;
+    } else {
+      x = previousWord.x + previousWord.width + spacerWidth;
     }
-
-    const result: Bounds[] = [];
-    const combinedBounds = getCombinedBounds(nonZeroWidthWords);
-    const w = combinedBounds.width;
-    const totalSpace = maxLineWidth - w;
-    const spacerWidth = totalSpace / (countNonZeroWidthWords - 1);
-
-    let previousWord;
-    for (let i = 0; i < line.length; i++) {
-      const bounds = line[i];
-      if (bounds.width === 0) {
-        result[i] = { ...bounds };
-        continue;
-      }
-      let x;
-      if (previousWord === undefined) {
-        x = 0;
-      } else {
-        x = previousWord.x + previousWord.width + spacerWidth;
-      }
-      if (isNaN(x)) {
-        throw new Error(
-          `Something went wrong with the justified layout calculation. x is NaN.`
-        );
-      }
-      const newWord: Bounds = setBoundsX(x)(bounds);
-      previousWord = newWord;
-      result[i] = newWord;
+    if (isNaN(x)) {
+      throw new Error(
+        `Something went wrong with the justified layout calculation. x is NaN.`
+      );
     }
-    return result;
-  };
+    const newWord: Bounds = setBoundsX(x)(bounds);
+    previousWord = newWord;
+    result[i] = newWord;
+  }
+  return result;
+};
 
 export const alignLines = (
   align: Align,
@@ -248,28 +245,48 @@ export const alignLines = (
   lines: ParagraphToken
 ): ParagraphToken => {
   // do horizontal alignment.
-  let alignFunction: (l: Bounds[]) => Bounds[];
+  let alignFunction: AlignFunction;
+  let lastAlignFunction: AlignFunction;
   switch (align) {
     case "left":
       alignFunction = alignLeft;
+      lastAlignFunction = alignFunction;
       break;
     case "right":
       alignFunction = alignRight(maxWidth);
+      lastAlignFunction = alignFunction;
       break;
     case "center":
       alignFunction = alignCenter(maxWidth);
+      lastAlignFunction = alignFunction;
       break;
     case "justify":
+    case "justify-left":
       alignFunction = alignJustify(maxWidth);
+      lastAlignFunction = alignLeft;
+      break;
+    case "justify-right":
+      alignFunction = alignJustify(maxWidth);
+      lastAlignFunction = alignRight(maxWidth);
+      break;
+    case "justify-center":
+      alignFunction = alignJustify(maxWidth);
+      lastAlignFunction = alignCenter(maxWidth);
+      break;
+    case "justify-all":
+      alignFunction = alignJustify(maxWidth);
+      lastAlignFunction = alignFunction;
       break;
     default:
       throw new Error(
-        `Unsupported alignment type ${align}! Use one of : "left", "right", "center", "justify"`
+        `Unsupported alignment type ${align}! Use one of : "left", "right", "center", "justify", "justify-left", "justify-right", justify-center", "justify-all"`
       );
   }
 
   for (const line of lines) {
+    const isLastLine = lines.indexOf(line) === lines.length - 1;
     const wordBoundsForLine: Bounds[] = [];
+    let alignedLine;
     for (const word of line) {
       const wordBounds = getBoundsNested(word);
       wordBoundsForLine.push(wordBounds);
@@ -277,7 +294,11 @@ export const alignLines = (
         throw new Error("wordBounds not correct");
       }
     }
-    const alignedLine = alignFunction(wordBoundsForLine);
+    if (isLastLine) {
+      alignedLine = lastAlignFunction(wordBoundsForLine);
+    } else {
+      alignedLine = alignFunction(wordBoundsForLine);
+    }
     for (let i = 0; i < line.length; i++) {
       const bounds = alignedLine[i];
       const word = line[i];
@@ -596,8 +617,11 @@ export const calculateFinalTokens = (
     (token: StyledToken | TextToken | SpriteToken): FinalToken[] => {
       let output: FinalToken[] = [];
 
+      const alignClassic = convertUnsupportedAlignment(style.align);
+
       sizer.style = {
         ...style,
+        align: alignClassic,
         // Override some styles for the purposes of sizing text.
         wordWrap: false,
         dropShadowBlur: 0,
