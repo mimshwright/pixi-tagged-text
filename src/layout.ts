@@ -284,7 +284,12 @@ export const alignLines = (
   }
 
   for (const line of lines) {
-    const isLastLine = lines.indexOf(line) === lines.length - 1;
+    const isLastLine =
+      // line is the last in the group OR
+      lines.indexOf(line) === lines.length - 1 ||
+      // line contains newline character
+      line.flat(2).filter(isNewlineToken).length > 0;
+
     const wordBoundsForLine: Bounds[] = [];
     let alignedLine;
     for (const word of line) {
