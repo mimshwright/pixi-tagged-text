@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.5.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.5.0...v3.5.1) (2022-03-19)
+
+### Bug Fixes
+
+- **alignment:** justified alignment types now correctly handle newlines ([d9fdf35](https://github.com/mimshwright/pixi-tagged-text/commit/d9fdf35c5bf82eed3af99e716b9d075da885bb80)), closes [#215](https://github.com/mimshwright/pixi-tagged-text/issues/215)
+
 ## [3.5.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.4.0...v3.5.0) (2022-03-17)
 
 ### Features
