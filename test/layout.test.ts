@@ -10,6 +10,7 @@ import {
   TextStyleSet,
   TextStyleExtended,
   LineToken,
+  WordToken,
 } from "./../src/types";
 import { splitText } from "./../src/layout";
 import * as PIXI from "pixi.js";
@@ -294,20 +295,27 @@ describe("layout module", () => {
       fontSize: 20,
       wordWrapWidth: 400,
     };
-    const makeToken = (content: string): FinalToken => ({
-      content,
-      style,
-      bounds: { x: 0, y: 0, width: 100, height: 20 },
-      fontProperties: { ascent: 16, descent: 4, fontSize: 20 },
-      tags: "",
-    });
-    const makeSpace = () => ({
-      ...makeToken(" "),
-      bounds: { x: 0, y: 0, width: 20, height: 20 },
-    });
+    const makeToken = (content: string): WordToken => [
+      {
+        content,
+        style,
+        bounds: { x: 0, y: 0, width: 100, height: 20 },
+        fontProperties: { ascent: 16, descent: 4, fontSize: 20 },
+        tags: "",
+      },
+    ];
+    const makeSpace = (): WordToken => [
+      {
+        content: " ",
+        style,
+        bounds: { x: 0, y: 0, width: 20, height: 20 },
+        fontProperties: { ascent: 16, descent: 4, fontSize: 20 },
+        tags: "",
+      },
+    ];
     const makeLine = (contents: string[]) =>
       contents.map((content) =>
-        content === " " ? [makeSpace()] : [makeToken(content)]
+        content === " " ? makeSpace() : makeToken(content)
       );
     const tokens = [
       makeLine(["12345", " ", "12345", " ", "12345"]),
@@ -337,49 +345,92 @@ describe("layout module", () => {
     const expectTokens = (tokens: ParagraphToken) => ({
       toMatchPositions: (positions: number[][]): void =>
         tokens.forEach((line, lineIndex) =>
-          line.forEach((word, wordIndex) =>
-            expect(word[0].bounds.x).toBe(positions[lineIndex][wordIndex])
-          )
+          line.forEach((word, wordIndex) => {
+            expect(word[0].bounds.x).toBe(positions[lineIndex][wordIndex]);
+          })
         ),
     });
 
-    const align = (align: Align) => layout.alignLines(align, 400, tokens);
+    const align = (tokens: ParagraphToken, align: Align) =>
+      layout.alignLines(align, 400, tokens);
 
     it("Should align lines left aligned.", () => {
-      expectTokens(align("left")).toMatchPositions(leftPos);
+      expectTokens(align(tokens, "left")).toMatchPositions(leftPos);
     });
 
     it("Should align lines right aligned.", () => {
       // calling align("left") is a little hack to reset the token positions.
       // I think it has to do with reusing the tokens or bounds objects during testing.
-      align("left");
-      expectTokens(align("right")).toMatchPositions(rightPos);
+      align(tokens, "left");
+      expectTokens(align(tokens, "right")).toMatchPositions(rightPos);
     });
 
     it("Should align lines center aligned.", () => {
-      align("left");
-      expectTokens(align("center")).toMatchPositions(centerPos);
+      align(tokens, "left");
+      expectTokens(align(tokens, "center")).toMatchPositions(centerPos);
     });
     it("Should align lines justify-all aligned.", () => {
-      align("left");
-      expectTokens(align("justify-all")).toMatchPositions(justifyPos);
+      align(tokens, "left");
+      expectTokens(align(tokens, "justify-all")).toMatchPositions(justifyPos);
     });
 
     it("Should align lines justify / justify-left.", () => {
-      align("left");
-      expectTokens(align("justify")).toMatchPositions(justifyLeftPos);
-      align("left");
-      expectTokens(align("justify-left")).toMatchPositions(justifyLeftPos);
+      align(tokens, "left");
+      expectTokens(align(tokens, "justify")).toMatchPositions(justifyLeftPos);
+      align(tokens, "left");
+      expectTokens(align(tokens, "justify-left")).toMatchPositions(
+        justifyLeftPos
+      );
     });
 
     it("Should align lines justify-right.", () => {
-      align("left");
-      expectTokens(align("justify-right")).toMatchPositions(justifyRightPos);
+      align(tokens, "left");
+      expectTokens(align(tokens, "justify-right")).toMatchPositions(
+        justifyRightPos
+      );
     });
 
     it("Should align lines justify-center.", () => {
-      align("left");
-      expectTokens(align("justify-center")).toMatchPositions(justifyCenterPos);
+      align(tokens, "left");
+      expectTokens(align(tokens, "justify-center")).toMatchPositions(
+        justifyCenterPos
+      );
+    });
+
+    it("Should handle line breaks in justified text correctly. The last line of each paragraph should have special style.", () => {
+      const tokensWithLineBreak = [
+        makeLine(["12345", " ", "12345", " ", "12345"]),
+        makeLine(["12345", " ", "12345", " ", "12345"]),
+        makeLine(["12345", " ", "\n"]),
+        makeLine(["12345", " ", "12345", " ", "12345"]),
+        makeLine(["12345", " ", "12345"]),
+      ];
+      const justifyLeftWithLineBreakPos = [
+        justifyPos[0],
+        justifyPos[0],
+        leftPos[1],
+        justifyPos[0],
+        leftPos[1],
+      ];
+      align(tokensWithLineBreak, "left");
+      expectTokens(align(tokensWithLineBreak, "justify")).toMatchPositions(
+        justifyLeftWithLineBreakPos
+      );
+
+      // // essentially, the last line of each paragraph should be left aligned. Here we have 5 lines with a line break in the middle.
+      // const justifyLeftWithLineBreakPos = [
+      //   justifyPos[0],
+      //   leftPos[1],
+      //   // justifyPos[0],
+      //   // justifyPos[0],
+      //   // leftPos[1],
+      // ];
+
+      // console.log("justifyLeftWithLineBreak");
+      // // align(tokensWithLineBreak, "left");
+      // expectTokens(align(tokensWithLineBreak, "justify-left")).toMatchPositions(
+      //   justifyLeftWithLineBreakPos
+      // );
     });
   });
 
