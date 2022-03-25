@@ -220,7 +220,7 @@ If you're using the [vscode-jest extension](https://marketplace.visualstudio.com
 
 ## Demo
 
-You can view some examples using the command:
+You can view examples using the command:
 
 ```bash
 yarn demo
