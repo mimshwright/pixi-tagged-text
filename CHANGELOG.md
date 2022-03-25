@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.5.2](https://github.com/mimshwright/pixi-tagged-text/compare/v3.5.1...v3.5.2) (2022-03-25)
+
+### Chore
+
+- **deps-dev:** bump @types/jest from 27.4.0 to 27.4.1 ([368ab8d](https://github.com/mimshwright/pixi-tagged-text/commit/368ab8df9209e3781c393c36dd07b696ef6e82e8))
+- **deps-dev:** bump canvas from 2.9.0 to 2.9.1 ([1d561cc](https://github.com/mimshwright/pixi-tagged-text/commit/1d561cc5072024fb378519e6853ea0afc263178b))
+- **deps-dev:** bump electron from 17.0.1 to 17.1.2 ([877489a](https://github.com/mimshwright/pixi-tagged-text/commit/877489adb61fe396c74abf05551982465b7bb0c4))
+- **deps-dev:** bump eslint-config-prettier from 8.4.0 to 8.5.0 ([1bad414](https://github.com/mimshwright/pixi-tagged-text/commit/1bad41478777f112bbcfb38c52fa1f5b15373134))
+- **deps-dev:** bump fs-extra from 10.0.0 to 10.0.1 ([7a55103](https://github.com/mimshwright/pixi-tagged-text/commit/7a55103ac988ff058fa3d7a79ec3b908965ade86))
+- **deps-dev:** bump prettier from 2.5.1 to 2.6.0 ([7f127d5](https://github.com/mimshwright/pixi-tagged-text/commit/7f127d5cdfde78b7276fc36415ab2140c3208555))
+- **deps-dev:** bump typescript from 4.5.5 to 4.6.2 ([c2629e3](https://github.com/mimshwright/pixi-tagged-text/commit/c2629e3606d16e1d975155f00f565dd702d17dac))
+- **deps:** updated dependencies thru dependabot ([f522f23](https://github.com/mimshwright/pixi-tagged-text/commit/f522f2349dcafdc0806928f5372bf4424a7cde66))
+
 ### [3.5.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.5.0...v3.5.1) (2022-03-19)
 
 ### Bug Fixes
