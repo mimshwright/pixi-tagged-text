@@ -38,6 +38,8 @@ import {
 
 const ICON_SCALE_BASE = 0.8;
 
+const sizer = new PIXI.Text("");
+
 /**
  * Translates the current location point to the beginning of the next line.
  *
@@ -612,7 +614,6 @@ export const calculateFinalTokens = (
   adjustFontBaseline?: FontMap
 ): ParagraphToken => {
   // Create a text field to use for measurements.
-  const sizer = new PIXI.Text("");
   const defaultStyle = styledTokens.style;
 
   let fontProperties: IFontMetrics;
