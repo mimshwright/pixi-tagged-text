@@ -349,6 +349,40 @@ export default class TaggedText extends PIXI.Sprite {
     this.text = text;
   }
 
+  public destroy(options?: boolean | PIXI.IDestroyOptions): void {
+    super.destroy(options);
+
+    const destroyChildren = {
+      children: true,
+      texture: true,
+      baseTexture: true,
+    };
+
+    this._textContainer.children.forEach((child) =>
+      child.destroy(destroyChildren)
+    );
+    this._debugContainer.children.forEach((child) =>
+      child.destroy(destroyChildren)
+    );
+    this._decorationContainer.children.forEach((child) =>
+      child.destroy(destroyChildren)
+    );
+    this._spriteContainer.children.forEach((child) =>
+      child.destroy({ children: true })
+    );
+
+    this.resetChildren();
+    this._debugContainer.destroy(destroyChildren);
+    this._textContainer.destroy(destroyChildren);
+    this._spriteContainer.destroy(destroyChildren);
+    this._decorationContainer.destroy(destroyChildren);
+
+    this._spriteTemplates = {};
+    this.options.imgMap = {};
+    this.options.skipUpdates = true;
+    this.options.skipDraw = true;
+  }
+
   /**
    * Removes all PIXI children from this component's containers.
    * Deletes references to sprites and text fields.
