@@ -76,7 +76,7 @@
     "dev": "microbundle watch -f umd --name TaggedText --external 'pixi.js' --globals 'pixi.js'=PIXI",
     "test": "jest",
     "test:watch": "test --watch",
-    "demo": "npm run build && http-server . --port 8080 && opener http://localhost:8080/demo/index.html",
+    "demo": "npm run build && http-server . --port 8888 && opener http://localhost:8888/demo/index.html",
     "build": "microbundle --name TaggedText --external 'pixi.js' --globals  'pixi.js'=PIXI",
     "lint:eslint": "eslint ./src/**/*.ts",
     "lint:prettier": "prettier ./**/*.{ts,js,json,html,css,md} -l",
@@ -87,6 +87,7 @@
     "commit": "cz",
     "commit-retry": "cz --retry",
     "ci": "npm run commit",
+    "cinv": "npm run commit --no-verify",
     "cirr": "npm run commit-retry",
     "prepublishOnly": "npm run build",
     "release": "standard-version"
