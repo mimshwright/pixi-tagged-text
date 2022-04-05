@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [3.6.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.5.3...v3.6.0) (2022-04-05)
 
+
 ### Bug Fixes
 
-- **memory:** improved memory management ([405eed9](https://github.com/mimshwright/pixi-tagged-text/commit/405eed9604d5109c307ef064516b26b11c63d0ea)), closes [#223](https://github.com/mimshwright/pixi-tagged-text/issues/223)
+* **memory:** improved memory management ([405eed9](https://github.com/mimshwright/pixi-tagged-text/commit/405eed9604d5109c307ef064516b26b11c63d0ea)), closes [#223](https://github.com/mimshwright/pixi-tagged-text/issues/223)
 
 ### [3.5.3](https://github.com/mimshwright/pixi-tagged-text/compare/v3.5.2...v3.5.3) (2022-04-05)
 
