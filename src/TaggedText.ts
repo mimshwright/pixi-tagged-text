@@ -284,22 +284,22 @@ export default class TaggedText extends PIXI.Sprite {
   private _debugGraphics: PIXI.Graphics | null = null;
 
   // Containers for children
-  private _textContainer: PIXI.Container;
-  public get textContainer(): PIXI.Container {
+  private _textContainer: PIXI.Container | null = null;
+  public get textContainer(): PIXI.Container | null {
     return this._textContainer;
   }
 
-  private _decorationContainer: PIXI.Container;
-  public get decorationContainer(): PIXI.Container {
+  private _decorationContainer: PIXI.Container | null;
+  public get decorationContainer(): PIXI.Container | null {
     return this._decorationContainer;
   }
 
-  private _spriteContainer: PIXI.Container;
-  public get spriteContainer(): PIXI.Container {
+  private _spriteContainer: PIXI.Container | null;
+  public get spriteContainer(): PIXI.Container | null {
     return this._spriteContainer;
   }
-  private _debugContainer: PIXI.Container;
-  public get debugContainer(): PIXI.Container {
+  private _debugContainer: PIXI.Container | null;
+  public get debugContainer(): PIXI.Container | null {
     return this._debugContainer;
   }
 
@@ -322,11 +322,6 @@ export default class TaggedText extends PIXI.Sprite {
     this._spriteContainer = new PIXI.Container();
     this._decorationContainer = new PIXI.Container();
     this._debugContainer = new PIXI.Container();
-
-    this.addChild(this._textContainer);
-    this.addChild(this._spriteContainer);
-    this.addChild(this._decorationContainer);
-    this.addChild(this._debugContainer);
 
     this.resetChildren();
 
@@ -358,29 +353,67 @@ export default class TaggedText extends PIXI.Sprite {
       baseTexture: true,
     };
 
-    this._textContainer.children.forEach((child) =>
-      child.destroy(destroyChildren)
-    );
-    this._debugContainer.children.forEach((child) =>
-      child.destroy(destroyChildren)
-    );
-    this._decorationContainer.children.forEach((child) =>
-      child.destroy(destroyChildren)
-    );
-    this._spriteContainer.children.forEach((child) =>
-      child.destroy({ children: true })
+    // Object.values(this.sprites).forEach((sprite) => sprite.destroy());
+    Object.values(this.decorations).forEach((decoration) =>
+      decoration.destroy()
     );
 
-    this.resetChildren();
-    this._debugContainer.destroy(destroyChildren);
-    this._textContainer.destroy(destroyChildren);
-    this._spriteContainer.destroy(destroyChildren);
-    this._decorationContainer.destroy(destroyChildren);
+    if (this._textContainer) {
+      this._textContainer.children.forEach((child) => {
+        child.destroy(destroyChildren);
+        if (child instanceof PIXI.Text) {
+          // @ts-ignore
+          child.context = null;
+          // @ts-ignore
+          child.canvas = null;
+        }
+      });
+      this._textContainer.removeAllListeners();
+      this._textContainer.removeChildren();
+      this._textContainer.destroy(destroyChildren);
+      this._textContainer = null;
+    }
 
+    if (this._debugContainer) {
+      this._debugContainer.children.forEach((child) =>
+        child.destroy(destroyChildren)
+      );
+      this._debugContainer.removeAllListeners();
+      this._debugContainer.removeChildren();
+      this._debugContainer.destroy(destroyChildren);
+      this._debugContainer = null;
+    }
+
+    if (this._decorationContainer) {
+      this._decorationContainer.children.forEach((child) =>
+        child.destroy(destroyChildren)
+      );
+      this._decorationContainer.removeAllListeners();
+      this._decorationContainer.removeChildren();
+      this._decorationContainer.destroy(destroyChildren);
+      this._decorationContainer = null;
+    }
+
+    if (this._spriteContainer) {
+      this._spriteContainer.children.forEach((child) =>
+        child.destroy({ children: true })
+      );
+      this._spriteContainer.removeAllListeners();
+      this._spriteContainer.removeChildren();
+      this._spriteContainer.destroy(destroyChildren);
+      this._spriteContainer = null;
+    }
+
+    this._textFields = [];
+    this._sprites = [];
+    this._decorations = [];
     this._spriteTemplates = {};
-    this.options.imgMap = {};
-    this.options.skipUpdates = true;
-    this.options.skipDraw = true;
+    this._tokens = [];
+    this._tagStyles = {};
+    this._options.imgMap = {};
+    this._options.skipUpdates = true;
+    this._options.skipDraw = true;
+    this._options = {};
   }
 
   /**
@@ -388,10 +421,33 @@ export default class TaggedText extends PIXI.Sprite {
    * Deletes references to sprites and text fields.
    */
   private resetChildren() {
-    this._debugContainer.removeChildren();
-    this._textContainer.removeChildren();
-    this._spriteContainer.removeChildren();
-    this._decorationContainer.removeChildren();
+    if (this._textContainer) {
+      this._textContainer.removeChildren();
+      this.removeChild(this._textContainer);
+    }
+    this._textContainer = new PIXI.Container();
+    this.addChild(this._textContainer);
+
+    if (this._spriteContainer) {
+      this._spriteContainer.removeChildren();
+      this.removeChild(this._spriteContainer);
+    }
+    this._spriteContainer = new PIXI.Container();
+    this.addChild(this._spriteContainer);
+
+    if (this._decorationContainer) {
+      this._decorationContainer.removeChildren();
+      this.removeChild(this._decorationContainer);
+    }
+    this._decorationContainer = new PIXI.Container();
+    this.addChild(this._decorationContainer);
+
+    if (this._debugContainer) {
+      this._debugContainer.removeChildren();
+      this.removeChild(this._debugContainer);
+    }
+    this._debugContainer = new PIXI.Container();
+    this.addChild(this._debugContainer);
 
     this._textFields = [];
     this._sprites = [];
@@ -424,12 +480,14 @@ export default class TaggedText extends PIXI.Sprite {
       }
       // Listen for changes to sprites (e.g. when they load.)
       const texture = sprite.texture;
+
+      const onTextureUpdate = (baseTexture: PIXI.BaseTexture) => {
+        this.onImageTextureUpdate(baseTexture);
+        baseTexture.removeListener("update", onTextureUpdate);
+      };
+
       if (texture !== undefined) {
-        texture.baseTexture.addListener(
-          "update",
-          (baseTexture: PIXI.BaseTexture) =>
-            this.onImageTextureUpdate(baseTexture)
-        );
+        texture.baseTexture.addListener("update", onTextureUpdate);
       }
 
       this.spriteTemplates[key] = sprite;
@@ -445,10 +503,7 @@ export default class TaggedText extends PIXI.Sprite {
     baseTexture;
     this._needsUpdate = true;
     this._needsDraw = true;
-    // const didUpdate = this.updateIfShould();
     this.updateIfShould();
-
-    // this.dispactchEvent(new Event("imageUpdate", texture));
   }
 
   /**
@@ -501,7 +556,6 @@ export default class TaggedText extends PIXI.Sprite {
       tagStyles,
       spriteTemplates
     );
-    styledTokens;
     // Measure font for each style
     // Measure each segment
     // Create the text segments, position and add them. (draw)
@@ -554,6 +608,14 @@ export default class TaggedText extends PIXI.Sprite {
    */
   public draw(): void {
     this.resetChildren();
+    if (this.textContainer === null || this.spriteContainer === null) {
+      throw new Error(
+        "Somehow the textContainer or spriteContainer is null. This shouldn't be possible. Perhaps you've destroyed this object?"
+      );
+    }
+    const textContainer = this.textContainer;
+    const spriteContainer = this.spriteContainer;
+
     const { drawWhitespace } = this.options;
     const tokens = drawWhitespace
       ? this.tokensFlat
@@ -566,7 +628,7 @@ export default class TaggedText extends PIXI.Sprite {
     tokens.forEach((t) => {
       if (isTextToken(t)) {
         displayObject = this.createTextFieldForToken(t as TextFinalToken);
-        this.textContainer.addChild(displayObject);
+        textContainer.addChild(displayObject);
         this.textFields.push(displayObject as PIXI.Text);
 
         if (t.textDecorations && t.textDecorations.length > 0) {
@@ -582,7 +644,7 @@ export default class TaggedText extends PIXI.Sprite {
         displayObject = t.content as PIXI.Sprite;
 
         this.sprites.push(displayObject as PIXI.Sprite);
-        this.spriteContainer.addChild(displayObject);
+        spriteContainer.addChild(displayObject);
       }
 
       const { bounds } = t;
@@ -736,7 +798,13 @@ export default class TaggedText extends PIXI.Sprite {
   public drawDebug(): void {
     const paragraph = this.tokens;
     this._debugGraphics = new PIXI.Graphics();
-    this.debugContainer.addChild(this._debugGraphics);
+    if (this.debugContainer === null) {
+      throw new Error(
+        "Somehow the debug container is null. This shouldn't be possible. Perhaps you've destroyed this object?"
+      );
+    }
+    const debugContainer = this.debugContainer;
+    debugContainer.addChild(this._debugGraphics);
 
     const g = this._debugGraphics;
     g.clear();
