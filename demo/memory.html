@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>pixi-tagged-text Demo</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.2.2/browser/pixi.min.js"></script>
+
+    <!-- TaggedText -->
+    <script src="../dist/pixi-tagged-text.umd.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+  </head>
+
+  <body>
+    <h1>pixi-tagged-text Demo</h1>
+    <main>
+      <div class="example">
+        <div class="code">
+          <pre><code class="js"></code></pre>
+        </div>
+
+        <div class="pixi" id="basic">
+          <script>
+            const SET_SIZE = 10;
+            const INTERVAL = 200;
+            const LIMIT = 10000;
+            const TEST_TT = true;
+            const TEST_PLAIN_TEXT = false;
+
+            PIXI.settings.RESOLUTION = 2;
+            const app = new PIXI.Application({
+              width: 600,
+              height: 600,
+              backgroundColor: 0x333333,
+            });
+            document.getElementById("basic").appendChild(app.view);
+
+            let tt;
+            let plainText;
+            const iconImage = PIXI.Sprite.from("./icon.png");
+            const style = {
+              fontSize: 40,
+              textDecoration: "underline",
+              wordWrap: true,
+              wordWrapWidth: 400,
+              fill: 0xffffff,
+            };
+            const options = {
+              imgMap: { icon: iconImage },
+              debug: true,
+            };
+
+            const makeTaggedText = (total) => {
+              tt = new TaggedText(
+                "Hello my baby, hello my honey, hello my ragtime gal! <icon /> " +
+                  total,
+                {
+                  default: style,
+                },
+                options
+              );
+              tt.x = 50;
+              tt.y = 50;
+              app.stage.addChild(tt);
+            };
+
+            const destroyTaggedText = () => {
+              if (tt && tt.destroyed === false) {
+                app.stage.removeChild(tt);
+                tt.destroy();
+                tt = null;
+              }
+            };
+
+            const makePlainText = () => {
+              plainText = new PIXI.Text(
+                "Hello my baby, hello my honey, hello my ragtime gal! " + total,
+                style
+              );
+              plainText.x = 50;
+              plainText.y = 300;
+              app.stage.addChild(plainText);
+            };
+
+            const destroyPlainText = () => {
+              app.stage.removeChild(plainText);
+              plainText.destroy();
+              plainText = null;
+            };
+
+            let total = 0;
+            let firstHeapSize =
+              window.performance.memory.usedJSHeapSize / 1024 / 1024;
+            let lastHeapSize = firstHeapSize;
+
+            const runTest = () => {
+              let i = SET_SIZE;
+              while (i > 0) {
+                total += 1;
+
+                if (TEST_TT) {
+                  if (tt) {
+                    destroyTaggedText();
+                  }
+                  makeTaggedText(total);
+                }
+
+                if (TEST_PLAIN_TEXT) {
+                  if (plainText) {
+                    destroyPlainText();
+                  }
+                  makePlainText(total);
+                }
+
+                i--;
+              }
+              const heapSize = Math.ceil(
+                window.performance.memory.usedJSHeapSize / 1024 / 1024
+              );
+              console.log(
+                `iterations:${total} • Heap size: ${heapSize}MB • change: ${
+                  heapSize - lastHeapSize
+                }`
+              );
+              if (total >= LIMIT) {
+                clearInterval(loop);
+                const total = (heapSize - firstHeapSize).toFixed(2);
+                const each = (
+                  ((heapSize - firstHeapSize) * 1024) /
+                  LIMIT
+                ).toFixed(2);
+                console.log(`Total gain: ${total}MB (${each}KB/iteration)`);
+              }
+              lastHeapSize = heapSize;
+            };
+            var loop = setInterval(runTest, INTERVAL);
+
+            // makeTaggedText();
+            // console.log(tt);
+            // // debugger;
+            // setTimeout(() => {
+            //   tt.destroy();
+            //   console.log(JSON.stringify(tt));
+            //   console.log(tt);
+            // }, 1000);
+          </script>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
