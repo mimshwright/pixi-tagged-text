@@ -103,8 +103,9 @@ describe("TaggedText", () => {
         const blank = new TaggedText("", style, { debug: true });
 
         it("Draws all shapes into one graphics layer.", () => {
-          expect(blank.debugContainer.children).toHaveLength(1);
-          expect(blank.debugContainer.getChildAt(0)).toBeInstanceOf(
+          expect(blank.debugContainer).not.toBeNull();
+          expect(blank.debugContainer?.children).toHaveLength(1);
+          expect(blank.debugContainer?.getChildAt(0)).toBeInstanceOf(
             PIXI.Graphics
           );
         });
@@ -112,20 +113,20 @@ describe("TaggedText", () => {
         it("Should show debug information if you set debug to true.", () => {
           // one element for the graphics layer
           // 5 elements for the text layers
-          expect(debug.debugContainer.children).toHaveLength(6);
+          expect(debug.debugContainer?.children).toHaveLength(6);
 
-          expect(debug.debugContainer.getBounds().width).toBeGreaterThan(100);
+          expect(debug.debugContainer?.getBounds().width).toBeGreaterThan(100);
         });
         it("Should show the tag names for styled text.", () => {
-          expect(debug.debugContainer.getChildAt(3)).toHaveProperty(
+          expect(debug.debugContainer?.getChildAt(3)).toHaveProperty(
             "text",
             "b,i"
           );
         });
 
         it("Should have debug set to false by default.", () => {
-          expect(control.debugContainer.children).toHaveLength(0);
-          expect(control.debugContainer.getBounds()).toMatchObject(
+          expect(control.debugContainer?.children).toHaveLength(0);
+          expect(control.debugContainer?.getBounds()).toMatchObject(
             emptySpriteBounds
           );
         });
@@ -271,7 +272,7 @@ describe("TaggedText", () => {
         const bAscent = b.fontProperties.ascent;
         const cAscent = c.fontProperties.ascent;
 
-        const tallestHeight = control.textContainer.height;
+        const tallestHeight = control.textContainer?.height;
         const baselineControl = Math.max(
           aControlAscent,
           bControlAscent,
@@ -469,17 +470,29 @@ describe("TaggedText", () => {
           skipDraw: true,
         });
 
+        it("Default should be to automatically call update.", () => {
+          expect(control.textContainer?.children).toHaveLength(2);
+        });
         it("Should have the option to disable automatic calls to update().", () => {
-          expect(skipUpdates.textContainer.children).toHaveLength(0);
+          expect(skipUpdates.textContainer?.children).toHaveLength(0);
           expect(skipUpdates.getBounds()).toMatchObject(containerSpriteBounds);
           skipUpdates.update();
           expect(skipUpdates.getBounds()).toMatchObject(control.getBounds());
           expect(skipUpdates.textFields).toHaveLength(2);
         });
+
+        it("should allow you to force an update.", () => {
+          expect(skipUpdates.textFields).toHaveLength(2);
+          skipUpdates.setText("");
+          expect(skipUpdates.textFields).toHaveLength(2);
+          skipUpdates.setText("", false);
+          expect(skipUpdates.textFields).toHaveLength(0);
+        });
+
         it("Should have the option to disable automatic calls to draw().", () => {
-          expect(skipDraw.textContainer.children).toHaveLength(0);
+          expect(skipDraw.textContainer?.children).toHaveLength(0);
           skipDraw.update();
-          expect(skipDraw.textContainer.children).toHaveLength(0);
+          expect(skipDraw.textContainer?.children).toHaveLength(0);
           skipDraw.draw();
           expect(skipDraw.textFields).toHaveLength(2);
           expect(skipDraw.tokens).toMatchObject([
@@ -491,24 +504,14 @@ describe("TaggedText", () => {
           ]);
           expect(skipDraw.getBounds()).toMatchObject(control.getBounds());
         });
-        it("Default should be to automatically call update.", () => {
-          expect(control.textContainer.children).toHaveLength(2);
-        });
-
-        it("should allow you to force an update...", () => {
-          expect(skipUpdates.textFields).toHaveLength(2);
-          skipUpdates.setText("");
-          expect(skipUpdates.textFields).toHaveLength(2);
-          skipUpdates.setText("", false);
-          expect(skipUpdates.textFields).toHaveLength(0);
-        });
-        it("...or draw...", () => {
+        it("Should allow you to force a draw.", () => {
           skipDraw.setText("");
           expect(skipDraw.textFields).toHaveLength(2);
           skipDraw.update(false);
           expect(skipDraw.textFields).toHaveLength(0);
         });
-        it("...or force no update", () => {
+
+        it("It can also be forced not to update", () => {
           control.text = "";
           expect(control.textFields).toHaveLength(0);
           control.setText("abc def ghi", true);
@@ -977,19 +980,28 @@ Line 4`);
       { imgMap: { icon }, debug: true, drawWhitespace: true }
     );
     it("Should have a child called textContainer that displays the text fields", () => {
-      expect(t.textContainer).toBeDefined();
-      expect(t.textContainer.children).toHaveLength(6);
-      expect(t.textContainer.getChildAt(0)).toBeInstanceOf(PIXI.Text);
+      expect(t.textContainer).toBeInstanceOf(PIXI.Container);
+      expect(t.textContainer?.children).toHaveLength(6);
+      expect(t.textContainer?.getChildAt(0)).toBeInstanceOf(PIXI.Text);
     });
     it("Should have a child called spriteContainer that displays the sprites", () => {
-      expect(t.spriteContainer).toBeDefined();
-      expect(t.spriteContainer.children).toHaveLength(1);
-      expect(t.spriteContainer.getChildAt(0)).toBeInstanceOf(PIXI.Sprite);
+      expect(t.spriteContainer).toBeInstanceOf(PIXI.Container);
+      expect(t.spriteContainer?.children).toHaveLength(1);
+      expect(t.spriteContainer?.getChildAt(0)).toBeInstanceOf(PIXI.Sprite);
     });
     it("Should have a child called debugContainer that displays the debug info", () => {
-      expect(t.debugContainer).toBeDefined();
-      expect(t.debugContainer.children.length).toBeGreaterThan(0);
-      expect(t.debugContainer.getChildAt(0)).toBeInstanceOf(PIXI.DisplayObject);
+      expect(t.debugContainer).toBeInstanceOf(PIXI.Container);
+      expect(t.debugContainer?.children.length).toBeGreaterThan(0);
+      expect(t.debugContainer?.getChildAt(0)).toBeInstanceOf(
+        PIXI.DisplayObject
+      );
+    });
+    it("Should have a child called decorationContainer that displays the debug info", () => {
+      expect(t.decorationContainer).toBeInstanceOf(PIXI.Container);
+      // expect(t.decorationContainer?.children.length).toBeGreaterThan(0);
+      // expect(t.decorationContainer?.getChildAt(0)).toBeInstanceOf(
+      // PIXI.Graphics
+      // );
     });
     it("Should have a property textFields that is a list of text fields", () => {
       expect(t.textFields).toBeDefined();
@@ -1018,7 +1030,7 @@ Line 4`);
     });
     it("spriteTemplates are not the same as the objects in sprites or spriteContainer, the latter are clones of the spriteTemplates.", () => {
       expect(t.spriteTemplates[0]).not.toBe(t.sprites[0]);
-      expect(t.spriteTemplates[0]).not.toBe(t.spriteContainer.getChildAt(0));
+      expect(t.spriteTemplates[0]).not.toBe(t.spriteContainer?.getChildAt(0));
     });
   });
 
@@ -1198,6 +1210,52 @@ Line 4`);
         expect(token50px.style.fontSize).toBe("50px");
         expect(token200percentOf50px.style.fontSize).toBe("100px");
       });
+    });
+  });
+
+  describe("destructor", () => {
+    it("Should destroy the references to children of this object. ", () => {
+      const tt = new TaggedText(
+        "Hello my baby, hello my honey, hello my ragtime gal! <icon />",
+        { default: { fontSize: 25, textDecoration: "underline" } },
+        { imgMap: { icon: iconImage }, debug: true }
+      );
+
+      expect(tt.textContainer).toBeInstanceOf(PIXI.Container); // The Sprite layer which holds all the text fields rendered by draw.
+      expect(tt.textContainer?.children).toHaveLength(10);
+      expect(tt.spriteContainer).toBeInstanceOf(PIXI.Container); // The Sprite layer which holds all the sprites rendered by draw if you're using an image map (imgMap).
+      expect(tt.spriteContainer?.children).toHaveLength(1);
+      expect(tt.debugContainer).toBeInstanceOf(PIXI.Container); // The Sprite layer which holds all debug overlay information (if you're using the debug: true setting).
+      expect(tt.debugContainer?.children.length).toBeGreaterThanOrEqual(10);
+      expect(tt.decorationContainer).toBeInstanceOf(PIXI.Container); // The Sprite layer which holds all text decorations (underlines).
+      // expect(tt.decorationContainer.children.length).toBeGreaterThanOrEqual(10);
+      expect(tt.decorations).toBeInstanceOf(Array); // Array of Graphic objects which render the text decorations.
+      // expect(tt.decorations.length).toBeGreaterThanOrEqual(10);
+      // expect(tt.decorations[0]).toBeInstanceOf(PIXI.Graphics);
+      expect(tt.textFields).toBeInstanceOf(Array); // An array containing all the text fields generated by draw.
+      expect(tt.textFields).toHaveLength(10);
+      expect(tt.textFields[0]).toBeInstanceOf(PIXI.Text);
+      expect(tt.sprites).toBeInstanceOf(Array); // If you're using an image map (imgMap), this array stores references to all the Sprites generated by draw.
+      expect(tt.sprites).toHaveLength(1);
+      expect(tt.sprites[0]).toBeInstanceOf(PIXI.Sprite);
+      expect(tt.spriteTemplates).toBeInstanceOf(Object); // The sprites in sprites and spriteContainer are actually clones of the originals passed in via the imgMap option. To get the originals, access them this way.
+      expect(Object.values(tt.spriteTemplates)).toHaveLength(1);
+      expect(tt.spriteTemplates.icon).toBeInstanceOf(PIXI.Sprite);
+      expect(tt.options.imgMap).toBeInstanceOf(Object);
+      expect(tt.options.imgMap).toHaveProperty("icon");
+      expect(tt.options.imgMap?.icon).toBeInstanceOf(HTMLImageElement);
+
+      tt.destroy();
+
+      expect(tt.textContainer).toBeNull();
+      expect(tt.spriteContainer).toBeNull();
+      expect(tt.debugContainer).toBeNull();
+      expect(tt.decorationContainer).toBeNull();
+      expect(tt.decorations).toHaveLength(0);
+      expect(tt.textFields).toHaveLength(0);
+      expect(tt.sprites).toHaveLength(0);
+      expect(Object.values(tt.spriteTemplates)).toHaveLength(0);
+      expect(Object.values(tt.options.imgMap ?? {})).toHaveLength(0);
     });
   });
 });
