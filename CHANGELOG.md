@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.5.3](https://github.com/mimshwright/pixi-tagged-text/compare/v3.5.2...v3.5.3) (2022-04-05)
+
+### Chore
+
+- changed demo port number ([c2a7545](https://github.com/mimshwright/pixi-tagged-text/commit/c2a7545091df5ec3f94715091c5d1966d38b06af))
+- **deps-dev:** bump electron from 17.1.2 to 18.0.1 ([ddc2963](https://github.com/mimshwright/pixi-tagged-text/commit/ddc2963c53cdfab22463f5890f411138f5a4279c))
+- **deps-dev:** bump prettier from 2.6.0 to 2.6.2 ([9c3a0c4](https://github.com/mimshwright/pixi-tagged-text/commit/9c3a0c4220162ce49ee1eb9a4ccdefffa9ec9925))
+- **deps-dev:** bump typescript from 4.6.2 to 4.6.3 ([ed602b5](https://github.com/mimshwright/pixi-tagged-text/commit/ed602b5207fe13f0f30dbf97d06b1f9c0516a025))
+- **node:** bump node version to 16.14.2 ([9f3292c](https://github.com/mimshwright/pixi-tagged-text/commit/9f3292c51bde72a87b19f53cbc40f0d79c72f8df))
+- removed vscode settings from repo ([d8731d7](https://github.com/mimshwright/pixi-tagged-text/commit/d8731d7c0440ca39d6565e62e47b05ba4b2b9196))
+
 ### [3.5.2](https://github.com/mimshwright/pixi-tagged-text/compare/v3.5.1...v3.5.2) (2022-03-25)
 
 ### Chore
