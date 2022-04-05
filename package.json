@@ -86,9 +86,9 @@
     "pre-commit": "npm run fix:changelog && npm run lint && npm run test",
     "commit": "cz",
     "commit-retry": "cz --retry",
-    "ci": "npm run commit",
-    "cinv": "npm run commit --no-verify",
-    "cirr": "npm run commit-retry",
+    "ci": "cz",
+    "cinv": "cz --no-verify",
+    "cirr": "cz --retry",
     "prepublishOnly": "npm run build",
     "release": "standard-version"
   },

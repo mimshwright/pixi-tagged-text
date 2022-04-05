@@ -26,6 +26,10 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 - **alignment:** adds support for more types of justify layout ([9097368](https://github.com/mimshwright/pixi-tagged-text/commit/9097368c65cdac5f94d43004ab0a8a864586e3b4)), closes [#215](https://github.com/mimshwright/pixi-tagged-text/issues/215)
+  - **`"justify-left"`** - aka `"justify"`
+  - **`"justify-center"`**
+  - **`"justify-right"`**
+  - **`"justify-all"`**
 
 ## [3.4.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.3.1...v3.4.0) (2022-02-27)
 
@@ -130,7 +134,7 @@ Since several patches related to the changelog and dependabot updates were relea
 
 ## [2.5.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.4.0...v2.5.0) (2021-12-06)
 
-- fix: #174 - Added paragraph spacing
+- Feat: #174 - Added paragraph spacing
 
 - chore(deps): Updated node version
 - chore(deps-dev): upgraded prettier, jsdom, @types/jest, typescript, microbundle
