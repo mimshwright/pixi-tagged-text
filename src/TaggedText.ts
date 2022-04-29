@@ -21,6 +21,7 @@ import {
   isSpriteSource,
   isTextureSource,
   IFontMetrics,
+  Bounds,
 } from "./types";
 
 import { parseTagsNew, removeTags, EMOJI_TAG } from "./tags";
@@ -36,7 +37,6 @@ import { capitalize } from "./stringUtil";
 import { fontSizeStringToNumber } from "./pixiUtils";
 import { logWarning as _logWarning } from "./errorMessaging";
 import { ILRUCache, LRUCache } from "./LRUCache";
-import type { Rectangle } from "pixi.js";
 
 export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debug: false,
@@ -123,7 +123,7 @@ export default class TaggedText extends PIXI.Sprite {
   }
 
   private _metricsLRUCache: ILRUCache<string, IFontMetrics>;
-  private _rectsLRUCache: ILRUCache<string, Rectangle>;
+  private _boundsLRUCache: ILRUCache<string, Bounds>;
 
   /**
    * Setter for text that allows you to override the default for skipping the update.
@@ -350,7 +350,7 @@ export default class TaggedText extends PIXI.Sprite {
     this._metricsLRUCache = new LRUCache<string, IFontMetrics>(
       this.options.cacheCapacity ?? 25
     );
-    this._rectsLRUCache = new LRUCache<string, Rectangle>(
+    this._boundsLRUCache = new LRUCache<string, Bounds>(
       this.options.cacheCapacity ?? 25
     );
   }
@@ -426,7 +426,7 @@ export default class TaggedText extends PIXI.Sprite {
     this._options.skipDraw = true;
     this._options = {};
     this._metricsLRUCache.clear();
-    this._rectsLRUCache.clear();
+    this._boundsLRUCache.clear();
   }
 
   /**
@@ -578,7 +578,7 @@ export default class TaggedText extends PIXI.Sprite {
       scaleIcons,
       this.options.adjustFontBaseline,
       this._metricsLRUCache,
-      this._rectsLRUCache
+      this._boundsLRUCache
     );
 
     this._tokens = newFinalTokens;

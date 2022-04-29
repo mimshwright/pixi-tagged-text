@@ -36,7 +36,6 @@ import {
   FontMap,
 } from "./types";
 import type { ILRUCache } from "./LRUCache";
-import type { Rectangle } from "pixi.js";
 
 const ICON_SCALE_BASE = 0.8;
 
@@ -615,7 +614,7 @@ export const calculateFinalTokens = (
   scaleIcons = true,
   adjustFontBaseline?: FontMap,
   metricsCache?: ILRUCache<string, IFontMetrics>,
-  rectCache?: ILRUCache<string, Rectangle>
+  boundsCache?: ILRUCache<string, Bounds>
 ): ParagraphToken => {
   // Create a text field to use for measurements.
   const defaultStyle = styledTokens.style;
@@ -683,7 +682,15 @@ export const calculateFinalTokens = (
           fontProperties.descent *= scaleHeight;
           fontProperties.fontSize *= scaleHeight;
 
-          const bounds = rectCache?.get(sizer.text) ?? rectFromContainer(sizer);
+          const boundsCached = boundsCache?.get(sizer.text);
+
+          let bounds: Bounds;
+          if (boundsCached) {
+            bounds = boundsCached;
+          } else {
+            bounds = rectFromContainer(sizer);
+            boundsCache?.set(sizer.text, bounds);
+          }
           // bounds.height = fontProperties.fontSize;
 
           // Incorporate the size of the stroke into the size of the text.
