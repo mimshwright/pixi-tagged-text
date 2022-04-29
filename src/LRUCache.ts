@@ -1,6 +1,7 @@
 export interface ILRUCache<K, V> {
   get(key: K): V | undefined;
   set(key: K, value: V): void;
+  clear(): void;
 }
 
 export class LRUCache<K, V> implements ILRUCache<K, V> {
@@ -44,5 +45,9 @@ export class LRUCache<K, V> implements ILRUCache<K, V> {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
+  }
+
+  clear(): void {
+    this.cache.clear();
   }
 }

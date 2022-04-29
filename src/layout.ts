@@ -35,7 +35,8 @@ import {
   createEmptyFinalToken,
   FontMap,
 } from "./types";
-import { ILRUCache } from "./LRUCache";
+import type { ILRUCache } from "./LRUCache";
+import type { Rectangle } from "pixi.js";
 
 const ICON_SCALE_BASE = 0.8;
 
@@ -613,7 +614,8 @@ export const calculateFinalTokens = (
   splitStyle: SplitStyle = "words",
   scaleIcons = true,
   adjustFontBaseline?: FontMap,
-  cache?: ILRUCache<string, IFontMetrics>
+  metricsCache?: ILRUCache<string, IFontMetrics>,
+  rectCache?: ILRUCache<string, Rectangle>
 ): ParagraphToken => {
   // Create a text field to use for measurements.
   const defaultStyle = styledTokens.style;
@@ -666,7 +668,7 @@ export const calculateFinalTokens = (
 
           sizer.scale.set(scaleWidth, scaleHeight);
 
-          const cacheValue = cache?.get(sizer.text);
+          const cacheValue = metricsCache?.get(sizer.text);
 
           if (cacheValue) {
             fontProperties = { ...cacheValue };
@@ -674,14 +676,14 @@ export const calculateFinalTokens = (
             fontProperties = {
               ...getFontPropertiesOfText(sizer, true),
             };
-            cache?.set(sizer.text, { ...fontProperties });
+            metricsCache?.set(sizer.text, { ...fontProperties });
           }
 
           fontProperties.ascent *= scaleHeight;
           fontProperties.descent *= scaleHeight;
           fontProperties.fontSize *= scaleHeight;
 
-          const bounds = rectFromContainer(sizer);
+          const bounds = rectCache?.get(sizer.text) ?? rectFromContainer(sizer);
           // bounds.height = fontProperties.fontSize;
 
           // Incorporate the size of the stroke into the size of the text.
@@ -727,7 +729,7 @@ export const calculateFinalTokens = (
         const imgDisplay = style[IMG_DISPLAY_PROPERTY];
         // const isBlockImage = imgDisplay === "block";
         const isIcon = imgDisplay === "icon";
-        const cacheValue = cache?.get(sizer.text);
+        const cacheValue = metricsCache?.get(sizer.text);
 
         if (cacheValue) {
           fontProperties = { ...cacheValue };
@@ -735,7 +737,7 @@ export const calculateFinalTokens = (
           fontProperties = {
             ...getFontPropertiesOfText(sizer, true),
           };
-          cache?.set(sizer.text, { ...fontProperties });
+          metricsCache?.set(sizer.text, { ...fontProperties });
         }
 
         if (isIcon) {
