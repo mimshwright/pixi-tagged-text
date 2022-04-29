@@ -20,6 +20,7 @@ import {
   TextDecorationMetrics,
   isSpriteSource,
   isTextureSource,
+  IFontMetrics,
 } from "./types";
 
 import { parseTagsNew, removeTags, EMOJI_TAG } from "./tags";
@@ -34,6 +35,7 @@ import { calculateFinalTokens, getBoundsNested } from "./layout";
 import { capitalize } from "./stringUtil";
 import { fontSizeStringToNumber } from "./pixiUtils";
 import { logWarning as _logWarning } from "./errorMessaging";
+import { ILRUCache, LRUCache } from "./LRUCache";
 
 export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debug: false,
@@ -118,6 +120,8 @@ export default class TaggedText extends PIXI.Sprite {
   public set text(text: string) {
     this.setText(text);
   }
+
+  private _lruCache: ILRUCache<string, IFontMetrics>;
 
   /**
    * Setter for text that allows you to override the default for skipping the update.
@@ -327,8 +331,7 @@ export default class TaggedText extends PIXI.Sprite {
 
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
     this._options = mergedOptions;
-
-    tagStyles = { default: {}, ...tagStyles };
+    this.tagStyles = { default: {}, ...tagStyles };
 
     if (this.options.wrapEmoji) {
       tagStyles[EMOJI_TAG] = { fontFamily: "sans-serif" };
@@ -342,6 +345,9 @@ export default class TaggedText extends PIXI.Sprite {
     }
 
     this.text = text;
+    this._lruCache = new LRUCache<string, IFontMetrics>(
+      this.options.cacheCapacity ?? 25
+    );
   }
 
   public destroy(options?: boolean | PIXI.IDestroyOptions): void {
@@ -563,7 +569,8 @@ export default class TaggedText extends PIXI.Sprite {
       styledTokens,
       splitStyle,
       scaleIcons,
-      this.options.adjustFontBaseline
+      this.options.adjustFontBaseline,
+      this._lruCache
     );
 
     this._tokens = newFinalTokens;

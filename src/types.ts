@@ -73,6 +73,7 @@ export interface TaggedTextOptions {
   wrapEmoji?: boolean;
   errorHandler?: ErrorHandler;
   supressConsole?: boolean;
+  cacheCapacity?: number;
 }
 
 ///// STYLE PROPERTIES

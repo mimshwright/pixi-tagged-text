@@ -35,6 +35,7 @@ import {
   createEmptyFinalToken,
   FontMap,
 } from "./types";
+import { ILRUCache } from "./LRUCache";
 
 const ICON_SCALE_BASE = 0.8;
 
@@ -611,7 +612,8 @@ export const calculateFinalTokens = (
   styledTokens: StyledTokens,
   splitStyle: SplitStyle = "words",
   scaleIcons = true,
-  adjustFontBaseline?: FontMap
+  adjustFontBaseline?: FontMap,
+  cache?: ILRUCache<string, IFontMetrics>
 ): ParagraphToken => {
   // Create a text field to use for measurements.
   const defaultStyle = styledTokens.style;
@@ -664,7 +666,16 @@ export const calculateFinalTokens = (
 
           sizer.scale.set(scaleWidth, scaleHeight);
 
-          fontProperties = { ...getFontPropertiesOfText(sizer, true) };
+          const cacheValue = cache?.get(sizer.text);
+
+          if (cacheValue) {
+            fontProperties = { ...cacheValue };
+          } else {
+            fontProperties = {
+              ...getFontPropertiesOfText(sizer, true),
+            };
+            cache?.set(sizer.text, { ...fontProperties });
+          }
 
           fontProperties.ascent *= scaleHeight;
           fontProperties.descent *= scaleHeight;
@@ -716,7 +727,16 @@ export const calculateFinalTokens = (
         const imgDisplay = style[IMG_DISPLAY_PROPERTY];
         // const isBlockImage = imgDisplay === "block";
         const isIcon = imgDisplay === "icon";
-        fontProperties = { ...getFontPropertiesOfText(sizer, true) };
+        const cacheValue = cache?.get(sizer.text);
+
+        if (cacheValue) {
+          fontProperties = { ...cacheValue };
+        } else {
+          fontProperties = {
+            ...getFontPropertiesOfText(sizer, true),
+          };
+          cache?.set(sizer.text, { ...fontProperties });
+        }
 
         if (isIcon) {
           // Set to minimum of 1 to avoid devide by zero.
