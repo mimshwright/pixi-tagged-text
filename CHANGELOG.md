@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.6.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.6.0...v3.6.1) (2022-05-02)
+
+### Bug Fixes
+
+- **font-size:** fixes fontSize percentages in attributes ([bd9af9c](https://github.com/mimshwright/pixi-tagged-text/commit/bd9af9cb4ba613cc71efb86a1a3bd547e512f11f)), closes [#234](https://github.com/mimshwright/pixi-tagged-text/issues/234)
+
 ## [3.6.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.5.3...v3.6.0) (2022-04-05)
 
 ### Bug Fixes
