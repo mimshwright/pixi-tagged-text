@@ -1155,6 +1155,31 @@ Line 4`);
       });
     });
 
+    describe("Percentages added via attributes behave correctly.", () => {
+      const text = `20px<big>40px</big><medium>30px</medium><medium fontSize="200%">40px</medium>`;
+
+      const style = {
+        default: {
+          fontSize: 20,
+        },
+        big: {
+          fontSize: "200%",
+        },
+        medium: {
+          fontSize: "150%",
+        },
+      };
+
+      const nested = new TaggedText(text, style);
+      const [control, big, medium, attr] = nested.tokensFlat;
+      it("renders percentages correctly based on context and attributes work correctly.", () => {
+        expect(control.style.fontSize).toBe(20); // 20px
+        expect(big.style.fontSize).toBe("40px"); // 200% of 20px = 40px
+        expect(medium.style.fontSize).toBe("30px"); // 150% of 20px = 30px
+        expect(attr.style.fontSize).toBe("40px"); // 200% of 20px = 40px
+      });
+    });
+
     describe("Check that non-100% scaling is working as expected.", () => {
       const text = "<big>big</big> normal <small>small</small>";
       const styleTest = {

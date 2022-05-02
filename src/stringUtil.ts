@@ -9,3 +9,6 @@ export const capitalize = (str: string): string => {
 
   return converted.trim();
 };
+
+export const stringIsNumber = (s: string): boolean =>
+  s?.trim()?.search(/^-?[0-9]*\.?[0-9]+$/) === 0 ?? false;
