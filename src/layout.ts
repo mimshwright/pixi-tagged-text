@@ -8,7 +8,6 @@ import {
   flatReduce,
   Unary,
 } from "./functionalUtils";
-import { getFontPropertiesOfText } from "./pixiUtils";
 import * as PIXI from "pixi.js";
 import {
   Align,
@@ -57,7 +56,7 @@ export const updateOffsetForNewLine = (
 const rectFromContainer = (
   container: PIXI.Container,
   offset: Point = { x: 0, y: 0 }
-): Bounds => {
+): PIXI.Rectangle => {
   const w = container.width;
   const h = container.height;
   const x = offset.x + container.x;
@@ -590,6 +589,63 @@ export const splitAroundWhitespace = (s: string): string[] =>
     .split(SPLIT_MARKER)
     .filter((s) => s !== "");
 
+export const stringifyStyle = (style: PIXI.TextStyle): string => {
+  const {
+    align,
+    breakWords,
+    dropShadow,
+    dropShadowAlpha,
+    dropShadowAngle,
+    dropShadowBlur,
+    dropShadowColor,
+    dropShadowDistance,
+    fill,
+    fillGradientType,
+    fillGradientStops,
+    letterSpacing,
+    lineHeight,
+    lineJoin,
+    miterLimit,
+    padding,
+    stroke,
+    strokeThickness,
+    textBaseline,
+    trim,
+    whiteSpace,
+    wordWrap,
+    wordWrapWidth,
+    leading,
+  } = style;
+
+  return JSON.stringify({
+    align,
+    breakWords,
+    dropShadow,
+    dropShadowAlpha,
+    dropShadowAngle,
+    dropShadowBlur,
+    dropShadowColor,
+    dropShadowDistance,
+    fill,
+    fillGradientType,
+    fillGradientStops,
+    fontString: style.toFontString(),
+    letterSpacing,
+    lineHeight,
+    lineJoin,
+    miterLimit,
+    padding,
+    stroke,
+    strokeThickness,
+    textBaseline,
+    trim,
+    whiteSpace,
+    wordWrap,
+    wordWrapWidth,
+    leading,
+  });
+};
+
 export const splitText = (s: string, splitStyle: SplitStyle): string[] => {
   if (splitStyle === "words") {
     return [s].flatMap(splitAroundWhitespace).filter(notEmptyString);
@@ -613,8 +669,7 @@ export const calculateFinalTokens = (
   splitStyle: SplitStyle = "words",
   scaleIcons = true,
   adjustFontBaseline?: FontMap,
-  metricsCache?: ILRUCache<string, IFontMetrics>,
-  boundsCache?: ILRUCache<string, Bounds>
+  boundsCache?: ILRUCache<string, PIXI.Rectangle>
 ): ParagraphToken => {
   // Create a text field to use for measurements.
   const defaultStyle = styledTokens.style;
@@ -623,7 +678,10 @@ export const calculateFinalTokens = (
 
   const generateFinalTokenFromStyledToken =
     (style: TextStyleExtended, tags: string) =>
-    (token: StyledToken | TextToken | SpriteToken): FinalToken[] => {
+    (
+      token: StyledToken | TextToken | SpriteToken,
+      tokenIndex: number
+    ): FinalToken[] => {
       let output: FinalToken[] = [];
 
       const alignClassic = convertUnsupportedAlignment(style.align);
@@ -644,7 +702,7 @@ export const calculateFinalTokens = (
 
         const textSegments = splitText(token, splitStyle);
 
-        const textTokens = textSegments.map((str): FinalToken => {
+        const textTokens = textSegments.map((str, strIndex): FinalToken => {
           switch (style.textTransform) {
             case "uppercase":
               sizer.text = str.toUpperCase();
@@ -667,29 +725,32 @@ export const calculateFinalTokens = (
 
           sizer.scale.set(scaleWidth, scaleHeight);
 
-          const cacheValue = metricsCache?.get(sizer.text);
-
-          if (cacheValue) {
-            fontProperties = { ...cacheValue };
-          } else {
-            fontProperties = {
-              ...getFontPropertiesOfText(sizer, true),
-            };
-            metricsCache?.set(sizer.text, { ...fontProperties });
-          }
+          fontProperties = {
+            ...PIXI.TextMetrics.measureFont(
+              (sizer.style as PIXI.TextStyle).toFontString()
+            ),
+          };
 
           fontProperties.ascent *= scaleHeight;
           fontProperties.descent *= scaleHeight;
           fontProperties.fontSize *= scaleHeight;
 
-          const boundsCached = boundsCache?.get(sizer.text);
+          const boundsCacheKey = JSON.stringify({
+            text: sizer.text,
+            scaleX: sizer.scale.x,
+            scaleY: sizer.scale.y,
+            style: stringifyStyle(sizer.style as PIXI.TextStyle),
+            tokenIndex,
+            strIndex,
+          });
+          const boundsCached = boundsCache?.get(boundsCacheKey);
 
-          let bounds: Bounds;
+          let bounds: PIXI.Rectangle;
           if (boundsCached) {
-            bounds = boundsCached;
+            bounds = boundsCached.clone();
           } else {
             bounds = rectFromContainer(sizer);
-            boundsCache?.set(sizer.text, bounds);
+            boundsCache?.set(boundsCacheKey, bounds.clone());
           }
           // bounds.height = fontProperties.fontSize;
 
@@ -736,16 +797,12 @@ export const calculateFinalTokens = (
         const imgDisplay = style[IMG_DISPLAY_PROPERTY];
         // const isBlockImage = imgDisplay === "block";
         const isIcon = imgDisplay === "icon";
-        const cacheValue = metricsCache?.get(sizer.text);
 
-        if (cacheValue) {
-          fontProperties = { ...cacheValue };
-        } else {
-          fontProperties = {
-            ...getFontPropertiesOfText(sizer, true),
-          };
-          metricsCache?.set(sizer.text, { ...fontProperties });
-        }
+        fontProperties = {
+          ...PIXI.TextMetrics.measureFont(
+            (sizer.style as PIXI.TextStyle).toFontString()
+          ),
+        };
 
         if (isIcon) {
           // Set to minimum of 1 to avoid devide by zero.
