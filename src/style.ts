@@ -1,3 +1,4 @@
+import { stringIsNumber } from "./stringUtil";
 import { combineRecords, isDefined, pluck } from "./functionalUtils";
 import {
   AttributesList,
@@ -62,8 +63,11 @@ export const convertAttributeValues = (
 ): AttributesList => {
   const convertedAttributes: AttributesList = {};
   for (const key in attributes) {
-    const value = attributes[key] as string;
-    if (isNaN(parseFloat(value)) === false) {
+    const value = attributes[key];
+    const isValueString = typeof value === "string";
+    const isStringNumber = isValueString && stringIsNumber(value);
+
+    if (isStringNumber) {
       convertedAttributes[key] = parseFloat(value);
     } else {
       convertedAttributes[key] = value;
