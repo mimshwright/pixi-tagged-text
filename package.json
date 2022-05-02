@@ -62,7 +62,7 @@
     "jest": "^26.6.3",
     "jest-canvas-mock": "^2.3.1",
     "jsdom": "^19.0.0",
-    "microbundle": "^0.14.1",
+    "microbundle": "^0.15.0",
     "nth-check": "^2.0.1",
     "opener": "^1.5.1",
     "prettier": "^2.3.0",
