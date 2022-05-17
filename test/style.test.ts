@@ -6,23 +6,26 @@ import {
   TextStyleExtended,
   FontStyle,
   TextDecoration,
+  AttributesList,
+  ImageMap,
 } from "./../src/types";
 import * as style from "../src/style";
 import iconSrc from "./support/icon.base64";
+import DEFAULT_STYLE from "../src/defaultStyle";
+
+describe("defaultStyles", () => {
+  it("there should be a publically accessible default text styles object.", () => {
+    expect(DEFAULT_STYLE).toBeDefined();
+    expect(DEFAULT_STYLE).toHaveProperty("fill", 0x000000);
+    expect(DEFAULT_STYLE).toHaveProperty("fontSize", 26);
+  });
+});
 
 describe("style module", () => {
   const iconImage = new Image();
   iconImage.src = `data:image/png;base64,${iconSrc}`;
   const texture = PIXI.Texture.from(iconImage);
   const icon = PIXI.Sprite.from(texture);
-
-  describe("default styles", () => {
-    it("should have a public copy of the default text styles", () => {
-      expect(style.DEFAULT_STYLE).toBeDefined();
-      expect(style.DEFAULT_STYLE).toHaveProperty("fill", 0x000000);
-      expect(style.DEFAULT_STYLE).toHaveProperty("fontSize", 26);
-    });
-  });
 
   describe("combineStyles()", () => {
     it("should combine 2 styles into one.", () => {
@@ -64,6 +67,19 @@ describe("style module", () => {
         fill: "#333333",
       });
     });
+    it("Should work if eitehr property is empty", () => {
+      const s = { fontSize: 12 };
+      const noStyle = style.injectAttributes(s as AttributesList, undefined);
+      const noAttributes = style.injectAttributes(
+        undefined,
+        s as TextStyleExtended
+      );
+      expect(noStyle).toMatchObject(s);
+      expect(noAttributes).toMatchObject(s);
+    });
+    it("Should return undefined if both are empty", () => {
+      expect(style.injectAttributes()).toBeUndefined();
+    });
   });
 
   describe("tagWithAttributesToStyle", () => {
@@ -103,6 +119,7 @@ describe("style module", () => {
       expect(style.getStyleForTag("em", {})).toBeUndefined();
       expect(style.getStyleForTag("", styles)).toBeUndefined();
       expect(style.getStyleForTag("em", { em: {} })).toBeUndefined();
+      expect(style.getStyleForTag("", {})).toBeUndefined();
     });
   });
 
@@ -453,6 +470,29 @@ describe("style module", () => {
         img: { fontSize: 48, imgSrc: "img" },
       };
       const imageMap = { img: icon };
+
+      it("Should throw when there is no spriteTemplate, when there is no sprite for the tag, or if the sprite is invalid.", () => {
+        const input = {
+          children: [
+            "foo ",
+            {
+              tag: "img",
+              children: [],
+            },
+          ],
+        };
+        expect(() => {
+          style.mapTagsToStyles(input, styles, undefined);
+        }).toThrow();
+        expect(() => {
+          style.mapTagsToStyles(input, styles, { notImg: icon });
+        }).toThrow();
+        expect(() => {
+          style.mapTagsToStyles(input, styles, {
+            img: "",
+          } as unknown as ImageMap);
+        }).toThrow();
+      });
 
       it("Should attach images to tokens that have image references.", () => {
         const input = {

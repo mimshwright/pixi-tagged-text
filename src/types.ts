@@ -18,14 +18,6 @@ export type Bounds = Rectangle;
 
 export type Nested<T> = T | Array<Nested<T>>;
 
-export type ErrorMessageType = "warning" | "error";
-export interface ErrorMessage {
-  type: ErrorMessageType;
-  code: string;
-  message: string;
-  target?: TaggedText;
-}
-
 ///// OPTIONS
 
 export type SpriteSource =
@@ -63,7 +55,21 @@ export type ImageMap = Record<string, PIXI.Sprite>;
 
 export type SplitStyle = "words" | "characters";
 
+export type ErrorMessageType = "warning" | "error";
+export interface ErrorMessage {
+  type: ErrorMessageType;
+  code: string;
+  message: string;
+  target?: TaggedText;
+}
 export type ErrorHandler = (e: ErrorMessage) => void;
+
+export interface IFontMetrics {
+  ascent: number;
+  descent: number;
+  fontSize: number;
+}
+
 export interface TaggedTextOptions {
   debug?: boolean;
   debugConsole?: boolean;
@@ -84,6 +90,7 @@ export interface TaggedTextOptions {
 // PROPERTY NAMES
 export const IMG_REFERENCE_PROPERTY = "imgSrc";
 export const IMG_DISPLAY_PROPERTY = "imgDisplay";
+export const DEFAULT_KEY = "default";
 
 export enum MeasurementUnit {
   default = "px",
@@ -252,22 +259,42 @@ export interface StyledToken
 
 export type StyledTokens = StyledToken;
 
-export interface IFontMetrics {
-  ascent: number;
-  descent: number;
-  fontSize: number;
-}
+// About Tokens
+// The contents of a block of text are composed of nested tokens in 4 layers.
+// The types are:
+// Paragraph - contains Lines
+// Lines - contains words Words
+// Word - contains Segments
+// Segment - contains text or image content, styles, and other metadata.
+//
+// Notes:
+// - The SegmentToken is the only one that contains text content and metadata;
+//   the rest are all ordered containers used to organize the smaller pieces inside it.
+//   In other words, the type of a ParagraphToken is equal to SegmentToken[][][]
+// - The .tokens property of a TaggedText is a ParagraphToken.
+// - ParagrahpTokens don't necessarily contain paragraphs in the grammatical sense.
+//   It is simply a collection of lines of text and could contain one literal paragraph,
+//   or more than one, or none at all. Same is true for Lines & Words
+// - Segments are groups of 1 or more individual characters (or sometimes sprites).
+//   Most WordTokens contain only one Segment, however, each time styles change
+//   in the text, a new segment is crated, therefore, some words will have multiple
+//   segments if they contain tags within like "Abso<i>lutely</i>".
+// - When splitStyle is "characters", each character gets its own SegmentToken.
 
-export interface FinalToken {
-  content: TextToken | SpriteToken;
+export type SegmentContent = TextToken | SpriteToken;
+export interface SegmentToken {
+  content: SegmentContent;
   bounds: Rectangle;
   fontProperties: IFontMetrics;
   style: TextStyleExtended;
   tags: string;
   textDecorations?: TextDecorationMetrics[];
 }
+export type WordToken = SegmentToken[];
+export type LineToken = WordToken[];
+export type ParagraphToken = LineToken[];
 
-export const createEmptyFinalToken = (): FinalToken => ({
+export const createEmptySegmentToken = (): SegmentToken => ({
   content: "",
   bounds: new PIXI.Rectangle(),
   fontProperties: { ascent: 0, descent: 0, fontSize: 0 },
@@ -276,21 +303,17 @@ export const createEmptyFinalToken = (): FinalToken => ({
   textDecorations: [],
 });
 
-export type WordToken = FinalToken[];
-export type LineToken = WordToken[];
-export type ParagraphToken = LineToken[];
-
-export interface SpriteFinalToken extends FinalToken {
+export interface SpriteSegmentToken extends SegmentToken {
   content: SpriteToken;
 }
-export interface TextFinalToken extends FinalToken {
+export interface TextSegmentToken extends SegmentToken {
   content: TextToken;
 }
 
-export interface WhitespaceFinalToken extends TextFinalToken {
+export interface WhitespaceSegmentToken extends TextSegmentToken {
   content: WhitespaceToken;
 }
-export interface NewlineFinalToken extends TextFinalToken {
+export interface NewlineSegmentToken extends TextSegmentToken {
   content: NewlineToken;
 }
 
@@ -300,21 +323,23 @@ export const isWhitespace = (s: string): s is WhitespaceToken =>
 export const isNewline = (s: string): s is NewlineToken =>
   isWhitespace(s) && s === "\n";
 
-export const _isSpriteToken = (t: FinalToken): t is SpriteFinalToken =>
+export const _isSpriteToken = (t: SegmentToken): t is SpriteSegmentToken =>
   t.content instanceof PIXI.Sprite;
 export const isSpriteToken = flatEvery(_isSpriteToken);
 
-export const _isTextToken = (t: FinalToken): t is TextFinalToken =>
+export const _isTextToken = (t: SegmentToken): t is TextSegmentToken =>
   typeof t.content === "string";
 export const isTextToken = flatEvery(_isTextToken);
 
-export const _isWhitespaceToken = (t: FinalToken): t is WhitespaceFinalToken =>
+export const _isWhitespaceToken = (
+  t: SegmentToken
+): t is WhitespaceSegmentToken =>
   t !== undefined && _isTextToken(t) && isWhitespace(t.content);
 export const isWhitespaceToken = flatEvery(_isWhitespaceToken);
 
-export const _isNewlineToken = (t: FinalToken): t is NewlineFinalToken =>
+export const _isNewlineToken = (t: SegmentToken): t is NewlineSegmentToken =>
   t !== undefined && _isTextToken(t) && isNewline(t.content);
-export const isNewlineToken = (t?: Nested<FinalToken>): boolean =>
+export const isNewlineToken = (t?: Nested<SegmentToken>): boolean =>
   t === undefined ? false : flatEvery(_isNewlineToken)(t);
 
 export const isNotWhitespaceToken = complement(isWhitespaceToken);

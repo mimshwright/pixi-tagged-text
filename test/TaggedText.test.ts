@@ -1,4 +1,5 @@
 import { expectToBeBetween } from "./support/testUtil";
+import { DEFAULT_KEY } from "./../src/types";
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
@@ -65,7 +66,7 @@ describe("TaggedText", () => {
 
       it("Should provide the default styles for TaggedText as a static value.", () => {
         const defaultStyles = TaggedText.defaultStyles;
-        expect(defaultStyles).toHaveProperty("default");
+        expect(defaultStyles).toHaveProperty(DEFAULT_KEY);
         expect(defaultStyles.default).toHaveProperty("valign", "baseline");
       });
 
@@ -81,7 +82,7 @@ describe("TaggedText", () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         expect(() => (TaggedText.defaultStyles = {})).toThrow();
-        expect(TaggedText.defaultStyles).toHaveProperty("default");
+        expect(TaggedText.defaultStyles).toHaveProperty(DEFAULT_KEY);
       });
     });
     describe("defaultOptions", () => {

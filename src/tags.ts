@@ -194,6 +194,10 @@ export const replaceSelfClosingTags = (input: string): string =>
     return output;
   });
 
+/**
+ * Returns the string with the tags removed.
+ * TODO: could be memoized but only used by untaggedText prop of TaggedText so probably not worth it.
+ */
 export const removeTags = (input: string): string =>
   input.replace(getTagRegex(), "");
 

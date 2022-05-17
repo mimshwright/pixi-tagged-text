@@ -1,8 +1,9 @@
 import { cloneSprite } from "./../src/pixiUtils";
 import {
   Align,
-  createEmptyFinalToken,
-  FinalToken,
+  createEmptySegmentToken,
+  // See the source for the SegmentToken type for information about token types.
+  SegmentToken,
   ParagraphToken,
   StyledToken,
   StyledTokens,
@@ -23,7 +24,7 @@ const R = (...args: number[]) => new PIXI.Rectangle(...args);
 
 const textToTags = tags.parseTagsNew;
 const tagsToStyles = style.mapTagsToStyles;
-const stylesToLayout = layout.calculateFinalTokens;
+const stylesToLayout = layout.calculateTokens;
 
 const toBeBetween = (actual: number, a: number, b: number) => {
   expect(actual).toBeGreaterThanOrEqual(a);
@@ -67,7 +68,7 @@ describe("layout module", () => {
       width: number,
       height: number
     ) => ({
-      ...createEmptyFinalToken(),
+      ...createEmptySegmentToken(),
       ...{ bounds: { x, y, width, height } },
     });
 
@@ -133,6 +134,83 @@ describe("layout module", () => {
     });
   });
 
+  describe("translateWordPosition() and translateTokenLine()", () => {
+    const segment: SegmentToken = {
+      content: " ",
+      fontProperties: { ascent: 10, descent: 5, fontSize: 10 },
+      bounds: {
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+      },
+      style: {},
+      tags: "",
+    };
+    const word: WordToken = [
+      { ...segment },
+      { ...segment, bounds: { ...segment.bounds, x: 10 } },
+      { ...segment, bounds: { ...segment.bounds, x: 20 } },
+    ];
+    const line: LineToken = [
+      word,
+      [
+        { ...word[0], bounds: { ...word[0].bounds, y: 20 } },
+        { ...word[1], bounds: { ...word[1].bounds, y: 20 } },
+        { ...word[2], bounds: { ...word[2].bounds, y: 20 } },
+      ],
+    ];
+    const offset = {
+      x: 100,
+      y: 100,
+    };
+    describe("translateWordPosition()", () => {
+      it("Should translate the points within a word by some offset", () => {
+        const translateWordBy100x100 = layout.translateWordPosition(offset);
+        expect(translateWordBy100x100(word)).toMatchObject([
+          {
+            bounds: { x: 100, y: 100 },
+          },
+          {
+            bounds: { x: 110, y: 100 },
+          },
+          {
+            bounds: { x: 120, y: 100 },
+          },
+        ]);
+      });
+    });
+    describe("translateLinePosition()", () => {
+      it("Should translate the points within a line by some offset", () => {
+        const translateLineBy100x100 = layout.translateTokenLine(offset);
+        expect(translateLineBy100x100(line)).toMatchObject([
+          [
+            {
+              bounds: { x: 100, y: 100 },
+            },
+            {
+              bounds: { x: 110, y: 100 },
+            },
+            {
+              bounds: { x: 120, y: 100 },
+            },
+          ],
+          [
+            {
+              bounds: { x: 100, y: 120 },
+            },
+            {
+              bounds: { x: 110, y: 120 },
+            },
+            {
+              bounds: { x: 120, y: 120 },
+            },
+          ],
+        ]);
+      });
+    });
+  });
+
   describe("lineWidth()", () => {
     it("should get the total width of the words in a line of measurements.", () => {
       const line = [
@@ -153,6 +231,13 @@ describe("layout module", () => {
     it("should account for positioning of first and last elements.", () => {
       const line = [R(50, 30, 100, 20), R(150, 30, 100, 20)];
       expect(layout.lineWidth(line)).toBe(200);
+    });
+
+    it("Should return 0 for empty lines and the size of the first element for lines with only one element", () => {
+      const emptyLine = [] as PIXI.Rectangle[];
+      const singleElement = [R(50, 30, 100, 20)];
+      expect(layout.lineWidth(emptyLine)).toBe(0);
+      expect(layout.lineWidth(singleElement)).toBe(100);
     });
   });
 
@@ -259,7 +344,7 @@ describe("layout module", () => {
           };
           const tagTokens = textToTags(text, Object.keys(styles));
           const styleTokens = tagsToStyles(tagTokens, styles);
-          layout.calculateFinalTokens(styleTokens);
+          layout.calculateTokens(styleTokens);
         }).not.toThrow();
       });
     });
@@ -522,7 +607,7 @@ describe("layout module", () => {
         [
           // Segment 0
           {
-            ...createEmptyFinalToken(),
+            ...createEmptySegmentToken(),
             fontProperties,
             bounds: R(0, 0, 100, 20),
           },
@@ -531,7 +616,7 @@ describe("layout module", () => {
         [
           // Segment 0
           {
-            ...createEmptyFinalToken(),
+            ...createEmptySegmentToken(),
             fontProperties,
             bounds: R(100, 0, 100, 40),
           },
@@ -543,7 +628,7 @@ describe("layout module", () => {
         [
           // Segment 0
           {
-            ...createEmptyFinalToken(),
+            ...createEmptySegmentToken(),
             fontProperties,
             bounds: R(0, 40, 100, 30),
           },
@@ -552,7 +637,7 @@ describe("layout module", () => {
         [
           // Segment 0
           {
-            ...createEmptyFinalToken(),
+            ...createEmptySegmentToken(),
             fontProperties,
             bounds: R(100, 40, 100, 20),
           },
@@ -561,7 +646,7 @@ describe("layout module", () => {
         [
           // Segment 0
           {
-            ...createEmptyFinalToken(),
+            ...createEmptySegmentToken(),
             fontProperties,
             bounds: R(200, 40, 100, 10),
           },
@@ -573,7 +658,7 @@ describe("layout module", () => {
         [
           // Segment 0
           {
-            ...createEmptyFinalToken(),
+            ...createEmptySegmentToken(),
             fontProperties,
             bounds: R(0, 70, 100, 20),
           },
@@ -633,14 +718,14 @@ describe("layout module", () => {
     });
   });
 
-  describe("calculateFinalTokens()", () => {
+  describe("calculateTokens()", () => {
     it("Should throw if the styledToken has no style", () => {
       expect(() => {
         const fakeStyled = {
           children: ["No styles?"],
           tags: "",
         } as StyledToken;
-        layout.calculateFinalTokens(fakeStyled);
+        layout.calculateTokens(fakeStyled);
       }).toThrow();
     });
 
@@ -656,7 +741,7 @@ describe("layout module", () => {
             tags: "",
             style: { wordWrap: true, wordWrapWidth: 300, fontSize: 16 },
           };
-          const wrapTokens = layout.calculateFinalTokens(wrap);
+          const wrapTokens = layout.calculateTokens(wrap);
 
           expect(wrapTokens.length).toBeGreaterThan(1);
 
@@ -681,11 +766,11 @@ aa bb aa`;
             style: style,
           };
 
-          const tokens = layout.calculateFinalTokens(wrappingStyledTokens);
+          const tokens = layout.calculateTokens(wrappingStyledTokens);
 
           wrappingStyledTokens.children = [text + " "];
           const tokensWithExtraSpace =
-            layout.calculateFinalTokens(wrappingStyledTokens);
+            layout.calculateTokens(wrappingStyledTokens);
 
           expect(tokens).toHaveLength(2);
           expect(tokensWithExtraSpace).toHaveLength(2);
@@ -722,7 +807,7 @@ aa bb aa`;
             tags: "",
           };
 
-          const tokens = layout.calculateFinalTokens(spaceWrap);
+          const tokens = layout.calculateTokens(spaceWrap);
           const [line0, line1] = tokens;
           test("First line contains first 2 words and final space before wrap", () => {
             expect(line0).toHaveLength(6);
@@ -777,15 +862,13 @@ aa bb aa`;
             style: { wordWrap: true, wordWrapWidth: 300, fontSize: 32 },
           };
           const longWordsSmall: StyledTokens = shared;
-          const longWordsTokensSmall =
-            layout.calculateFinalTokens(longWordsSmall);
+          const longWordsTokensSmall = layout.calculateTokens(longWordsSmall);
 
           const longWordsLarge: StyledTokens = {
             ...shared,
             style: { ...shared.style, fontSize: 64 },
           };
-          const longWordsTokensLarge =
-            layout.calculateFinalTokens(longWordsLarge);
+          const longWordsTokensLarge = layout.calculateTokens(longWordsLarge);
 
           expect(longWordsTokensSmall.length).toBe(2);
           expect(longWordsTokensLarge.length).toBe(4);
@@ -801,7 +884,7 @@ aa bb aa`;
           const text = ["aaaaaaaaaaaaaaaaaaaa bbb ccc"];
           const www = 300;
           const style = { fontSize: 64, wordWrap: true, wordWrapWidth: www };
-          const firstWordLong = layout.calculateFinalTokens({
+          const firstWordLong = layout.calculateTokens({
             children: text,
             tags: "",
             style,
@@ -834,7 +917,7 @@ aa bb aa`;
 
           test("If the length of the entire text is less than wordWrapWidth, it should not wrap.", () => {
             style.children = ["aa bb aa"];
-            const shouldNotWrap = layout.calculateFinalTokens(style);
+            const shouldNotWrap = layout.calculateTokens(style);
             const [, , , space, aa] = shouldNotWrap.flat(2);
             const totalWidth =
               space.bounds.x + space.bounds.width + aa.bounds.width;
@@ -851,7 +934,7 @@ aa bb aa`;
 
           test("If the last word makes the first line longer than the wordWrapWidth, it should wrap with the last word on a line by itself.", () => {
             style.children = ["aaa bbb aaa"];
-            const shouldWrap = layout.calculateFinalTokens(style);
+            const shouldWrap = layout.calculateTokens(style);
 
             const [, , , space, aaa] = shouldWrap.flat(2);
             const totalWidth =
@@ -873,7 +956,7 @@ aa bb aa`;
           });
           test("If the last word makes line longer than the wordWrapWidth, but not on the first line of text, it should wrap with the last word on a line by itself.", () => {
             style.children = ["aaa bbb aaa bbb aaa"];
-            const shouldWrapTwice = layout.calculateFinalTokens(style);
+            const shouldWrapTwice = layout.calculateTokens(style);
 
             const [, , , , , , , space, aaa] = shouldWrapTwice.flat(2);
             const totalWidth =
@@ -910,11 +993,11 @@ aa bb aa`;
             },
           };
           // aaaa and bbb should be positioned the same for top and bottom line.
-          const left = layout.calculateFinalTokens(style);
+          const left = layout.calculateTokens(style);
           style.style.align = "right" as Align;
-          const right = layout.calculateFinalTokens(style);
+          const right = layout.calculateTokens(style);
           style.style.align = "center" as Align;
-          const center = layout.calculateFinalTokens(style);
+          const center = layout.calculateTokens(style);
 
           expect(left).toHaveLength(3);
           expect(left[0][2][0].bounds.x).toBe(left[1][2][0].bounds.x);
@@ -945,16 +1028,16 @@ aa bb aa`;
             style,
           };
 
-          const undefinedTokens = layout.calculateFinalTokens(base);
-          const negativeTokens = layout.calculateFinalTokens({
+          const undefinedTokens = layout.calculateTokens(base);
+          const negativeTokens = layout.calculateTokens({
             ...base,
             ...{ style: negStyle },
           });
-          const nanTokens = layout.calculateFinalTokens({
+          const nanTokens = layout.calculateTokens({
             ...base,
             ...{ style: nanStyle },
           });
-          const zeroTokens = layout.calculateFinalTokens({
+          const zeroTokens = layout.calculateTokens({
             ...base,
             ...{ style: zeroStyle },
           });
@@ -984,7 +1067,7 @@ aa bb aa`;
             tags: "",
             style: { wordWrap: false, fontSize: 100 },
           };
-          const noWrapTokens = layout.calculateFinalTokens(noWrap);
+          const noWrapTokens = layout.calculateTokens(noWrap);
 
           // only one line because no wrapping
           expect(noWrapTokens).toHaveLength(1);
@@ -1007,7 +1090,7 @@ aa bb aa`;
         style: { fontSize: 20 },
         tags: "",
       };
-      const tokens = layout.calculateFinalTokens(line);
+      const tokens = layout.calculateTokens(line);
 
       const [[[normal], , [stroked], , [alsoStroked]]] = tokens;
 
@@ -1046,7 +1129,7 @@ aa bb aa`;
         tags: "",
         style: {},
       } as StyledToken;
-      const tokens = layout.calculateFinalTokens(styledToken);
+      const tokens = layout.calculateTokens(styledToken);
       const [[[lc, uc]]] = tokens;
 
       it("Should calculate sizes of text that has textTransform style correctly without actually changing the content for them.", () => {
@@ -1070,7 +1153,7 @@ aa bb aa`;
       });
 
       const control = makeExample({});
-      const controlTokens = layout.calculateFinalTokens(control).flat(2);
+      const controlTokens = layout.calculateTokens(control).flat(2);
       expect(controlTokens).toHaveLength(3);
       const [scaled, , unscaled] = controlTokens;
       const W = scaled.bounds.width;
@@ -1083,40 +1166,36 @@ aa bb aa`;
         toBeBetween(unscaled.bounds.height, 34, 35);
 
         const def = makeExample({ fontScaleWidth: 1, fontScaleHeight: 1 });
-        const scaleSetToDefaultValues = layout
-          .calculateFinalTokens(def)
-          .flat(2);
+        const scaleSetToDefaultValues = layout.calculateTokens(def).flat(2);
         expect(scaleSetToDefaultValues[0]).toMatchObject(scaled);
         expect(scaleSetToDefaultValues[2]).toMatchObject(unscaled);
       });
 
       it("Should scale the width of text.", () => {
         const wide = makeExample({ fontScaleWidth: 2.0 });
-        const wideTokens = layout.calculateFinalTokens(wide).flat(2)[0];
+        const wideTokens = layout.calculateTokens(wide).flat(2)[0];
 
         expect(wideTokens.bounds.width / W).toBeCloseTo(2);
 
         const condensed = makeExample({ fontScaleWidth: 0.5 });
-        const condensedTokens = layout
-          .calculateFinalTokens(condensed)
-          .flat(2)[0];
+        const condensedTokens = layout.calculateTokens(condensed).flat(2)[0];
         expect(condensedTokens.bounds.width / W).toBeCloseTo(0.5);
       });
       it("Scale the height of text by using fontSize and <100% font scaling.", () => {
         const tall = makeExample({ fontScaleHeight: 2 });
-        const tallTokens = layout.calculateFinalTokens(tall).flat(2);
+        const tallTokens = layout.calculateTokens(tall).flat(2);
         expect(tallTokens[0].bounds.width / W).toBeCloseTo(1, 1);
         expect(tallTokens[0].bounds.height / H).toBeCloseTo(2, 1);
 
         const short = makeExample({ fontScaleHeight: 0.5 });
-        const shortTokens = layout.calculateFinalTokens(short).flat(2);
+        const shortTokens = layout.calculateTokens(short).flat(2);
         expect(shortTokens[0].bounds.width / W).toBeCloseTo(1, 1);
         expect(shortTokens[0].bounds.height / H).toBeCloseTo(0.5, 1);
       });
 
       it("Should convert NaN to 0", () => {
         const bogus = makeExample({ fontScaleHeight: NaN });
-        const bogusTokens = layout.calculateFinalTokens(bogus).flat(2);
+        const bogusTokens = layout.calculateTokens(bogus).flat(2);
         expect(bogusTokens[0].bounds.height).toEqual(0);
         expect(bogusTokens[0].bounds.width).toEqual(
           controlTokens[0].bounds.width
@@ -1124,7 +1203,7 @@ aa bb aa`;
       });
       it("Should convert negative numbers to 0", () => {
         const bogus = makeExample({ fontScaleWidth: -1 });
-        const bogusTokens = layout.calculateFinalTokens(bogus).flat(2);
+        const bogusTokens = layout.calculateTokens(bogus).flat(2);
         expect(bogusTokens[0].bounds.width).toEqual(0);
       });
     });
@@ -1136,7 +1215,7 @@ aa bb aa`;
           tags: "",
           style: noStyle,
         };
-        const result = layout.calculateFinalTokens(lws);
+        const result = layout.calculateTokens(lws);
 
         expect(result).toHaveLength(1);
         // line 0
@@ -1165,7 +1244,7 @@ aa bb aa`;
           tags: "",
           style: noStyle,
         };
-        const helloWorld = layout.calculateFinalTokens(
+        const helloWorld = layout.calculateTokens(
           helloWorldStyledTokens,
           "characters"
         );
@@ -1202,7 +1281,7 @@ aa bb aa`;
     describe("collapseWhitespacesOnEndOfLines()", () => {
       const fontProperties = { ascent: 10, descent: 2, fontSize: 12 };
       it("Should collapse the width of any whitespace characters that appear at end of lines. (but not in middle)", () => {
-        const example: Partial<FinalToken>[][][] = [
+        const example: Partial<SegmentToken>[][][] = [
           [
             [{ content: "a", fontProperties, bounds: R(0, 0, 10, 10) }],
             [{ content: " ", fontProperties, bounds: R(10, 0, 10, 10) }],
@@ -1225,7 +1304,7 @@ aa bb aa`;
         ]);
       });
       it("Should collapse width and height of newlines.", () => {
-        const example: Partial<FinalToken>[][][] = [
+        const example: Partial<SegmentToken>[][][] = [
           [
             [{ content: "a", fontProperties, bounds: R(0, 0, 10, 10) }],
             [{ content: "\n", fontProperties, bounds: R(10, 0, 10, 20) }],
@@ -1280,8 +1359,8 @@ line5</negative>`;
       const tagTokens = textToTags(text, Object.keys(styles));
       const styleTokensControl = tagsToStyles(tagTokensControl, stylesControl);
       const styleTokens = tagsToStyles(tagTokens, styles);
-      const tokensControl = layout.calculateFinalTokens(styleTokensControl);
-      const tokens = layout.calculateFinalTokens(styleTokens);
+      const tokensControl = layout.calculateTokens(styleTokensControl);
+      const tokens = layout.calculateTokens(styleTokens);
       const [
         line0Control,
         line1Control,
@@ -1359,7 +1438,7 @@ line1 <middle>goes</middle> <top>on</top> <bot>until</bot> it wraps <middle>to</
 
         const tagTokens = textToTags(text, Object.keys(styles));
         const styleTokens = tagsToStyles(tagTokens, styles);
-        const tokens = layout.calculateFinalTokens(styleTokens);
+        const tokens = layout.calculateTokens(styleTokens);
         const [, line1, line2] = tokens;
 
         const firstLineNormal = line1[0][0];
@@ -1425,19 +1504,13 @@ line1 <middle>goes</middle> <top>on</top> <bot>until</bot> it wraps <middle>to</
         style: letterSpacingStyle,
       } as StyledTokens;
 
-      const charSplitControl = layout.calculateFinalTokens(
+      const charSplitControl = layout.calculateTokens(
         unstyledTokens,
         "characters"
       );
-      const charSplitTest = layout.calculateFinalTokens(
-        styledTokens,
-        "characters"
-      );
-      const wordSplitControl = layout.calculateFinalTokens(
-        unstyledTokens,
-        "words"
-      );
-      const wordSplitTest = layout.calculateFinalTokens(styledTokens, "words");
+      const charSplitTest = layout.calculateTokens(styledTokens, "characters");
+      const wordSplitControl = layout.calculateTokens(unstyledTokens, "words");
+      const wordSplitTest = layout.calculateTokens(styledTokens, "words");
 
       describe("Should respect letterSpacing property with various splitStyles", () => {
         describe("splitStyle='words' with letterSpacing'", () => {
@@ -1541,7 +1614,7 @@ line1 <middle>goes</middle> <top>on</top> <bot>until</bot> it wraps <middle>to</
             } as StyledTokens);
 
           const createTokens = (letterSpacing: number): ParagraphToken =>
-            layout.calculateFinalTokens({
+            layout.calculateTokens({
               children: [
                 createIcon(letterSpacing),
                 createIcon(letterSpacing),

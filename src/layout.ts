@@ -15,7 +15,7 @@ import {
   Bounds,
   Point,
   StyledTokens,
-  FinalToken,
+  SegmentToken,
   StyledToken,
   TextToken,
   SpriteToken,
@@ -32,7 +32,7 @@ import {
   Nested,
   isNotWhitespaceToken,
   VAlign,
-  createEmptyFinalToken,
+  createEmptySegmentToken,
   FontMap,
 } from "./types";
 
@@ -91,7 +91,7 @@ export const translateWordPosition =
   (offset: Point) =>
   (word: WordToken): WordToken =>
     word.map((token) =>
-      mapProp<Bounds, FinalToken>("bounds")(translatePoint(offset))(token)
+      mapProp<Bounds, SegmentToken>("bounds")(translatePoint(offset))(token)
     );
 
 export const translateTokenLine =
@@ -159,10 +159,10 @@ export const concatBounds = (
 const getCombinedBounds = (bounds: Bounds[]): Bounds =>
   bounds.reduce(concatBounds, { x: NaN, y: NaN, width: NaN, height: NaN });
 
-export const getBoundsNested: Unary<Nested<FinalToken>, Bounds> = flatReduce<
-  FinalToken,
+export const getBoundsNested: Unary<Nested<SegmentToken>, Bounds> = flatReduce<
+  SegmentToken,
   Bounds
->((acc: Bounds, t: FinalToken) => concatBounds(acc, t.bounds), {
+>((acc: Bounds, t: SegmentToken) => concatBounds(acc, t.bounds), {
   x: NaN,
   y: NaN,
   width: NaN,
@@ -315,8 +315,8 @@ export const alignLines = (
   return lines;
 };
 
-const getTallestToken = (line: LineToken): FinalToken =>
-  flatReduce<FinalToken, FinalToken>((tallest, current) => {
+const getTallestToken = (line: LineToken): SegmentToken =>
+  flatReduce<SegmentToken, SegmentToken>((tallest, current) => {
     let h = current.bounds.height ?? 0;
     if (isSpriteToken(current)) {
       h += current.fontProperties.descent;
@@ -325,7 +325,7 @@ const getTallestToken = (line: LineToken): FinalToken =>
       return current;
     }
     return tallest;
-  }, createEmptyFinalToken())(line);
+  }, createEmptySegmentToken())(line);
 
 /**
  * @param If you want to override the valign from the styles object, set it here.
@@ -335,7 +335,7 @@ export const verticalAlignInLines = (
   lineSpacing: number,
   overrideValign?: VAlign
 ): ParagraphToken => {
-  let previousTallestToken: FinalToken = createEmptyFinalToken();
+  let previousTallestToken: SegmentToken = createEmptySegmentToken();
   let previousLineBottom = 0;
   let paragraphModifier = 0;
 
@@ -344,7 +344,7 @@ export const verticalAlignInLines = (
   for (const line of lines) {
     const newLine: LineToken = [];
 
-    let tallestToken: FinalToken = getTallestToken(line);
+    let tallestToken: SegmentToken = getTallestToken(line);
     // Note, paragraphModifier from previous line applied here.
     let tallestHeight = (tallestToken.bounds?.height ?? 0) + paragraphModifier;
     let tallestAscent =
@@ -453,7 +453,7 @@ export const collapseWhitespacesOnEndOfLines = (
 };
 
 const layout = (
-  tokens: FinalToken[],
+  tokens: SegmentToken[],
   maxWidth: number,
   lineSpacing: number,
   align: Align
@@ -481,7 +481,7 @@ const layout = (
     line = [];
   }
 
-  function addLineToListOfLinesAndMoveCursorToNextLine(token: FinalToken) {
+  function addLineToListOfLinesAndMoveCursorToNextLine(token: SegmentToken) {
     // finalize Line
     addLineToListOfLines();
 
@@ -494,7 +494,7 @@ const layout = (
     setTallestHeight(token);
   }
 
-  function setTallestHeight(token?: FinalToken): void {
+  function setTallestHeight(token?: SegmentToken): void {
     const fontSize = token?.fontProperties?.fontSize ?? 0;
     const height = token?.bounds?.height ?? 0;
 
@@ -506,7 +506,7 @@ const layout = (
     }
   }
 
-  function positionTokenAtCursorAndAdvanceCursor(token: FinalToken): void {
+  function positionTokenAtCursorAndAdvanceCursor(token: SegmentToken): void {
     // position token at cursor
     setTallestHeight(token);
     token.bounds.x = cursor.x;
@@ -523,11 +523,11 @@ const layout = (
     return cursor.x + wordWidth > maxWidth;
   }
 
-  function isBlockImage(token: FinalToken): boolean {
+  function isBlockImage(token: SegmentToken): boolean {
     return token.style[IMG_DISPLAY_PROPERTY] === "block";
   }
 
-  function addTokenToWordAndUpdateWordWidth(token: FinalToken): void {
+  function addTokenToWordAndUpdateWordWidth(token: SegmentToken): void {
     // add the token to the current word buffer.
     word.push(token);
     wordWidth += token.bounds.width;
@@ -610,7 +610,7 @@ export const splitText = (s: string, splitStyle: SplitStyle): string[] => {
   }
 };
 
-export const calculateFinalTokens = (
+export const calculateTokens = (
   styledTokens: StyledTokens,
   splitStyle: SplitStyle = "words",
   scaleIcons = true,
@@ -621,10 +621,10 @@ export const calculateFinalTokens = (
 
   let fontProperties: IFontMetrics;
 
-  const generateFinalTokenFromStyledToken =
+  const generateTokensFormStyledToken =
     (style: TextStyleExtended, tags: string) =>
-    (token: StyledToken | TextToken | SpriteToken): FinalToken[] => {
-      let output: FinalToken[] = [];
+    (token: StyledToken | TextToken | SpriteToken): SegmentToken[] => {
+      let output: SegmentToken[] = [];
 
       const alignClassic = convertUnsupportedAlignment(style.align);
 
@@ -644,7 +644,7 @@ export const calculateFinalTokens = (
 
         const textSegments = splitText(token, splitStyle);
 
-        const textTokens = textSegments.map((str): FinalToken => {
+        const textTokens = textSegments.map((str): SegmentToken => {
           switch (style.textTransform) {
             case "uppercase":
               sizer.text = str.toUpperCase();
@@ -773,7 +773,7 @@ export const calculateFinalTokens = (
         }
 
         output = output.concat(
-          children.flatMap(generateFinalTokenFromStyledToken(newStyle, newTags))
+          children.flatMap(generateTokensFormStyledToken(newStyle, newTags))
         );
       }
       return output;
@@ -784,7 +784,7 @@ export const calculateFinalTokens = (
   const style: TextStyleExtended = defaultStyle;
 
   const finalTokens = styledTokens.children.flatMap(
-    generateFinalTokenFromStyledToken(style, tags)
+    generateTokensFormStyledToken(style, tags)
   );
 
   const { wordWrap: ww, wordWrapWidth: www } = defaultStyle;

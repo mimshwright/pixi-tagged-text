@@ -36,8 +36,9 @@ describe("srtingUtil", () => {
       ).toBeTruthy();
       expect(f(" 1 2 3 ")).toBeFalsy();
     });
-    it("Should return false if empty.", () => {
+    it("Should return false if empty or all whitespace.", () => {
       expect(f("")).toBeFalsy();
+      expect(f(" ")).toBeFalsy();
     });
     it("Should return false if there are any non-numbers.", () => {
       expect(f("123f")).toBeFalsy();

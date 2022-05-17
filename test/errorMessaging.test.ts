@@ -1,8 +1,8 @@
-import { logWarning } from "../src/errorMessaging";
+import { logError, logWarning } from "../src/errorMessaging";
 import { ErrorHandler, ErrorMessage } from "../src/types";
 
 describe("errorMessaging", () => {
-  describe("logWarning", () => {
+  describe("logWarning()", () => {
     it("first accepts options for how to handle the messaging.", () => {
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       expect(logWarning((): void => {}, true)).toBeInstanceOf(Function);
@@ -27,6 +27,13 @@ describe("errorMessaging", () => {
         expect(e.type).toBe("warning");
       };
       logWarning(handler)("code", "message");
+    });
+  });
+  describe("logError()", () => {
+    it("should log an error", () => {
+      const spy = jest.spyOn(console, "error");
+      logError(undefined, false)("code", "message");
+      expect(spy).toHaveBeenCalledWith("[code] message");
     });
   });
 });

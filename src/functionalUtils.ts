@@ -16,10 +16,14 @@ export const combineRecords = <
   ...b,
 });
 
+/**
+ * Returns the first item in a list. AKA head
+ * List a -> a
+ */
 export const first = <T>(a: T[]): T => a[0];
 
 /**
- * Return the last item in a list.
+ * Return the last item in a list. Aka tail
  * List f => f a -> a
  */
 export const last = <T>(a: T[]): T => a[a.length - 1];
@@ -51,6 +55,11 @@ export const assoc =
     ...{ [key]: value },
   });
 
+/**
+ * Takes a key (k), a function (f) and an object (o) and applies f to the property k
+ * of the object and stores the result in o[k].
+ * Key k, Record r => k -> (a -> a) -> r k a -> r k a
+ */
 export const mapProp =
   <T, U>(k: keyof U) =>
   (f: (t: T) => T) =>
@@ -58,8 +67,6 @@ export const mapProp =
     ...o,
     [k]: f((o as U & Record<string, T>)[k]),
   });
-
-// export const every = <T>(p: Predicate<T>) => (a: T[]): boolean => a.every(p);
 
 export const flatReduce =
   <T, U>(f: (acc: U, t: T) => U, acc: U) =>
@@ -77,6 +84,12 @@ export const nestedMap =
   (nested: Nested<T>): Nested<U> =>
     nested instanceof Array ? nested.map(nestedMap(f)) : f(nested);
 
+/**
+ * Takes a list and a predicate and returns a number that represents the number of
+ * true statements when applied to the elements in the list.
+ * In other words, the number of elements that pass the test.
+ * (a -> boolean) -> a[] -> number
+ */
 export const countIf =
   <T>(p: Predicate<T>) =>
   (a: Array<T>): number =>
