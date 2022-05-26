@@ -201,6 +201,16 @@ t.draw();
 t.textContainer.length; // This will now contain all the PIXI.Text objects created by draw.
 ```
 
+### Destructor
+
+Like with other Pixi components, when you're ready to remove your `TaggedText` object from the stage and make it ready for garbage collection, use the [`.destroy()`](https://pixijs.download/release/docs/PIXI.Container.html#destroy) method. Unlike some other Pixi components, `TaggedText` will automatically destroy its child objects, such as fragments of text and debug drawings (with the exception of `imgMap`, see below). Child objects can still be retained by passing options to the destructor, e.g. `.destroy(false)`.
+
+### Destroying `imgMap` sources
+
+`destroy()` will _not_ by default destroy the textures used for the `imgMap` since these are often shared between multiple `TaggedText` objects.
+
+To destroy the source textures in `imgMap` use the method `.destroyImgMap()`. Please note that this must be called _before_ destroying the `TaggedText` instance and will throw an error if you try to call it on an already-destroyed instance.
+
 ## Contributing
 
 If you'd like to contribute, a great place to start is to log an issue. If you are interested in bug-fixing, please take a look at the issues list and notify one of the owners that you're interested in working on it. Please make sure to test the code you write! If you're not sure how, just ask for help!

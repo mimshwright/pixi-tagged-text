@@ -71,6 +71,12 @@ const DEFAULT_STYLE_SET = { default: DEFAULT_STYLE };
 
 Object.freeze(DEFAULT_STYLE_SET);
 Object.freeze(DEFAULT_STYLE);
+
+const DEFAULT_DESTROY_OPTIONS: PIXI.IDestroyOptions = {
+  children: true,
+  texture: true,
+};
+
 export default class TaggedText extends PIXI.Sprite {
   public static get defaultStyles(): TextStyleSet {
     return DEFAULT_STYLE_SET;
@@ -281,25 +287,25 @@ export default class TaggedText extends PIXI.Sprite {
   public get spriteTemplates(): ImageMap {
     return this._spriteTemplates;
   }
-  private _debugGraphics: PIXI.Graphics | null = null;
+  private _debugGraphics: PIXI.Graphics;
 
   // Containers for children
-  private _textContainer: PIXI.Container | null = null;
-  public get textContainer(): PIXI.Container | null {
+  private _textContainer: PIXI.Container;
+  public get textContainer(): PIXI.Container {
     return this._textContainer;
   }
 
-  private _decorationContainer: PIXI.Container | null;
-  public get decorationContainer(): PIXI.Container | null {
+  private _decorationContainer: PIXI.Container;
+  public get decorationContainer(): PIXI.Container {
     return this._decorationContainer;
   }
 
-  private _spriteContainer: PIXI.Container | null;
-  public get spriteContainer(): PIXI.Container | null {
+  private _spriteContainer: PIXI.Container;
+  public get spriteContainer(): PIXI.Container {
     return this._spriteContainer;
   }
-  private _debugContainer: PIXI.Container | null;
-  public get debugContainer(): PIXI.Container | null {
+  private _debugContainer: PIXI.Container;
+  public get debugContainer(): PIXI.Container {
     return this._debugContainer;
   }
 
@@ -322,6 +328,7 @@ export default class TaggedText extends PIXI.Sprite {
     this._spriteContainer = new PIXI.Container();
     this._decorationContainer = new PIXI.Container();
     this._debugContainer = new PIXI.Container();
+    this._debugGraphics = new PIXI.Graphics();
 
     this.resetChildren();
 
@@ -344,65 +351,31 @@ export default class TaggedText extends PIXI.Sprite {
     this.text = text;
   }
 
-  public destroy(options?: boolean | PIXI.IDestroyOptions): void {
-    super.destroy(options);
+  public destroyImgMap(): void {
+    if (this.destroyed) {
+      throw new Error(
+        "destroyImgMap() was called after this object was already destroyed. You must call destroyImgMap() before destroy() because imgMap is cleared when the object is destroyed."
+      );
+    }
 
-    const destroyChildren = {
+    this._spriteContainer.destroy({
       children: true,
       texture: true,
       baseTexture: true,
-    };
+    });
+  }
 
-    // Object.values(this.sprites).forEach((sprite) => sprite.destroy());
-    Object.values(this.decorations).forEach((decoration) =>
-      decoration.destroy()
-    );
-
-    if (this._textContainer) {
-      this._textContainer.children.forEach((child) => {
-        child.destroy(destroyChildren);
-        if (child instanceof PIXI.Text) {
-          // @ts-ignore
-          child.context = null;
-          // @ts-ignore
-          child.canvas = null;
-        }
-      });
-      this._textContainer.removeAllListeners();
-      this._textContainer.removeChildren();
-      this._textContainer.destroy(destroyChildren);
-      this._textContainer = null;
+  public destroy(options?: boolean | PIXI.IDestroyOptions): void {
+    let destroyOptions: PIXI.IDestroyOptions = {};
+    if (typeof options === "boolean") {
+      options = { children: options };
     }
+    destroyOptions = { ...DEFAULT_DESTROY_OPTIONS, ...options };
 
-    if (this._debugContainer) {
-      this._debugContainer.children.forEach((child) =>
-        child.destroy(destroyChildren)
-      );
-      this._debugContainer.removeAllListeners();
-      this._debugContainer.removeChildren();
-      this._debugContainer.destroy(destroyChildren);
-      this._debugContainer = null;
-    }
+    // Do not destroy the sprites in the imgMap.
+    this._spriteContainer.destroy(false);
 
-    if (this._decorationContainer) {
-      this._decorationContainer.children.forEach((child) =>
-        child.destroy(destroyChildren)
-      );
-      this._decorationContainer.removeAllListeners();
-      this._decorationContainer.removeChildren();
-      this._decorationContainer.destroy(destroyChildren);
-      this._decorationContainer = null;
-    }
-
-    if (this._spriteContainer) {
-      this._spriteContainer.children.forEach((child) =>
-        child.destroy({ children: true })
-      );
-      this._spriteContainer.removeAllListeners();
-      this._spriteContainer.removeChildren();
-      this._spriteContainer.destroy(destroyChildren);
-      this._spriteContainer = null;
-    }
+    super.destroy(destroyOptions);
 
     this._textFields = [];
     this._sprites = [];
@@ -463,21 +436,48 @@ export default class TaggedText extends PIXI.Sprite {
     this._spriteTemplates = {};
 
     Object.entries(imgMap).forEach(([key, spriteSource]) => {
-      let sprite: PIXI.Sprite;
-      if (spriteSource instanceof PIXI.Sprite) {
-        sprite = spriteSource;
-      } else {
+      const wrongFormatError = new TypeError(
+        `The spriteSource provided for key ${key} was not in a valid format. Please use a Sprite, Texture, BaseTexture, string, HTMLImageElement, HTMLVideoElement, HTMLCanvasElement, or SVGElement`
+      );
+      const destroyedError = new Error(
+        `The spriteSource provided for key ${key} appears to be a Sprite or Texture that has been destroyed or removed from PIXI.TextureCache probably using \`destroy()\` with aggressive options or \`destroyImgMap()\`.`
+      );
+      let error: Error | null = null;
+
+      let sprite: PIXI.Sprite = new PIXI.Sprite();
+
+      try {
+        if (spriteSource instanceof PIXI.Sprite) {
+          sprite = spriteSource;
+        }
         // if the entry is not a sprite, attempt to load the sprite as if it is a reference to the sprite source (e.g. an Image element, url, or texture).
-        if (isSpriteSource(spriteSource)) {
+        else if (isSpriteSource(spriteSource)) {
           sprite = PIXI.Sprite.from(spriteSource);
         } else if (isTextureSource(spriteSource)) {
           sprite = PIXI.Sprite.from(PIXI.Texture.from(spriteSource));
         } else {
-          throw new TypeError(
-            `The spriteSource provided for key ${key} was not in a valid format. Please use a Sprite, Texture, BaseTexture, string, HTMLImageElement, HTMLVideoElement, HTMLCanvasElement, or SVGElement`
-          );
+          error = wrongFormatError;
+          console.log(error);
         }
+      } catch (e) {
+        error = e as Error;
+        console.log(error);
       }
+
+      if (
+        (isSpriteSource(spriteSource) &&
+          (spriteSource as PIXI.Texture).baseTexture === null) ||
+        (sprite !== undefined &&
+          (sprite.destroyed || sprite.texture?.baseTexture === null))
+      ) {
+        error = destroyedError;
+        console.log(error);
+      }
+
+      if (error) {
+        throw error;
+      }
+
       // Listen for changes to sprites (e.g. when they load.)
       const texture = sprite.texture;
 
@@ -486,9 +486,7 @@ export default class TaggedText extends PIXI.Sprite {
         baseTexture.removeListener("update", onTextureUpdate);
       };
 
-      if (texture !== undefined) {
-        texture.baseTexture.addListener("update", onTextureUpdate);
-      }
+      texture.baseTexture.addListener("update", onTextureUpdate);
 
       this.spriteTemplates[key] = sprite;
 

@@ -12,14 +12,10 @@
       rel="stylesheet"
     />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.2.2/browser/pixi.min.js"></script>
 
     <!-- TaggedText -->
     <script src="../dist/pixi-tagged-text.umd.js"></script>
-    <script>
-      hljs.initHighlightingOnLoad();
-    </script>
   </head>
 
   <body>
@@ -32,11 +28,18 @@
 
         <div class="pixi" id="basic">
           <script>
-            const SET_SIZE = 10;
-            const INTERVAL = 200;
-            const LIMIT = 3000;
+            ///////// CONFIG TESTS /////////
             const TEST_TT = true;
-            const TEST_PLAIN_TEXT = false;
+            const TEST_PLAIN_TEXT = true;
+            const TEST_ICON = true;
+            const TEST_HEAP = true;
+            const TEST_TEXTURE_CACHE = true;
+            const TEST_BASE_TEXTURE_CACHE = true;
+
+            const SET_SIZE = 25;
+            const INTERVAL = 250;
+            const LIMIT = 5000;
+            ///////////////////////////////
 
             PIXI.settings.RESOLUTION = 2;
             const app = new PIXI.Application({
@@ -58,38 +61,42 @@
             };
             const options = {
               imgMap: { icon: iconImage },
-              debug: true,
+              debug: false,
+              drawWhitespace: false,
+            };
+
+            const text =
+              "Hello my baby, hello my honey, hello my ragtime gal!\n" +
+              (TEST_ICON ? `<icon />` : ``);
+            const styleSet = {
+              default: style,
             };
 
             const makeTaggedText = (total) => {
-              tt = new TaggedText(
-                "Hello my baby, hello my honey, hello my ragtime gal! <icon /> " +
-                  total,
-                {
-                  default: style,
-                },
-                options
-              );
-              tt.x = 50;
-              tt.y = 50;
-              app.stage.addChild(tt);
+              try {
+                tt = new TaggedText(text + " " + total, styleSet, options);
+                tt.x = 50;
+                tt.y = 50;
+                app.stage.addChild(tt);
+              } catch (error) {
+                console.warn("Failed to create TaggedText");
+                console.error(error);
+              }
             };
 
             const destroyTaggedText = () => {
               if (tt && tt.destroyed === false) {
                 app.stage.removeChild(tt);
+                // tt.destroyImgMap();
                 tt.destroy();
                 tt = null;
               }
             };
 
             const makePlainText = () => {
-              plainText = new PIXI.Text(
-                "Hello my baby, hello my honey, hello my ragtime gal! " + total,
-                style
-              );
+              plainText = new PIXI.Text(text + " " + total, style);
               plainText.x = 50;
-              plainText.y = 300;
+              plainText.y = 350;
               app.stage.addChild(plainText);
             };
 
@@ -99,10 +106,29 @@
               plainText = null;
             };
 
+            const instructions = new PIXI.Text("See console for results", {
+              fontSize: 12,
+              fill: 0xffff00,
+            });
+            instructions.x = 50;
+            instructions.y = 10;
+            app.stage.addChild(instructions);
+
             let total = 0;
-            let firstHeapSize =
+            let heapSize = 0;
+            const firstHeapSize =
               window.performance.memory.usedJSHeapSize / 1024 / 1024;
             let lastHeapSize = firstHeapSize;
+            const firstTextureCacheSize = Object.keys(
+              PIXI.utils.TextureCache
+            ).length;
+            let lastTextureCacheSize = firstTextureCacheSize;
+            let textureCacheSize = 0;
+            const firstBaseTextureCacheSize = Object.keys(
+              PIXI.utils.BaseTextureCache
+            ).length;
+            let lastBaseTextureCacheSize = firstBaseTextureCacheSize;
+            let baseTextureCacheSize = 0;
 
             const runTest = () => {
               let i = SET_SIZE;
@@ -125,35 +151,85 @@
 
                 i--;
               }
-              const heapSize = Math.ceil(
-                window.performance.memory.usedJSHeapSize / 1024 / 1024
-              );
-              console.log(
-                `iterations:${total} • Heap size: ${heapSize}MB • change: ${
-                  heapSize - lastHeapSize
-                }`
-              );
+
+              console.log(`\nIterations: ${total}`);
+
+              if (TEST_HEAP) {
+                heapSize = Math.ceil(
+                  window.performance.memory.usedJSHeapSize / 1024 / 1024
+                );
+
+                console.log(
+                  `  Heap • size: ${heapSize}MB • change: ${
+                    heapSize - lastHeapSize
+                  }`
+                );
+
+                lastHeapSize = heapSize;
+              }
+
+              if (TEST_TEXTURE_CACHE) {
+                textureCacheSize = Object.keys(PIXI.utils.TextureCache).length;
+                console.log(
+                  `  TextureCache • size: ${textureCacheSize} • change: ${
+                    textureCacheSize - lastTextureCacheSize
+                  }`
+                );
+                lastTextureCacheSize = textureCacheSize;
+              }
+              if (TEST_BASE_TEXTURE_CACHE) {
+                baseTextureCacheSize = Object.keys(
+                  PIXI.utils.BaseTextureCache
+                ).length;
+                console.log(
+                  `  BaseTextureCache • size: ${baseTextureCacheSize} • change: ${
+                    baseTextureCacheSize - lastBaseTextureCacheSize
+                  }`
+                );
+                lastBaseTextureCacheSize = baseTextureCacheSize;
+              }
               if (total >= LIMIT) {
                 clearInterval(loop);
-                const total = (heapSize - firstHeapSize).toFixed(2);
-                const each = (
-                  ((heapSize - firstHeapSize) * 1024) /
-                  LIMIT
-                ).toFixed(2);
-                console.log(`Total gain: ${total}MB (${each}KB/iteration)`);
-              }
-              lastHeapSize = heapSize;
-            };
-            var loop = setInterval(runTest, INTERVAL);
+                console.log(`\nFINISHED!`);
 
-            // makeTaggedText();
-            // console.log(tt);
-            // // debugger;
-            // setTimeout(() => {
-            //   tt.destroy();
-            //   console.log(JSON.stringify(tt));
-            //   console.log(tt);
-            // }, 1000);
+                if (TEST_HEAP) {
+                  const total = (heapSize - firstHeapSize).toFixed(2);
+                  const each = (
+                    ((heapSize - firstHeapSize) * 1024) /
+                    LIMIT
+                  ).toFixed(2);
+
+                  console.log(
+                    `  Heap • Total gain: ${total}MB (${each}KB/iteration)`
+                  );
+                }
+
+                if (TEST_TEXTURE_CACHE) {
+                  const total = textureCacheSize - firstTextureCacheSize;
+                  const each = (
+                    (textureCacheSize - firstTextureCacheSize) /
+                    LIMIT
+                  ).toFixed(2);
+                  console.log(
+                    `  TextureCache • Total gain: ${total} (${each}/iteration)`
+                  );
+                }
+
+                if (TEST_BASE_TEXTURE_CACHE) {
+                  const total =
+                    baseTextureCacheSize - firstBaseTextureCacheSize;
+                  const each = (
+                    (baseTextureCacheSize - firstBaseTextureCacheSize) /
+                    LIMIT
+                  ).toFixed(2);
+                  console.log(
+                    `  BaseTextureCache • Total gain: ${total} (${each}/iteration)`
+                  );
+                }
+              }
+            };
+
+            var loop = setInterval(runTest, INTERVAL);
           </script>
         </div>
       </div>

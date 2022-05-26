@@ -2,7 +2,13 @@ import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
 import iconSrc from "./support/icon.base64";
-import { iconImage, iconTexture, icon } from "./support/testIcon";
+import {
+  iconImage,
+  iconTexture,
+  icon,
+  createTexture,
+  createSprite,
+} from "./support/testIcon";
 import {
   Align,
   SplitStyle,
@@ -241,7 +247,20 @@ describe("TaggedText", () => {
               {},
               { imgMap: { img: new Date() as unknown as string } }
             );
-          }).toThrow();
+          }).toThrow(/not in a valid format/);
+        });
+
+        it("should throw if the reference to the sprite was destroyed", () => {
+          const texture = createTexture();
+          expect(() => {
+            new TaggedText("<img />", {}, { imgMap: { img: texture } });
+          }).not.toThrow();
+
+          texture.destroy(true);
+
+          expect(() => {
+            new TaggedText("<img />", {}, { imgMap: { img: texture } });
+          }).toThrow(/destroyed/);
         });
       });
       describe("adjustFontBaseline", () => {
@@ -1239,12 +1258,19 @@ Line 4`);
   });
 
   describe("destructor", () => {
-    it("Should destroy the references to children of this object. ", () => {
-      const tt = new TaggedText(
+    let sprite: PIXI.Sprite;
+    const recreateSprite = () => (sprite = createSprite());
+    recreateSprite();
+
+    const createTextToDestroy = () =>
+      new TaggedText(
         "Hello my baby, hello my honey, hello my ragtime gal! <icon />",
         { default: { fontSize: 25, textDecoration: "underline" } },
-        { imgMap: { icon: iconImage }, debug: true }
+        { imgMap: { icon: sprite }, debug: true }
       );
+
+    test("All sub-components are as expected before being destroyed.", () => {
+      const tt = createTextToDestroy();
 
       expect(tt.textContainer).toBeInstanceOf(PIXI.Container); // The Sprite layer which holds all the text fields rendered by draw.
       expect(tt.textContainer?.children).toHaveLength(10);
@@ -1268,19 +1294,55 @@ Line 4`);
       expect(tt.spriteTemplates.icon).toBeInstanceOf(PIXI.Sprite);
       expect(tt.options.imgMap).toBeInstanceOf(Object);
       expect(tt.options.imgMap).toHaveProperty("icon");
-      expect(tt.options.imgMap?.icon).toBeInstanceOf(HTMLImageElement);
+      expect(tt.options.imgMap?.icon).toBeInstanceOf(PIXI.Sprite);
+    });
 
+    it("Should destroy the references to children of this object. ", () => {
+      const tt = createTextToDestroy();
       tt.destroy();
-
-      expect(tt.textContainer).toBeNull();
-      expect(tt.spriteContainer).toBeNull();
-      expect(tt.debugContainer).toBeNull();
-      expect(tt.decorationContainer).toBeNull();
+      expect(tt.textContainer.destroyed).toBeTruthy();
+      expect(tt.spriteContainer.destroyed).toBeTruthy();
+      expect(tt.debugContainer.destroyed).toBeTruthy();
+      expect(tt.decorationContainer.destroyed).toBeTruthy();
       expect(tt.decorations).toHaveLength(0);
       expect(tt.textFields).toHaveLength(0);
       expect(tt.sprites).toHaveLength(0);
       expect(Object.values(tt.spriteTemplates)).toHaveLength(0);
       expect(Object.values(tt.options.imgMap ?? {})).toHaveLength(0);
+    });
+    it("Should not destroy the sprite textures.", () => {
+      recreateSprite();
+
+      const tt = createTextToDestroy();
+      tt.destroy();
+      expect(sprite.texture.baseTexture).not.toBeNull();
+    });
+
+    describe("destroyImgMap()", () => {
+      it("Should destroy the sprite textures.", () => {
+        recreateSprite();
+
+        const tt = createTextToDestroy();
+        tt.destroyImgMap();
+        expect(sprite.texture.baseTexture).toBeNull();
+
+        expect(() => createTextToDestroy()).toThrow(/destroyed/);
+      });
+      it("Should throw if you try to destroy the image map after the object was destroyed.", () => {
+        recreateSprite();
+        expect(() => {
+          const tt = createTextToDestroy();
+          tt.destroyImgMap();
+          tt.destroy();
+        }).not.toThrow();
+
+        recreateSprite();
+        expect(() => {
+          const tt = createTextToDestroy();
+          tt.destroy();
+          tt.destroyImgMap();
+        }).toThrow(/already destroyed/);
+      });
     });
   });
 });

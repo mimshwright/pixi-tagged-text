@@ -48,8 +48,12 @@ export const isSpriteSource = (s: ImageSource): s is SpriteSource =>
   s instanceof PIXI.Texture ||
   s instanceof HTMLCanvasElement ||
   s instanceof HTMLVideoElement;
+export const isBaseTexture = (s: ImageSource): s is PIXI.BaseTexture =>
+  s instanceof PIXI.BaseTexture;
+export const isImageElement = (s: ImageSource): s is HTMLImageElement =>
+  s instanceof HTMLImageElement;
 export const isTextureSource = (s: ImageSource): s is TextureSource =>
-  s instanceof HTMLImageElement || s instanceof PIXI.BaseTexture;
+  isImageElement(s) || isBaseTexture(s);
 
 export type FontProperty = string | number;
 export type FontMap = Record<string, FontProperty>;
