@@ -2,7 +2,12 @@ import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
 import iconSrc from "./support/icon.base64";
-import { iconImage, iconTexture, icon } from "./support/testIcon";
+import {
+  iconImage,
+  iconTexture,
+  destroyableIconTexture,
+  icon,
+} from "./support/testIcon";
 import {
   Align,
   SplitStyle,
@@ -241,7 +246,27 @@ describe("TaggedText", () => {
               {},
               { imgMap: { img: new Date() as unknown as string } }
             );
-          }).toThrow();
+          }).toThrow(/not in a valid format/);
+        });
+
+        it("should throw if the reference to the sprite was destroyed", () => {
+          expect(() => {
+            new TaggedText(
+              "<img />",
+              {},
+              { imgMap: { img: destroyableIconTexture } }
+            );
+          }).not.toThrow();
+
+          destroyableIconTexture.destroy(true);
+
+          expect(() => {
+            new TaggedText(
+              "<img />",
+              {},
+              { imgMap: { img: destroyableIconTexture } }
+            );
+          }).toThrow(/destroyed/);
         });
       });
       describe("adjustFontBaseline", () => {
