@@ -12,14 +12,10 @@
       rel="stylesheet"
     />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.2.2/browser/pixi.min.js"></script>
 
     <!-- TaggedText -->
     <script src="../dist/pixi-tagged-text.umd.js"></script>
-    <script>
-      hljs.initHighlightingOnLoad();
-    </script>
   </head>
 
   <body>
@@ -32,11 +28,16 @@
 
         <div class="pixi" id="basic">
           <script>
-            const SET_SIZE = 10;
-            const INTERVAL = 200;
-            const LIMIT = 3000;
+            ///////// CONFIG TESTS /////////
             const TEST_TT = true;
-            const TEST_PLAIN_TEXT = false;
+            const TEST_PLAIN_TEXT = true;
+            const TEST_TEXTURE_CACHE = true;
+            const TEST_ICON = true;
+
+            const SET_SIZE = 25;
+            const INTERVAL = 250;
+            const LIMIT = 5000;
+            ///////////////////////////////
 
             PIXI.settings.RESOLUTION = 2;
             const app = new PIXI.Application({
@@ -58,38 +59,42 @@
             };
             const options = {
               imgMap: { icon: iconImage },
-              debug: true,
+              debug: false,
+              drawWhitespace: false,
+            };
+
+            const text =
+              "Hello my baby, hello my honey, hello my ragtime gal!\n" +
+              (TEST_ICON ? `<icon />` : ``);
+            const styleSet = {
+              default: style,
             };
 
             const makeTaggedText = (total) => {
-              tt = new TaggedText(
-                "Hello my baby, hello my honey, hello my ragtime gal! <icon /> " +
-                  total,
-                {
-                  default: style,
-                },
-                options
-              );
-              tt.x = 50;
-              tt.y = 50;
-              app.stage.addChild(tt);
+              try {
+                tt = new TaggedText(text + " " + total, styleSet, options);
+                tt.x = 50;
+                tt.y = 50;
+                app.stage.addChild(tt);
+              } catch (error) {
+                console.warn("Failed to create TaggedText");
+                console.error(error);
+              }
             };
 
             const destroyTaggedText = () => {
               if (tt && tt.destroyed === false) {
                 app.stage.removeChild(tt);
+                // tt.destroyImgMap();
                 tt.destroy();
                 tt = null;
               }
             };
 
             const makePlainText = () => {
-              plainText = new PIXI.Text(
-                "Hello my baby, hello my honey, hello my ragtime gal! " + total,
-                style
-              );
+              plainText = new PIXI.Text(text + " " + total, style);
               plainText.x = 50;
-              plainText.y = 300;
+              plainText.y = 350;
               app.stage.addChild(plainText);
             };
 
@@ -100,9 +105,13 @@
             };
 
             let total = 0;
-            let firstHeapSize =
+            const firstHeapSize =
               window.performance.memory.usedJSHeapSize / 1024 / 1024;
             let lastHeapSize = firstHeapSize;
+            const firstTextureCacheSize = Object.keys(
+              PIXI.utils.TextureCache
+            ).length;
+            let lastTextureCacheSize = firstTextureCacheSize;
 
             const runTest = () => {
               let i = SET_SIZE;
@@ -125,6 +134,7 @@
 
                 i--;
               }
+
               const heapSize = Math.ceil(
                 window.performance.memory.usedJSHeapSize / 1024 / 1024
               );
@@ -133,6 +143,17 @@
                   heapSize - lastHeapSize
                 }`
               );
+              if (TEST_TEXTURE_CACHE) {
+                const textureCacheSize = Object.keys(
+                  PIXI.utils.TextureCache
+                ).length;
+                console.log(
+                  `iterations:${total} • TextureCache size: ${textureCacheSize} • change: ${
+                    textureCacheSize - lastTextureCacheSize
+                  }`
+                );
+                lastTextureCacheSize = textureCacheSize;
+              }
               if (total >= LIMIT) {
                 clearInterval(loop);
                 const total = (heapSize - firstHeapSize).toFixed(2);
@@ -145,15 +166,6 @@
               lastHeapSize = heapSize;
             };
             var loop = setInterval(runTest, INTERVAL);
-
-            // makeTaggedText();
-            // console.log(tt);
-            // // debugger;
-            // setTimeout(() => {
-            //   tt.destroy();
-            //   console.log(JSON.stringify(tt));
-            //   console.log(tt);
-            // }, 1000);
           </script>
         </div>
       </div>

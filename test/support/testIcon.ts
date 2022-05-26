@@ -1,29 +1,33 @@
 import * as PIXI from "pixi.js";
 import iconSrc from "./icon.base64";
-import iconSrcDestroy from "./icon-destroy.base64";
 
-const ICON_SRC = `data:image/png;base64,${iconSrc}`;
-const img = new Image();
-img.src = ICON_SRC;
-img.width = 128;
-img.height = 128;
+const W = 128;
+const H = 128;
 
-export const iconImage = img;
+export const createImage = (
+  base64Source: string = iconSrc
+): HTMLImageElement => {
+  const ICON_SRC = `data:image/png;base64,${base64Source}`;
+  const img = new Image();
+  img.src = ICON_SRC;
+  img.width = W;
+  img.height = H;
+  return img;
+};
 
-export const iconTexture = PIXI.Texture.from(iconImage, {
-  width: 128,
-  height: 128,
-});
+export const createTexture = (
+  src = createImage(),
+  width = W,
+  height = H
+): PIXI.Texture =>
+  PIXI.Texture.from(src, {
+    width,
+    height,
+  });
+export const createSprite = (
+  texture: PIXI.Texture = createTexture()
+): PIXI.Sprite => new PIXI.Sprite(texture);
 
-export const icon = PIXI.Sprite.from(iconTexture);
-
-const ICON_SRC_DESTROYABLE = `data:image/png;base64,${iconSrcDestroy}`;
-const imgDestroy = new Image();
-imgDestroy.src = ICON_SRC_DESTROYABLE;
-imgDestroy.width = 128;
-imgDestroy.height = 128;
-
-export const destroyableIconTexture = PIXI.Texture.from(imgDestroy, {
-  width: 128,
-  height: 128,
-});
+export const iconImage = createImage(iconSrc);
+export const iconTexture = createTexture(iconImage);
+export const icon = createSprite(iconTexture);
