@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.7.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.6.1...v3.7.0) (2022-05-26)
+
+### Bug Fixes
+
+- **memory:** drastically improved memory performance and added new method destroyImgMap() ([caf3dd6](https://github.com/mimshwright/pixi-tagged-text/commit/caf3dd655c4e03ba2e4b111571202bd4fc2da219)), closes [#245](https://github.com/mimshwright/pixi-tagged-text/issues/245)
+
+### Tests
+
+- **imgmap:** adds more descriptive errors when a destroyed texture is used for the imgMap ([3a8b596](https://github.com/mimshwright/pixi-tagged-text/commit/3a8b5962dcbd8edd3f41c1c8874830ab02ff294c)), closes [#245](https://github.com/mimshwright/pixi-tagged-text/issues/245)
+- **memory:** improved the memory test structure (memory.html) ([1edb970](https://github.com/mimshwright/pixi-tagged-text/commit/1edb97029d71802356482e0b16907e085bfa58e7)), closes [#245](https://github.com/mimshwright/pixi-tagged-text/issues/245)
+
 ### [3.6.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.6.0...v3.6.1) (2022-05-02)
 
 ### Bug Fixes
