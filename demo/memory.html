@@ -31,8 +31,10 @@
             ///////// CONFIG TESTS /////////
             const TEST_TT = true;
             const TEST_PLAIN_TEXT = true;
-            const TEST_TEXTURE_CACHE = true;
             const TEST_ICON = true;
+            const TEST_HEAP = true;
+            const TEST_TEXTURE_CACHE = true;
+            const TEST_BASE_TEXTURE_CACHE = true;
 
             const SET_SIZE = 25;
             const INTERVAL = 250;
@@ -104,7 +106,16 @@
               plainText = null;
             };
 
+            const instructions = new PIXI.Text("See console for results", {
+              fontSize: 12,
+              fill: 0xffff00,
+            });
+            instructions.x = 50;
+            instructions.y = 10;
+            app.stage.addChild(instructions);
+
             let total = 0;
+            let heapSize = 0;
             const firstHeapSize =
               window.performance.memory.usedJSHeapSize / 1024 / 1024;
             let lastHeapSize = firstHeapSize;
@@ -112,6 +123,12 @@
               PIXI.utils.TextureCache
             ).length;
             let lastTextureCacheSize = firstTextureCacheSize;
+            let textureCacheSize = 0;
+            const firstBaseTextureCacheSize = Object.keys(
+              PIXI.utils.BaseTextureCache
+            ).length;
+            let lastBaseTextureCacheSize = firstBaseTextureCacheSize;
+            let baseTextureCacheSize = 0;
 
             const runTest = () => {
               let i = SET_SIZE;
@@ -135,36 +152,83 @@
                 i--;
               }
 
-              const heapSize = Math.ceil(
-                window.performance.memory.usedJSHeapSize / 1024 / 1024
-              );
-              console.log(
-                `iterations:${total} • Heap size: ${heapSize}MB • change: ${
-                  heapSize - lastHeapSize
-                }`
-              );
-              if (TEST_TEXTURE_CACHE) {
-                const textureCacheSize = Object.keys(
-                  PIXI.utils.TextureCache
-                ).length;
+              console.log(`\nIterations: ${total}`);
+
+              if (TEST_HEAP) {
+                heapSize = Math.ceil(
+                  window.performance.memory.usedJSHeapSize / 1024 / 1024
+                );
+
                 console.log(
-                  `iterations:${total} • TextureCache size: ${textureCacheSize} • change: ${
+                  `  Heap • size: ${heapSize}MB • change: ${
+                    heapSize - lastHeapSize
+                  }`
+                );
+
+                lastHeapSize = heapSize;
+              }
+
+              if (TEST_TEXTURE_CACHE) {
+                textureCacheSize = Object.keys(PIXI.utils.TextureCache).length;
+                console.log(
+                  `  TextureCache • size: ${textureCacheSize} • change: ${
                     textureCacheSize - lastTextureCacheSize
                   }`
                 );
                 lastTextureCacheSize = textureCacheSize;
               }
+              if (TEST_BASE_TEXTURE_CACHE) {
+                baseTextureCacheSize = Object.keys(
+                  PIXI.utils.BaseTextureCache
+                ).length;
+                console.log(
+                  `  BaseTextureCache • size: ${baseTextureCacheSize} • change: ${
+                    baseTextureCacheSize - lastBaseTextureCacheSize
+                  }`
+                );
+                lastBaseTextureCacheSize = baseTextureCacheSize;
+              }
               if (total >= LIMIT) {
                 clearInterval(loop);
-                const total = (heapSize - firstHeapSize).toFixed(2);
-                const each = (
-                  ((heapSize - firstHeapSize) * 1024) /
-                  LIMIT
-                ).toFixed(2);
-                console.log(`Total gain: ${total}MB (${each}KB/iteration)`);
+                console.log(`\nFINISHED!`);
+
+                if (TEST_HEAP) {
+                  const total = (heapSize - firstHeapSize).toFixed(2);
+                  const each = (
+                    ((heapSize - firstHeapSize) * 1024) /
+                    LIMIT
+                  ).toFixed(2);
+
+                  console.log(
+                    `  Heap • Total gain: ${total}MB (${each}KB/iteration)`
+                  );
+                }
+
+                if (TEST_TEXTURE_CACHE) {
+                  const total = textureCacheSize - firstTextureCacheSize;
+                  const each = (
+                    (textureCacheSize - firstTextureCacheSize) /
+                    LIMIT
+                  ).toFixed(2);
+                  console.log(
+                    `  TextureCache • Total gain: ${total} (${each}/iteration)`
+                  );
+                }
+
+                if (TEST_BASE_TEXTURE_CACHE) {
+                  const total =
+                    baseTextureCacheSize - firstBaseTextureCacheSize;
+                  const each = (
+                    (baseTextureCacheSize - firstBaseTextureCacheSize) /
+                    LIMIT
+                  ).toFixed(2);
+                  console.log(
+                    `  BaseTextureCache • Total gain: ${total} (${each}/iteration)`
+                  );
+                }
               }
-              lastHeapSize = heapSize;
             };
+
             var loop = setInterval(runTest, INTERVAL);
           </script>
         </div>
