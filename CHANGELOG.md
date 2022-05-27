@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.2](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.1...v3.7.2) (2022-05-27)
+
+### Chore
+
+- **deps-dev:** bump electron from 18.2.4 to 19.0.1 ([00c594a](https://github.com/mimshwright/pixi-tagged-text/commit/00c594afa79d9c0ed81e27d4f67a09a283fb6894))
+- **deps-dev:** bump typescript from 4.6.4 to 4.7.2 ([1341543](https://github.com/mimshwright/pixi-tagged-text/commit/1341543b35188f100c4f4963674358816feaf2ca))
+
 ### [3.7.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.0...v3.7.1) (2022-05-27)
 
 ### Chore
