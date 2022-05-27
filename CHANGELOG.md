@@ -1,6 +1,20 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [3.7.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.0...v3.7.1) (2022-05-27)
+
+### Chore
+
+- **deps-dev:** bump @types/jest from 27.4.1 to 27.5.0 ([dabfff8](https://github.com/mimshwright/pixi-tagged-text/commit/dabfff8d968047f3b036408631a6dc8ed1ec0000))
+- **deps-dev:** bump electron from 18.0.1 to 18.2.4 ([a5d67e9](https://github.com/mimshwright/pixi-tagged-text/commit/a5d67e9a738d75e03ec3df440edd8bc8edd90ec4))
+- **deps-dev:** bump fs-extra from 10.0.1 to 10.1.0 ([5a23a34](https://github.com/mimshwright/pixi-tagged-text/commit/5a23a3413d18caa2468bd7bd7d1292d59a5f7a86))
+- **deps-dev:** bump husky from 7.0.4 to 8.0.1 ([c75d5bd](https://github.com/mimshwright/pixi-tagged-text/commit/c75d5bd72fa6837d5bfeb8badc0a22919bfb942d))
+- **deps-dev:** bump jest-canvas-mock from 2.3.1 to 2.4.0 ([8744dad](https://github.com/mimshwright/pixi-tagged-text/commit/8744dad2724c70d6da2ce0efb9d73f4d21a4e0ec))
+- **deps-dev:** bump microbundle from 0.14.2 to 0.15.0 ([9f6abe8](https://github.com/mimshwright/pixi-tagged-text/commit/9f6abe85ef5a2807a43359b1a71135a5312eff96))
+- **deps-dev:** bump typescript from 4.6.3 to 4.6.4 ([321f4a0](https://github.com/mimshwright/pixi-tagged-text/commit/321f4a0e7e885f68cb1d1770f45be3088fa2c9a7))
+- **deps:** bump convict from 6.2.1 to 6.2.3 ([7d06981](https://github.com/mimshwright/pixi-tagged-text/commit/7d06981663684237331459637b92919e1c1e2851))
+- **deps:** bump ejs from 3.1.6 to 3.1.7 ([04fb6b5](https://github.com/mimshwright/pixi-tagged-text/commit/04fb6b5f5fd14c535f315a75777ae7cbdb073480))
 
 ## [3.7.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.6.1...v3.7.0) (2022-05-26)
 
