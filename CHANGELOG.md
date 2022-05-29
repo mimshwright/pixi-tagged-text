@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.4](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.3...v3.7.4) (2022-05-29)
+
+### Chore
+
+- **republish:** 3.7.3 may have been corrupted during build. Please use this instead ([75911fb](https://github.com/mimshwright/pixi-tagged-text/commit/75911fb574be948d5094df95262de5df061ddb93))
+
 ### [3.7.3](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.2...v3.7.3) (2022-05-29)
 
 **WARNING: THIS RELEASE MAY BE CORRUPTED. USE 3.7.4**
