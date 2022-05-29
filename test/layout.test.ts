@@ -1346,6 +1346,69 @@ line5</negative>`;
           distanceBetweenNormalLines - 10
         );
       });
+
+      describe('Issue 235 - When paragraphSpacing is applied, text and icons on the first line with valign other than "baseline" are not positioned correctly.', () => {
+        const text = `line0
+line1 <middle>goes</middle> <top>on</top> <bot>until</bot> it wraps <middle>to</middle> <top>line2</top> <bot>dude</bot>`; // wrap happens between "it" and "wraps"
+        const styles: TextStyleSet = {
+          default: { ...stylesControl.default, paragraphSpacing: 20 },
+          middle: { valign: "middle" },
+          top: { valign: "top" },
+          bot: { valign: "bottom" },
+        };
+
+        const tagTokens = textToTags(text, Object.keys(styles));
+        const styleTokens = tagsToStyles(tagTokens, styles);
+        const tokens = layout.calculateFinalTokens(styleTokens);
+        const [, line1, line2] = tokens;
+
+        const firstLineNormal = line1[0][0];
+        const firstLineMiddle = line1[2][0];
+        const firstLineTop = line1[4][0];
+        const firstLineBot = line1[6][0];
+        const secondLineNormal = line2[0][0];
+        const secondLineMiddle = line2[2][0];
+        const secondLineTop = line2[4][0];
+        const secondLineBot = line2[6][0];
+
+        test("tokens match up to the content we expect", () => {
+          expect(firstLineNormal.content).toBe("line1");
+          expect(firstLineMiddle.content).toBe("goes");
+          expect(firstLineTop.content).toBe("on");
+          expect(firstLineBot.content).toBe("until");
+          expect(secondLineNormal.content).toBe("wraps");
+          expect(secondLineMiddle.content).toBe("to");
+          expect(secondLineTop.content).toBe("line2");
+          expect(secondLineBot.content).toBe("dude");
+        });
+
+        it("valign shouldn't affect the line positioning. ", () => {
+          expect(yOf(line1)).toBe(lineSpacing + 20);
+          expect(yOf(line2)).toBe(lineSpacing * 2 + 20);
+        });
+
+        it("Should position middle aligned text the same regardless of whether paragraphSpacing is applied to the line.", () => {
+          const firstLineMiddleYDifference =
+            firstLineNormal.bounds.y - firstLineMiddle.bounds.y;
+          const secondLineMiddleYDifference =
+            secondLineNormal.bounds.y - secondLineMiddle.bounds.y;
+          expect(firstLineMiddleYDifference).toBe(secondLineMiddleYDifference);
+        });
+        it("Should position top aligned text the same regardless of whether paragraphSpacing is applied to the line.", () => {
+          const firstLineTopYDifference =
+            firstLineNormal.bounds.y - firstLineTop.bounds.y;
+          const secondLineTopYDifference =
+            secondLineNormal.bounds.y - secondLineTop.bounds.y;
+          expect(firstLineTopYDifference).toBe(secondLineTopYDifference);
+        });
+        it("Should position bottom aligned text the same regardless of whether paragraphSpacing is applied to the line.", () => {
+          const firstLineBotYDifference =
+            firstLineNormal.bounds.y - firstLineBot.bounds.y;
+          const secondLineBotYDifference =
+            secondLineNormal.bounds.y - secondLineBot.bounds.y;
+          expect(firstLineBotYDifference).toBe(secondLineBotYDifference);
+        });
+      });
     });
 
     describe("letterSpacing", () => {

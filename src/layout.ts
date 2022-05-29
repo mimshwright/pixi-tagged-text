@@ -349,6 +349,7 @@ export const verticalAlignInLines = (
     let tallestHeight = (tallestToken.bounds?.height ?? 0) + paragraphModifier;
     let tallestAscent =
       (tallestToken.fontProperties?.ascent ?? 0) + paragraphModifier;
+    const valignParagraphModifier = paragraphModifier;
     paragraphModifier = 0;
 
     const lastToken = line[line.length - 1][0];
@@ -390,22 +391,24 @@ export const verticalAlignInLines = (
           continue;
         }
 
-        let newY = 0;
+        // Every valignment starts at the previous line bottom.
+        let newY = previousLineBottom;
         switch (valign) {
           case "bottom":
-            newY = previousLineBottom + tallestHeight - height;
+            newY += tallestHeight - height;
             break;
           case "middle":
-            newY = previousLineBottom + (tallestHeight - height) / 2;
+            // Need to account for how paragraph spacing affects the middle positioning.
+            newY += (tallestHeight + valignParagraphModifier - height) / 2;
             break;
           case "top":
-            newY = previousLineBottom;
+            // Normally the change would be 0px but we need to account for paragraph spacing.
+            newY += valignParagraphModifier;
             break;
           case "baseline":
           default:
-            newY = previousLineBottom + tallestAscent - ascent;
+            newY += tallestAscent - ascent;
         }
-
         newBounds.y = newY;
 
         const newToken = {
