@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.3](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.2...v3.7.3) (2022-05-29)
+
+### Bug Fixes
+
+- **valing:** fixed issue where valign and paragraphSpacing didn't work together ([7a4534b](https://github.com/mimshwright/pixi-tagged-text/commit/7a4534b84a95edb2fd525d72ef9dfe8acefb0769)), closes [#235](https://github.com/mimshwright/pixi-tagged-text/issues/235)
+
 ### [3.7.2](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.1...v3.7.2) (2022-05-27)
 
 ### Chore
