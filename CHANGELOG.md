@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.5](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.4...v3.7.5) (2022-06-13)
+
+### Bug Fixes
+
+- **styles:** fixed issue with attribute values that contain spaces ([a0c3e67](https://github.com/mimshwright/pixi-tagged-text/commit/a0c3e6728c713a7e9792ca932574943c49f72d96)), closes [#258](https://github.com/mimshwright/pixi-tagged-text/issues/258)
+
+### Chore
+
+- **deps-dev:** bump nth-check from 2.0.1 to 2.1.1 ([cc53290](https://github.com/mimshwright/pixi-tagged-text/commit/cc53290fd7a7924015aafcc02c45025fd912e9fd))
+- **deps-dev:** bump standard-version from 9.3.2 to 9.5.0 ([5bd0a53](https://github.com/mimshwright/pixi-tagged-text/commit/5bd0a5372301c66fd86adc1c7648f594b9924fe4))
+- **deps:** bump async from 2.6.3 to 2.6.4 ([34c6522](https://github.com/mimshwright/pixi-tagged-text/commit/34c652238599f8129f8c932f87b588c0e55719e2))
+
 ### [3.7.4](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.3...v3.7.4) (2022-05-29)
 
 ### Chore
