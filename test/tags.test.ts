@@ -205,7 +205,17 @@ describe("tags module", () => {
         foo: "bar",
         bar: "baz",
       });
-      expect(tags.parseAttributes("foo=`bar`")).toMatchObject({});
+      expect(() => {
+        tags.parseAttributes("foo=`bar`");
+      }).toThrow();
+    });
+    it("Should handle space within the value of the attribute (#258)", () => {
+      expect(() => {
+        tags.parseAttributes(`fontFamily="Times New Roman"`);
+      }).not.toThrow();
+      expect(
+        tags.parseAttributes(`fontFamily="Times New Roman"`)
+      ).toMatchObject({ fontFamily: "Times New Roman" });
     });
 
     // fixme

@@ -75,7 +75,7 @@
     "prepare": "install-peers && husky install",
     "dev": "microbundle watch -f umd --name TaggedText --external 'pixi.js' --globals 'pixi.js'=PIXI",
     "test": "jest",
-    "test:watch": "test --watch",
+    "test:watch": "jest --watch",
     "demo": "npm run build && http-server . --port 8888 && opener http://localhost:8888/demo/index.html",
     "build": "microbundle --name TaggedText --external 'pixi.js' --globals  'pixi.js'=PIXI",
     "lint:eslint": "eslint ./src/**/*.ts",

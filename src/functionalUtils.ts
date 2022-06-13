@@ -64,6 +64,7 @@ export const mapProp =
 export const flatReduce =
   <T, U>(f: (acc: U, t: T) => U, acc: U) =>
   (nested: Nested<T>): U =>
+    // @ts-ignore-next-line
     [nested].flat(255).reduce(f, acc);
 
 type FlatReduceRetrun<T, U> = (nested: Nested<T>) => U;

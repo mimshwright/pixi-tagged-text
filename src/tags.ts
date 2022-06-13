@@ -70,13 +70,18 @@ export const parseAttributes = (attributesString = ""): AttributesList => {
     return {};
   }
 
-  const attributes = attributesString.trim().split(/\s+/);
+  const attributeMatch = /[a-zA-Z][a-zA-Z0-9]*=('|")[^'"]*('|")/g;
 
-  return attributes.reduce((obj: AttributesList, attribute: string) => {
+  const attributes = attributesString.trim().match(attributeMatch);
+  if (attributes === null) {
+    throw new Error('Invalid attributes string: "' + attributesString + '"');
+  }
+
+  return [...attributes].reduce((obj: AttributesList, attribute: string) => {
     const attributePair = attribute.split("=");
     const name = attributePair[0].trim();
     const valueStr: string = attributePair[1]
-      .substr(1, attributePair[1].length - 2)
+      .substring(1, attributePair[1].length - 1)
       .trim();
 
     obj[name] = valueStr;

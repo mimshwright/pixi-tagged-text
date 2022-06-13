@@ -969,6 +969,28 @@ Line 4`);
     });
   });
 
+  describe("attributes", () => {
+    it("Should allow attributes on tags.", () => {
+      const t = new TaggedText(`<b fontWeight="normal">Test</b>`, style);
+      expect(t.tokens[0][0][0].style.fontWeight).toEqual("normal");
+    });
+    it("Should allow spaces in attributes.", () => {
+      const control = new TaggedText(`<times>Test</times>`, {
+        times: { fontFamily: "Times New Roman" },
+      });
+      const t = new TaggedText(
+        `<times fontFamily="Times New Roman">Test</times>`,
+        {
+          times: { fontFamily: "Arial" },
+        }
+      );
+      expect(control.tokens[0][0][0].style.fontFamily).toEqual(
+        "Times New Roman"
+      );
+      expect(t.tokens[0][0][0].style.fontFamily).toEqual("Times New Roman");
+    });
+  });
+
   describe("update()", () => {
     const t = new TaggedText(`<b>Test</b>`, style);
     it("Should render the text as pixi text elements.", () => {
