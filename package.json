@@ -51,7 +51,7 @@
     "canvas": "^2.9.0",
     "commitizen": "^4.2.4",
     "cz-conventional-changelog": "3.3.0",
-    "electron": "^19.0.1",
+    "electron": "^20.1.0",
     "eslint": "^7.26.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
