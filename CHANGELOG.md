@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.6](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.5...v3.7.6) (2022-10-25)
+
+### Chore
+
+- **deps-dev:** bump eslint-plugin-prettier from 4.0.0 to 4.2.1 ([9bf4253](https://github.com/mimshwright/pixi-tagged-text/commit/9bf4253bce40902716eec210fb3c6531ead3808b))
+
+### Tests
+
+- **taggedtext:** fixed a platform-specific pixel size test that broke after upgrading ([f74f723](https://github.com/mimshwright/pixi-tagged-text/commit/f74f723db205bb941a16a189cdfd934863284f48))
+
 ### [3.7.5](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.4...v3.7.5) (2022-06-13)
 
 ### Bug Fixes
