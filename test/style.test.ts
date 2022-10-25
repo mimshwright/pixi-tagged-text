@@ -99,6 +99,11 @@ describe("style module", () => {
         style.getStyleForTag("em", styles, { fontStyle: "normal" })
       ).toMatchObject({ fontStyle: "normal" });
     });
+    it("Should return undefined if the tag is empty or undefined.", () => {
+      expect(style.getStyleForTag("em", {})).toBeUndefined();
+      expect(style.getStyleForTag("", styles)).toBeUndefined();
+      expect(style.getStyleForTag("em", { em: {} })).toBeUndefined();
+    });
   });
 
   describe("getStyleForTags()", () => {

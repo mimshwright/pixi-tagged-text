@@ -1,3 +1,4 @@
+import { expectToBeBetween } from "./support/testUtil";
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
@@ -1237,12 +1238,11 @@ Line 4`);
       });
       it("big tokens is 10x size.", () => {
         expect(bigField.text).toBe("big");
-        expect(bigField.height).toBe(289);
+        expectToBeBetween(bigField.height, 288, 289);
       });
       it("small tokens is 1/10x size.", () => {
         expect(smallField.text).toBe("small");
-        expect(smallField.height).toBeGreaterThanOrEqual(3);
-        expect(smallField.height).toBeLessThanOrEqual(4);
+        expectToBeBetween(smallField.height, 3, 4);
       });
     });
 
