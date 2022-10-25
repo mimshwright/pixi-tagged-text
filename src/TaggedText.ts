@@ -34,6 +34,7 @@ import { calculateFinalTokens, getBoundsNested } from "./layout";
 import { capitalize } from "./stringUtil";
 import { fontSizeStringToNumber } from "./pixiUtils";
 import { logWarning as _logWarning } from "./errorMessaging";
+import { ILRUCache, LRUCache } from "./LRUCache";
 
 export const DEFAULT_OPTIONS: TaggedTextOptions = {
   debug: false,
@@ -124,6 +125,8 @@ export default class TaggedText extends PIXI.Sprite {
   public set text(text: string) {
     this.setText(text);
   }
+
+  private _boundsLRUCache: ILRUCache<string, PIXI.Rectangle> | undefined;
 
   /**
    * Setter for text that allows you to override the default for skipping the update.
@@ -334,8 +337,7 @@ export default class TaggedText extends PIXI.Sprite {
 
     const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
     this._options = mergedOptions;
-
-    tagStyles = { default: {}, ...tagStyles };
+    this.tagStyles = { default: {}, ...tagStyles };
 
     if (this.options.wrapEmoji) {
       tagStyles[EMOJI_TAG] = { fontFamily: "sans-serif" };
@@ -349,6 +351,10 @@ export default class TaggedText extends PIXI.Sprite {
     }
 
     this.text = text;
+    this._boundsLRUCache =
+      this.options.cacheCapacity != undefined && this.options.cacheCapacity > 0
+        ? new LRUCache<string, PIXI.Rectangle>(this.options.cacheCapacity)
+        : undefined;
   }
 
   public destroyImgMap(): void {
@@ -387,6 +393,7 @@ export default class TaggedText extends PIXI.Sprite {
     this._options.skipUpdates = true;
     this._options.skipDraw = true;
     this._options = {};
+    this._boundsLRUCache?.clear();
   }
 
   /**
@@ -561,7 +568,8 @@ export default class TaggedText extends PIXI.Sprite {
       styledTokens,
       splitStyle,
       scaleIcons,
-      this.options.adjustFontBaseline
+      this.options.adjustFontBaseline,
+      this._boundsLRUCache
     );
 
     this._tokens = newFinalTokens;
