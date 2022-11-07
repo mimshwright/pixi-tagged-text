@@ -7,7 +7,6 @@ import {
   TextStyleSet,
   IFontMetrics,
   IMG_REFERENCE_PROPERTY,
-  IMG_DISPLAY_PROPERTY,
   ImageMap,
   TextToken,
   TagToken,
@@ -29,17 +28,7 @@ import {
 } from "./types";
 import { cloneSprite } from "./pixiUtils";
 import * as PIXI from "pixi.js";
-
-export const DEFAULT_STYLE: TextStyleExtended = {
-  valign: "baseline",
-  dropShadowColor: 0x000000,
-  fill: 0x000000,
-  fontSize: 26,
-  stroke: 0x000000,
-  [IMG_DISPLAY_PROPERTY]: "inline",
-  wordWrap: true,
-  wordWrapWidth: 500,
-};
+import DEFAULT_STYLE from "./defaultStyle";
 
 /**
  * Combine 2 styles into one.
@@ -101,8 +90,8 @@ export const getStyleForTag = (
   tagStyles: TextStyleSet,
   attributes: AttributesList = {}
 ): TextStyleExtended | undefined => {
-  const style = injectAttributes(attributes, tagStyles[tagName]);
-  if (style && Object.values(style).length === 0) return undefined;
+  const style = injectAttributes(attributes, tagStyles[tagName]) ?? {};
+  if (Object.values(style).length === 0) return undefined;
   return style;
 };
 

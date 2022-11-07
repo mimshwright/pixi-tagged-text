@@ -8,6 +8,8 @@ import {
   isDefined,
   assoc,
   flatEvery,
+  mapProp,
+  countIf,
 } from "../src/functionalUtils";
 import * as PIXI from "pixi.js";
 
@@ -113,6 +115,23 @@ describe("functional util", () => {
     });
   });
 
+  describe("mapProp()", () => {
+    it("Should apply a function to a specific property of an object.", () => {
+      interface HelloWorld {
+        greet: string;
+        who: string;
+      }
+      const upper = (s: string): string => s.toUpperCase();
+      const makeWhoUppercase = mapProp<string, HelloWorld>("who")(upper);
+      expect(
+        makeWhoUppercase({ greet: "Hello,", who: "world!" })
+      ).toMatchObject({
+        greet: "Hello,",
+        who: "WORLD!",
+      });
+    });
+  });
+
   describe("flatReduce()", () => {
     it("Should run reduce on a flatted nested array.", () => {
       const nested: Nested<number> = [
@@ -156,6 +175,19 @@ describe("functional util", () => {
     it("Should work on nested arrays.", () => {
       expect(isWhitespaceFlat(whitespaceNested)).toBeTruthy();
       expect(isWhitespaceFlat(notWhitespaceNested)).toBeFalsy();
+    });
+  });
+
+  describe("countIf()", () => {
+    it("Should take a predicate and a list and return a number representing the items that were true when the predicate is applied. ", () => {
+      const list = [1, 2, 3, 4, 5, 6, 7, 8];
+      const gt5 = (a: number) => a > 5;
+      const isEven = (a: number) => a % 2 === 0;
+      const alwaysFalse = (_: number) => false;
+
+      expect(countIf(gt5)(list)).toEqual(3);
+      expect(countIf(isEven)(list)).toEqual(4);
+      expect(countIf(alwaysFalse)(list)).toEqual(0);
     });
   });
 

@@ -15,3 +15,4 @@ const log =
   };
 
 export const logWarning = log("warning");
+export const logError = log("error");

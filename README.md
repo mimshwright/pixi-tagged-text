@@ -192,7 +192,7 @@ while (t.untaggedText.length <= 500) {
 }
 
 // Normally, update() will draw() also, but we've disabled that.
-// t.tokens will be updated to match the new text but it will not appear on the screen.
+// t.tokens will be up dated to match the new text but it will not appear on the screen.
 t.update();
 t.textContainer.length; // 0 - text fields never got created.
 

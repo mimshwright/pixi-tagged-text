@@ -77,10 +77,49 @@ describe("pixiUtils", () => {
           pixiUtils.getFontPropertiesOfText(trickyText, true);
         }).not.toThrowError();
       });
+      it("Should also throw if the fontSize is not readable.", () => {
+        expect(() => {
+          pixiUtils.getFontPropertiesOfText(
+            new PIXI.Text("Poop", {
+              fontSize: "WUT?",
+              fontFamily: "arial",
+            }),
+            false
+          );
+        }).toThrowError();
+        expect(() => {
+          pixiUtils.getFontPropertiesOfText(
+            new PIXI.Text("NoProps", { fontSize: undefined }),
+            false
+          );
+        }).toThrowError();
+      });
     });
   });
 
-  describe("fontSizeStringToNumber", () => {
+  describe("addChildrenToContainer()", () => {
+    describe("Adds each of an array of display objects to a container", () => {
+      const container = new PIXI.Container();
+      const child1 = new PIXI.Sprite();
+      const child2 = new PIXI.Sprite();
+      const child3 = new PIXI.Sprite();
+      const children = [child1, child2, child3];
+
+      it("should add each of the children to the container", () => {
+        pixiUtils.addChildrenToContainer(children, container);
+        expect(container.children.length).toBe(3);
+      });
+
+      it("should add each of the children to the container in the order they are passed in", () => {
+        pixiUtils.addChildrenToContainer(children, container);
+        expect(container.children[0]).toBe(child1);
+        expect(container.children[1]).toBe(child2);
+        expect(container.children[2]).toBe(child3);
+      });
+    });
+  });
+
+  describe("fontSizeStringToNumber()", () => {
     describe("Converts different text based font sizes to a pixel number. everything is based on 16px as the base.", () => {
       it("Converts rems and ems to px", () => {
         expect(pixiUtils.fontSizeStringToNumber("1rem")).toBeCloseTo(16);
@@ -98,6 +137,9 @@ describe("pixiUtils", () => {
       it("Converts px to px", () => {
         expect(pixiUtils.fontSizeStringToNumber("16.0px")).toBe(16.0);
         expect(pixiUtils.fontSizeStringToNumber("100px")).toBe(100);
+      });
+      it("Returns NaN if the input evaluates to NaN", () => {
+        expect(pixiUtils.fontSizeStringToNumber("Frank")).toBeNaN();
       });
     });
   });

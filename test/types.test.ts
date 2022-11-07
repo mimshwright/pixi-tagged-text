@@ -7,11 +7,18 @@ import {
   isWhitespaceToken,
   isNewline,
   isNewlineToken,
-  TextFinalToken,
-  SpriteFinalToken,
+  TextSegmentToken,
+  SpriteSegmentToken,
   percentStringToNumber,
   isPercent,
   measurementValueToComponents,
+  isPixel,
+  isEm,
+  pixelToNumber,
+  isImageElement,
+  isBaseTexture,
+  isTextureSource,
+  isSpriteSource,
 } from "./../src/types";
 
 describe("Type validation", () => {
@@ -26,14 +33,14 @@ describe("Type validation", () => {
     style: {},
     tags: "img",
     textDecorations: [],
-  } as TextFinalToken;
+  } as TextSegmentToken;
   const spriteToken = {
     content: new PIXI.Sprite(),
     bounds: { ...new PIXI.Rectangle() },
     fontProperties: { ascent: 10, descent: 3, fontSize: 13 },
     style: {},
     tags: "img",
-  } as SpriteFinalToken;
+  } as SpriteSegmentToken;
 
   const spaceToken = { ...textToken, content: " " };
   const multispaceToken = { ...textToken, content: " " };
@@ -111,6 +118,7 @@ describe("Type validation", () => {
       expect(isNewlineToken(newlineToken)).toBeTruthy();
     });
     it("Should return false if the token is not.", () => {
+      expect(isNewlineToken(undefined)).toBeFalsy();
       expect(isNewlineToken(textToken)).toBeFalsy();
       expect(isNewlineToken(spriteToken)).toBeFalsy();
       expect(isNewlineToken(spaceToken)).toBeFalsy();
@@ -133,6 +141,35 @@ describe("Type validation", () => {
     it("Should work recursively.", () => {
       expect(isSpriteToken([[spriteToken], spriteToken])).toBeTruthy();
       expect(isSpriteToken([spriteToken, textToken])).toBeFalsy();
+    });
+  });
+
+  describe("sprite sources", () => {
+    describe("isImageElement()", () => {
+      it("Should return true if the object is an image element.", () => {
+        expect(isImageElement(new Image())).toBeTruthy();
+      });
+    });
+    describe("isBaseTexture()", () => {
+      it("Should return true if the object is a pixi base texture", () => {
+        expect(isBaseTexture(new PIXI.BaseTexture())).toBeTruthy();
+      });
+    });
+    describe("isTextureSource()", () => {
+      it("Should return true if the object can be used as the source for a texture.", () => {
+        expect(isTextureSource(new Image())).toBeTruthy();
+        expect(isTextureSource(new PIXI.BaseTexture())).toBeTruthy();
+      });
+    });
+    describe("isSpriteSource()", () => {
+      it("Should return true if the object is any kind of sprite source.", () => {
+        expect(isSpriteSource("my url")).toBeTruthy();
+        expect(
+          isSpriteSource(new PIXI.Texture(new PIXI.BaseTexture()))
+        ).toBeTruthy();
+        expect(isSpriteSource(document.createElement("canvas"))).toBeTruthy();
+        expect(isSpriteSource(document.createElement("video"))).toBeTruthy();
+      });
     });
   });
 
@@ -173,6 +210,48 @@ describe("Type validation", () => {
       expect(isPercent("100%px")).toBeFalsy();
     });
   });
+  describe("isPixel()", () => {
+    it("Should return true if the input is a pixel.", () => {
+      expect(isPixel("0px")).toBeTruthy();
+      expect(isPixel("50px")).toBeTruthy();
+    });
+    it("Should ignore extra whitespace", () => {
+      expect(isPixel(" 50px ")).toBeTruthy();
+    });
+    it("Should return false if the input is not a pixel.", () => {
+      expect(isPixel("50")).toBeFalsy();
+      expect(isPixel("50%")).toBeFalsy();
+      expect(isPixel("px100")).toBeFalsy();
+      expect(isPixel("100px%")).toBeFalsy();
+    });
+  });
+  describe("isEm()", () => {
+    it("Should return true if the input unit is em.", () => {
+      expect(isEm("0em")).toBeTruthy();
+      expect(isEm("50em")).toBeTruthy();
+    });
+    it("Should ignore extra whitespace", () => {
+      expect(isEm(" 50em ")).toBeTruthy();
+    });
+    it("Should return false if the input is not ems.", () => {
+      expect(isEm("50")).toBeFalsy();
+      expect(isEm("50%")).toBeFalsy();
+      expect(isEm("em100")).toBeFalsy();
+    });
+  });
+
+  describe("pixelToNumber()", () => {
+    it("Should convert pixel values to numbers", () => {
+      expect(pixelToNumber("100px")).toEqual(100);
+      expect(pixelToNumber("0px")).toEqual(0);
+    });
+    it("Should ignore extra whitespace", () => {
+      expect(pixelToNumber("  100px  ")).toEqual(100);
+    });
+    it("Should not do any checking", () => {
+      expect(pixelToNumber("100")).toEqual(1);
+    });
+  });
 
   describe("percentStringToNumber()", () => {
     it("Should return the percentage as a number.", () => {
@@ -194,6 +273,11 @@ describe("Type validation", () => {
   });
 
   describe("measurementValueToComponents()", () => {
+    it("Should throw when the first argument is undefined.", () => {
+      expect(() => {
+        measurementValueToComponents(undefined as unknown as number);
+      }).toThrow();
+    });
     it("Should return the measurement value as a number and a unit.", () => {
       expect(measurementValueToComponents("50px")).toMatchObject({
         value: 50,

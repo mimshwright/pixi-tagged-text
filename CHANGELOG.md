@@ -225,10 +225,14 @@ Since several patches related to the changelog and dependabot updates were relea
 
 ## [2.5.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.4.0...v2.5.0) (2021-12-06)
 
-- Feat: #174 - Added paragraph spacing
+### Features
 
-- chore(deps): Updated node version
-- chore(deps-dev): upgraded prettier, jsdom, @types/jest, typescript, microbundle
+- **styles** - Added paragraph spacing - closes [#174](https://github.com/mimshwright/pixi-tagged-text/issues/174)
+
+### Chore
+
+- **deps**: Updated node version
+- **deps-dev**: upgraded prettier, jsdom, @types/jest, typescript, microbundle
 
 ## [2.4.0](https://github.com/mimshwright/pixi-tagged-text/compare/v2.3.6...v2.4.0) (2021-11-17)
 
