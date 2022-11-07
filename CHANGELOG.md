@@ -10,10 +10,37 @@ All notable changes to this project will be documented in this file. See [standa
 - **deps-dev:** bump electron from 21.2.0 to 21.2.2 ([a6a5281](https://github.com/mimshwright/pixi-tagged-text/commit/a6a5281e3a1375a6e6085c58ee299f5c51df8985))
 - **deps-dev:** bump jsdom from 19.0.0 to 20.0.2 ([7912d91](https://github.com/mimshwright/pixi-tagged-text/commit/7912d914846c6c623aa86d901673b92b4e0c1a86))
 - **deps-dev:** bump microbundle from 0.15.0 to 0.15.1 ([2f4a6b3](https://github.com/mimshwright/pixi-tagged-text/commit/2f4a6b3addb4ce841d2d2923d6ca149209aa8187))
+- **config:** cleaning up some small things in config files
 
 ### Tests
 
 - **types:** improved coverage for types ([35078e8](https://github.com/mimshwright/pixi-tagged-text/commit/35078e859f4c740e69b034f95d6661c7f9879220))
+- **layout:** improved test coverage for layout
+- **styles:** improved test coverage for styles
+- **functionalutils:** improved test coverage for functionalUtils
+- **test:** fixed an issue with canvas package for testing
+- **stringutil:** improved test coverage and simplified function
+- **errorMessaging:** added test coverage for errorMessaging
+- **pixiUtils:** added additional test coverage for pixiutils
+
+### Build
+
+- **eslint:** added exception for unused vars starting with underscore
+- **build:** added coverage script
+- **deps:** updated browser matrix
+
+### Fix
+
+- **tests:** Fixed a reference to a renamed function in tests.
+
+### Refactor
+
+- **general:** separated default options and styles and renamed some token types. Added even more detailed description to the types of tokens.
+
+### Docs
+
+- **docs:** added comments and reorganized.
+- **readme:** tweak to readme
 
 ### [3.7.6](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.5...v3.7.6) (2022-10-25)
 
