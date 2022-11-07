@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.8.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.6...v3.8.0) (2022-11-07)
+
+### Chore
+
+- **deps-dev:** bump canvas from 2.10.1 to 2.10.2 ([97769a4](https://github.com/mimshwright/pixi-tagged-text/commit/97769a4b95bfe569c6d95829f8e0ea4606c17de1))
+- **deps-dev:** bump electron from 21.2.0 to 21.2.2 ([a6a5281](https://github.com/mimshwright/pixi-tagged-text/commit/a6a5281e3a1375a6e6085c58ee299f5c51df8985))
+- **deps-dev:** bump jsdom from 19.0.0 to 20.0.2 ([7912d91](https://github.com/mimshwright/pixi-tagged-text/commit/7912d914846c6c623aa86d901673b92b4e0c1a86))
+- **deps-dev:** bump microbundle from 0.15.0 to 0.15.1 ([2f4a6b3](https://github.com/mimshwright/pixi-tagged-text/commit/2f4a6b3addb4ce841d2d2923d6ca149209aa8187))
+
+### Tests
+
+- **types:** improved coverage for types ([35078e8](https://github.com/mimshwright/pixi-tagged-text/commit/35078e859f4c740e69b034f95d6661c7f9879220))
+
 ### [3.7.6](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.5...v3.7.6) (2022-10-25)
 
 ### Chore
