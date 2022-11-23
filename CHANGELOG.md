@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.8.0...v3.8.1) (2022-11-23)
+
+### Chore
+
+- **deps-dev:** bump husky from 8.0.1 to 8.0.2 ([6abb03e](https://github.com/mimshwright/pixi-tagged-text/commit/6abb03e9b2e8d5c2b21ac4529abca19b79d9b047))
+- **deps-dev:** bump jsdom from 20.0.2 to 20.0.3 ([23b2676](https://github.com/mimshwright/pixi-tagged-text/commit/23b26762f3ce0579bf522399b9441bd2c81b9293))
+- **deps-dev:** bump typescript from 4.8.4 to 4.9.3 ([48db222](https://github.com/mimshwright/pixi-tagged-text/commit/48db2220ec4a5f8ea69928ee6bf2189671eee8ac))
+- **deps:** bump loader-utils from 3.2.0 to 3.2.1 ([45e0d61](https://github.com/mimshwright/pixi-tagged-text/commit/45e0d61a4d22c766af2dad1393154a13fe804b7b))
+- **deps:** updated dependencies ([2145784](https://github.com/mimshwright/pixi-tagged-text/commit/2145784c038f41043c2ab3c44693ce0b6ca8c6c0))
+
 ## [3.8.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.7.6...v3.8.0) (2022-11-07)
 
 ### Chore
