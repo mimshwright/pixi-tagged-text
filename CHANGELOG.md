@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [3.9.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.9.0...v3.9.1) (2022-11-30)
 
+- **pixi:** Made some changes to the code that will make the codebase more compatible with Pixi v7.
+
 ## [3.9.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.8.1...v3.9.0) (2022-11-30)
 
 ### Features
