@@ -19,6 +19,7 @@ import {
   TextStyleSet,
   ErrorMessage,
 } from "../src/types";
+import { Graphics } from "pixi.js";
 
 describe("TaggedText", () => {
   const style: TextStyleSet = {
@@ -832,33 +833,60 @@ Line 4`);
         const { textFields } = t;
         expect(textFields[0].children).toHaveLength(1);
         expect(textFields[0].getChildAt(0)).toBeInstanceOf(PIXI.Graphics);
+        expect(textFields[0].getChildAt(0)).toBe(t.decorations[0]);
       });
 
       describe("overdrawDecorations", () => {
-        const overValue = 3;
-        const underValue = -overValue;
-        const overdraw = new TaggedText(str, style, {
-          ...opt,
-          overdrawDecorations: overValue,
-        });
-        const underdraw = new TaggedText(str, style, {
-          ...opt,
-          overdrawDecorations: underValue,
+        const control = t.textFields[0].getChildAt(0) as Graphics;
+        const { x: controlX, width: controlWidth } = control.getBounds();
+
+        test("Check that control values are as expected.", () => {
+          expect(controlX).toBe(0);
+          expect(controlWidth).toBe(107);
         });
 
-        const { x: controlX, width: controlWidth } = t.decorations[0];
+        it("Should use a default value of 0.", () => {
+          expect(t.options.overdrawDecorations).toBe(0);
+        });
 
         it("Should add additional length to the text decorations on either side.", () => {
-          const { x: overX, width: overWidth } = overdraw.decorations[0];
+          const overValue = 3;
 
-          expect(overX - controlX).toBe(-overValue);
+          const overdraw = new TaggedText(str, style, {
+            ...opt,
+            overdrawDecorations: overValue,
+          });
+
+          // confirm it was set on the object.
+          expect(overdraw.options.overdrawDecorations).toBe(3);
+
+          const { x: overX, width: overWidth } =
+            overdraw.decorations[0].getBounds();
+
+          expect(overX).toBe(-overValue);
           expect(overWidth - controlWidth).toBe(2 * overValue);
         });
         it("Should allow negative values.", () => {
-          const { x: underX, width: underWidth } = underdraw.decorations[0];
+          const underValue = -3;
+          const underdraw = new TaggedText(str, style, {
+            ...opt,
+            overdrawDecorations: underValue,
+          });
+          const { x: underX, width: underWidth } =
+            underdraw.decorations[0].getBounds();
 
           expect(underX - controlX).toBe(-underValue);
           expect(underWidth - controlWidth).toBe(2 * underValue);
+        });
+
+        it("Should not allow the width of the decoration to be below 0", () => {
+          const superUnderValue = -100;
+          const superUnderdraw = new TaggedText(str, style, {
+            ...opt,
+            overdrawDecorations: superUnderValue,
+          });
+          const { width: superUnderWidth } = superUnderdraw.decorations[0];
+          expect(superUnderWidth).toBe(0);
         });
       });
 

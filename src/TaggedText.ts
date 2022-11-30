@@ -654,6 +654,7 @@ export default class TaggedText extends PIXI.Sprite {
   private createDrawingForTextDecoration(
     textDecoration: TextDecorationMetrics
   ): PIXI.Graphics {
+    const { overdrawDecorations: overdraw = 0 } = this.options;
     const { bounds } = textDecoration;
     let { color } = textDecoration;
     const drawing = new PIXI.Graphics();
@@ -670,9 +671,15 @@ export default class TaggedText extends PIXI.Sprite {
       }
     }
 
+    // the min , max here prevents the overdraw from producing a negative width drawing.
+    const { y, height } = bounds;
+    const midpoint = bounds.x + bounds.width / 2;
+    const x = Math.min(bounds.x - overdraw, midpoint);
+    const width = Math.max(bounds.width + overdraw * 2, 0);
+
     drawing
       .beginFill(color as number)
-      .drawRect(bounds.x, bounds.y, bounds.width, bounds.height)
+      .drawRect(x, y, width, height)
       .endFill();
 
     return drawing;
