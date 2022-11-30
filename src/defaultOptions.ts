@@ -12,6 +12,7 @@ const DEFAULT_OPTIONS: TaggedTextOptions = {
   wrapEmoji: true,
   errorHandler: undefined,
   supressConsole: false,
+  overdrawDecorations: 0,
 };
 
 export default DEFAULT_OPTIONS;

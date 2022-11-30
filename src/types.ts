@@ -83,6 +83,7 @@ export interface TaggedTextOptions {
   wrapEmoji?: boolean;
   errorHandler?: ErrorHandler;
   supressConsole?: boolean;
+  overdrawDecorations?: number;
 }
 
 ///// STYLE PROPERTIES

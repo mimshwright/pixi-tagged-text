@@ -439,6 +439,8 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
 
             let underline = new TaggedText(underlineText, underlineStyle, {
               drawWhitespace: true,
+              // FIXME: just for testing. Remove!
+              overdrawDecorations: 10,
             });
 
             createDemo("underline", underline);
