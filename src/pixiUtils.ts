@@ -5,7 +5,7 @@ const PX_PER_EM = 16;
 const PX_PER_PERCENT = 16 / 100;
 const PX_PER_PT = 1.3281472327365;
 
-export const measureFont = (context: CanvasRenderingContext2D): IFontMetrics =>
+export const measureFont = (context: { font: string }): IFontMetrics =>
   PIXI.TextMetrics.measureFont(context.font);
 
 export const INITIAL_FONT_PROPS: IFontMetrics = {
