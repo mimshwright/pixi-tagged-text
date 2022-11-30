@@ -19,6 +19,7 @@ import {
   TextStyleSet,
   ErrorMessage,
 } from "../src/types";
+import { Graphics } from "pixi.js";
 
 describe("TaggedText", () => {
   const style: TextStyleSet = {
@@ -482,6 +483,8 @@ describe("TaggedText", () => {
       });
 
       describe("skipUpdates & skipDraw", () => {
+        // See also TaggedText.perf.test.ts
+
         const text = "Test <b>test</b>";
         const control = new TaggedText(text, style);
         const skipUpdates = new TaggedText(text, style, {
@@ -578,55 +581,6 @@ describe("TaggedText", () => {
         });
       });
 
-      const REPS = 50;
-      describe(`performace of skipping draw and updates. Updating string ${REPS} times.`, () => {
-        // Performance
-        const editText = (textField: TaggedText) => {
-          textField.text = "";
-          for (let i = 0; i < REPS; i++) {
-            textField.text += `${i} `;
-          }
-        };
-
-        const control = new TaggedText();
-        const skipDraw = new TaggedText("", {}, { skipDraw: true });
-        const skipUpdates = new TaggedText("", {}, { skipUpdates: true });
-
-        let startTime = new Date().getTime();
-        editText(control);
-        let endTime = new Date().getTime();
-        const timeControl = endTime - startTime;
-
-        startTime = new Date().getTime();
-        editText(skipDraw);
-        skipDraw.draw();
-        endTime = new Date().getTime();
-        const timeSkipDraw = endTime - startTime;
-
-        startTime = new Date().getTime();
-        editText(skipUpdates);
-        skipUpdates.update();
-        endTime = new Date().getTime();
-        const timeSkipUpdates = endTime - startTime;
-
-        // Skipping since actual results will vary.
-        // it(`Default is slow AF! ${timeControl}ms`, () => {
-        //   expect(timeControl).toBeGreaterThanOrEqual(500);
-        // });
-        it(`skipDraw should be faster than default. ${timeSkipDraw}ms`, () => {
-          expect(timeSkipDraw).toBeLessThan(timeControl);
-        });
-        it(`skipUpdates should be faster than control and skipDraw. ${timeSkipUpdates}ms < ${timeSkipDraw}ms < ${timeControl}ms`, () => {
-          expect(timeSkipUpdates).toBeLessThan(timeControl);
-          expect(timeSkipUpdates).toBeLessThan(timeSkipDraw);
-        });
-        // Skipping since actual results will vary.
-        // it(`In fact, skipUpdates it's pretty fast! ${timeSkipUpdates}ms`, () => {
-        //   expect(timeSkipUpdates).toBeLessThan(50);
-        // });
-
-        console.log({ timeControl, timeSkipDraw, timeSkipUpdates });
-      });
       describe("wrapEmoji", () => {
         const control = new TaggedText("test");
         it("Should be true by default", () => {
@@ -795,28 +749,27 @@ Line 4`);
       });
     });
     describe("textDecoration style", () => {
-      const t = new TaggedText(
-        `<u>underline</u>
+      const str = `<u>underline</u>
 <o>overline</o>
 <lt>line-through</lt>
 <u><o>multi</o></u>
-`,
-        {
-          default: {
-            fill: 0x000000,
-          },
-          u: {
-            textDecoration: "underline",
-          },
-          o: {
-            textDecoration: "overline",
-          },
-          lt: {
-            textDecoration: "line-through",
-          },
+`;
+      const style = {
+        default: {
+          fill: 0x000000,
         },
-        { drawWhitespace: true }
-      );
+        u: {
+          textDecoration: "underline",
+        },
+        o: {
+          textDecoration: "overline",
+        },
+        lt: {
+          textDecoration: "line-through",
+        },
+      } as TextStyleSet;
+      const opt = { drawWhitespace: true };
+      const t = new TaggedText(str, style, opt);
 
       it("Should not break the whole TaggedText object", () => {
         expect(t).toBeDefined();
@@ -833,6 +786,83 @@ Line 4`);
         const { textFields } = t;
         expect(textFields[0].children).toHaveLength(1);
         expect(textFields[0].getChildAt(0)).toBeInstanceOf(PIXI.Graphics);
+        expect(textFields[0].getChildAt(0)).toBe(t.decorations[0]);
+      });
+
+      describe("overdrawDecorations", () => {
+        const control = t.textFields[0].getChildAt(0) as Graphics;
+        const { x: controlX, width: controlWidth } = control.getBounds();
+
+        test("Check that control values are as expected.", () => {
+          expect(controlX).toBe(0);
+          expect(controlWidth).toBe(107);
+        });
+
+        it("Should use a default value of 0.", () => {
+          expect(t.options.overdrawDecorations).toBe(0);
+        });
+
+        it("Should add additional length to the text decorations on either side.", () => {
+          const overValue = 3;
+
+          const overdraw = new TaggedText(str, style, {
+            ...opt,
+            overdrawDecorations: overValue,
+          });
+
+          // confirm it was set on the object.
+          expect(overdraw.options.overdrawDecorations).toBe(3);
+
+          const { x: overX, width: overWidth } =
+            overdraw.decorations[0].getBounds();
+
+          expect(overX).toBe(-overValue);
+          expect(overWidth - controlWidth).toBe(2 * overValue);
+        });
+        it("Should allow negative values.", () => {
+          const underValue = -3;
+          const underdraw = new TaggedText(str, style, {
+            ...opt,
+            overdrawDecorations: underValue,
+          });
+          const { x: underX, width: underWidth } =
+            underdraw.decorations[0].getBounds();
+
+          expect(underX - controlX).toBe(-underValue);
+          expect(underWidth - controlWidth).toBe(2 * underValue);
+        });
+
+        it("Should not allow the width of the decoration to be below 0", () => {
+          const superUnderValue = -100;
+          const superUnderdraw = new TaggedText(str, style, {
+            ...opt,
+            overdrawDecorations: superUnderValue,
+          });
+          const { width: superUnderWidth } = superUnderdraw.decorations[0];
+          expect(superUnderWidth).toBe(0);
+        });
+
+        it("Should not affect layout of text.", () => {
+          const str = "<u>0 1 2 3 4 5 6 7 8 9 A B C D E F</u>";
+          const style = {
+            u: {
+              textDecoration: "underline",
+            },
+            default: {
+              wordWrapWidth: 100,
+            },
+          } as TextStyleSet;
+          const a = new TaggedText(str, style);
+          const b = new TaggedText(str, style, { overdrawDecorations: 30 });
+
+          // without overdraw, text wraps to 4 lines
+          expect(a.tokens).toHaveLength(4);
+          expect(a.decorations[0].getBounds().width).toBe(15);
+          // by adding a super wide underline the width would cause it to wrap more
+          // if the underlines affect the width.
+          expect(b.tokens).toHaveLength(4);
+          expect(b.decorations[0].getBounds().width).toBe(75);
+        });
       });
 
       it('Should log an error if you try to use a color name like "red" for the underline.', () => {
@@ -1039,12 +1069,8 @@ Line 4`);
         PIXI.DisplayObject
       );
     });
-    it("Should have a child called decorationContainer that displays the debug info", () => {
+    it("Should have a child called decorationContainer that holds the text decoration graphics", () => {
       expect(t.decorationContainer).toBeInstanceOf(PIXI.Container);
-      // expect(t.decorationContainer?.children.length).toBeGreaterThan(0);
-      // expect(t.decorationContainer?.getChildAt(0)).toBeInstanceOf(
-      // PIXI.Graphics
-      // );
     });
     it("Should have a property textFields that is a list of text fields", () => {
       expect(t.textFields).toBeDefined();
@@ -1057,8 +1083,6 @@ Line 4`);
     });
     it("should have a property decorations that is a list of text decorations (aka underlines)", () => {
       expect(t.decorations).toBeDefined();
-      //   expect(t.decorations).toHaveLength(1);
-      //   expect(t.decorations[0]).toBeInstanceOf(PIXI.Graphics);
     });
     it("Should have a property sprites that is a list of sprites", () => {
       expect(t.sprites).toBeDefined();
@@ -1302,10 +1326,7 @@ Line 4`);
       expect(tt.debugContainer).toBeInstanceOf(PIXI.Container); // The Sprite layer which holds all debug overlay information (if you're using the debug: true setting).
       expect(tt.debugContainer?.children.length).toBeGreaterThanOrEqual(10);
       expect(tt.decorationContainer).toBeInstanceOf(PIXI.Container); // The Sprite layer which holds all text decorations (underlines).
-      // expect(tt.decorationContainer.children.length).toBeGreaterThanOrEqual(10);
       expect(tt.decorations).toBeInstanceOf(Array); // Array of Graphic objects which render the text decorations.
-      // expect(tt.decorations.length).toBeGreaterThanOrEqual(10);
-      // expect(tt.decorations[0]).toBeInstanceOf(PIXI.Graphics);
       expect(tt.textFields).toBeInstanceOf(Array); // An array containing all the text fields generated by draw.
       expect(tt.textFields).toHaveLength(10);
       expect(tt.textFields[0]).toBeInstanceOf(PIXI.Text);

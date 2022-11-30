@@ -401,6 +401,7 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
 
 <code>multiple custom decorations</code>
 <custom>consequuntur odit in excepturi perspiciatis dolores commodi aliquam exercitationem at</custom>`;
+
             const underlineStyle = {
               default: {
                 fontFamily: "Arial",
@@ -438,7 +439,13 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
             };
 
             let underline = new TaggedText(underlineText, underlineStyle, {
+              // When using text decoration, it's recommended you use drawWhitespace: true
+              // so that spaces will have underlines.
               drawWhitespace: true,
+
+              // When overdrawDecorations is set,
+              // the width of the decorations is extended by this amount on either side.
+              overdrawDecorations: 2,
             });
 
             createDemo("underline", underline);
