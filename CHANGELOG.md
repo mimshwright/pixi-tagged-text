@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.9.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.8.1...v3.9.0) (2022-11-30)
+
+### Features
+
+- **decorations:** added overdrawDecorations option ([989da3f](https://github.com/mimshwright/pixi-tagged-text/commit/989da3fd25be77dc2b8e59fecfa8539092d20602)), closes [#288](https://github.com/mimshwright/pixi-tagged-text/issues/288) [#288](https://github.com/mimshwright/pixi-tagged-text/issues/288)
+
 ### [3.8.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.8.0...v3.8.1) (2022-11-23)
 
 ### Chore
