@@ -483,6 +483,8 @@ describe("TaggedText", () => {
       });
 
       describe("skipUpdates & skipDraw", () => {
+        // See also TaggedText.perf.test.ts
+
         const text = "Test <b>test</b>";
         const control = new TaggedText(text, style);
         const skipUpdates = new TaggedText(text, style, {
@@ -579,55 +581,6 @@ describe("TaggedText", () => {
         });
       });
 
-      const REPS = 50;
-      describe(`performace of skipping draw and updates. Updating string ${REPS} times.`, () => {
-        // Performance
-        const editText = (textField: TaggedText) => {
-          textField.text = "";
-          for (let i = 0; i < REPS; i++) {
-            textField.text += `${i} `;
-          }
-        };
-
-        const control = new TaggedText();
-        const skipDraw = new TaggedText("", {}, { skipDraw: true });
-        const skipUpdates = new TaggedText("", {}, { skipUpdates: true });
-
-        let startTime = new Date().getTime();
-        editText(control);
-        let endTime = new Date().getTime();
-        const timeControl = endTime - startTime;
-
-        startTime = new Date().getTime();
-        editText(skipDraw);
-        skipDraw.draw();
-        endTime = new Date().getTime();
-        const timeSkipDraw = endTime - startTime;
-
-        startTime = new Date().getTime();
-        editText(skipUpdates);
-        skipUpdates.update();
-        endTime = new Date().getTime();
-        const timeSkipUpdates = endTime - startTime;
-
-        // Skipping since actual results will vary.
-        // it(`Default is slow AF! ${timeControl}ms`, () => {
-        //   expect(timeControl).toBeGreaterThanOrEqual(500);
-        // });
-        it(`skipDraw should be faster than default. ${timeSkipDraw}ms`, () => {
-          expect(timeSkipDraw).toBeLessThan(timeControl);
-        });
-        it(`skipUpdates should be faster than control and skipDraw. ${timeSkipUpdates}ms < ${timeSkipDraw}ms < ${timeControl}ms`, () => {
-          expect(timeSkipUpdates).toBeLessThan(timeControl);
-          expect(timeSkipUpdates).toBeLessThan(timeSkipDraw);
-        });
-        // Skipping since actual results will vary.
-        // it(`In fact, skipUpdates it's pretty fast! ${timeSkipUpdates}ms`, () => {
-        //   expect(timeSkipUpdates).toBeLessThan(50);
-        // });
-
-        console.log({ timeControl, timeSkipDraw, timeSkipUpdates });
-      });
       describe("wrapEmoji", () => {
         const control = new TaggedText("test");
         it("Should be true by default", () => {
@@ -887,6 +840,28 @@ Line 4`);
           });
           const { width: superUnderWidth } = superUnderdraw.decorations[0];
           expect(superUnderWidth).toBe(0);
+        });
+
+        it("Should not affect layout of text.", () => {
+          const str = "<u>0 1 2 3 4 5 6 7 8 9 A B C D E F</u>";
+          const style = {
+            u: {
+              textDecoration: "underline",
+            },
+            default: {
+              wordWrapWidth: 100,
+            },
+          } as TextStyleSet;
+          const a = new TaggedText(str, style);
+          const b = new TaggedText(str, style, { overdrawDecorations: 30 });
+
+          // without overdraw, text wraps to 4 lines
+          expect(a.tokens).toHaveLength(4);
+          expect(a.decorations[0].getBounds().width).toBe(15);
+          // by adding a super wide underline the width would cause it to wrap more
+          // if the underlines affect the width.
+          expect(b.tokens).toHaveLength(4);
+          expect(b.decorations[0].getBounds().width).toBe(75);
         });
       });
 
