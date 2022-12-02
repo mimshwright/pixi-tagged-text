@@ -205,6 +205,8 @@ export interface TextStyleExtended
   align?: Align;
   fontStyle?: FontStyle;
   fontSize?: FontSize;
+  // alias for `fill`
+  color?: PIXI.TextStyleFill;
 }
 
 export interface TextDecorationMetrics {

@@ -184,6 +184,16 @@ export const mapTagsToStyles = (
       style.fontSize = currentBaseFontSize;
     }
 
+    const currentTagStyle: TextStyleExtended = tag ? styles[tag] : {};
+    const currentTagColor = currentTagStyle.color;
+    const currentTagFill = currentTagStyle.fill;
+
+    // Use color as an alias for fill.
+    if (currentTagColor !== undefined && currentTagFill === undefined) {
+      style.fill = style.color;
+    }
+    style.color = style.fill;
+
     fontSizeStack.push(style.fontSize as FontSize);
 
     const styledToken: StyledToken = {
