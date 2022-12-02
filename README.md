@@ -74,7 +74,7 @@ The style objects are modified versions (supersets) of `PIXI.TextStyle` (referre
 - `lineThroughThickness` - Sets the thickness of the line-through. Default is `1`.
 - `lineThroughOffset` - Positions the line-through above or below the default location. Default is `0`.
 - `adjustBaseline` - Adjusts the position of the text above or below the baseline. Default is `0`. Also see the `adjustFontBaseline` property in the options.
-- `color` - An alias for `fill`. If both are set, `fill` will be used.
+- `color` - An alias for `fill`. It's recommended you just use either `fill` or `color`, but if both are set, `fill` will be used. If tags are nested, `color` on an inner tag can override `fill` in an outer tag.
 
 Additionally, the following changes have been made to the default style values:
 
