@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.10.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.9.1...v3.10.0) (2022-12-02)
+
+### Features
+
+- **styles:** added color as an alias for the fill property ([29ab892](https://github.com/mimshwright/pixi-tagged-text/commit/29ab892bc93ecda11dde421b37ac527079ca8898)), closes [#207](https://github.com/mimshwright/pixi-tagged-text/issues/207)
+
 ### [3.9.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.9.0...v3.9.1) (2022-11-30)
 
 - **pixi:** Made some changes to the code that will make the codebase more compatible with Pixi v7.
