@@ -695,6 +695,77 @@ describe("style module", () => {
       });
     });
   });
+  describe("color property", () => {
+    describe("Color is an alias for fill", () => {
+      const styles: TextStyleSet = {
+        c: { color: 0x00ffff },
+        m: { color: 0xff00ff },
+        y: { fill: 0xffff00, color: 0x0000ff },
+        g: { fill: 0x00ff00 },
+      };
+      const mappedStyles = style.mapTagsToStyles(
+        {
+          children: [
+            {
+              children: ["Cyan"],
+              tag: "c",
+            },
+            {
+              children: [" "],
+            },
+            {
+              children: [{ children: ["Magenta"], tag: "m" }],
+              tag: "g",
+            },
+            {
+              children: [" "],
+            },
+            {
+              children: ["Yellow"],
+              tag: "y",
+            },
+            {
+              children: [" "],
+            },
+            {
+              children: ["Green"],
+              tag: "g",
+            },
+          ],
+        },
+        styles
+      );
+      test("When setting styles, color should be treated as though it is the value for fill.", () => {
+        const c = mappedStyles.children[0] as StyledToken;
+        expect(Number(c.style.fill).toString(16)).toBe((0x00ffff).toString(16));
+      });
+      test("When overriding a fill with a color in a nested tag, use the innermost tag.", () => {
+        const m = (mappedStyles.children[2] as StyledToken)
+          .children[0] as StyledToken;
+        expect(m.children[0]).toBe("Magenta");
+        expect(m.tags).toBe("g,m");
+        expect(Number(m.style.fill).toString(16)).toBe((0xff00ff).toString(16));
+      });
+      test("When both fill and color are set, use the fill value.", () => {
+        const y = mappedStyles.children[4] as StyledToken;
+        expect(Number(y.style.fill).toString(16)).toBe((0xffff00).toString(16));
+      });
+      test("When getting the style properties, color will match fill even if color was never set.", () => {
+        const c = mappedStyles.children[0] as StyledToken;
+        const y = mappedStyles.children[4] as StyledToken;
+        const g = mappedStyles.children[6] as StyledToken;
+        expect(Number(c.style.color).toString(16)).toBe(
+          (0x00ffff).toString(16)
+        );
+        expect(Number(y.style.color).toString(16)).toBe(
+          (0xffff00).toString(16)
+        );
+        expect(Number(g.style.color).toString(16)).toBe(
+          (0x00ff00).toString(16)
+        );
+      });
+    });
+  });
 
   describe("convertDecorationToLineProps()", () => {
     it(`Should not alter "textDecoration: 'normal'".`, () => {
