@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.11.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.10.1...v3.11.0) (2023-02-01)
+
+### Features
+
+- **icons:** added iconScale ([730bb46](https://github.com/mimshwright/pixi-tagged-text/commit/730bb4627177c626f60802a8a049fdcc3dca1b16)), closes [#329](https://github.com/mimshwright/pixi-tagged-text/issues/329)
+
 ### [3.10.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.10.0...v3.10.1) (2023-02-01)
 
 ### Bug Fixes
