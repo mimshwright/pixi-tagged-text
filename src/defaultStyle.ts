@@ -8,6 +8,7 @@ export const DEFAULT_STYLE: TextStyleExtended = {
   [IMG_DISPLAY_PROPERTY]: "inline",
   wordWrap: true,
   wordWrapWidth: 500,
+  iconScale: 1.0,
 };
 Object.freeze(DEFAULT_STYLE);
 

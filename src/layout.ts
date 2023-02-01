@@ -728,7 +728,9 @@ export const calculateTokens = (
           const h = Math.max(sprite.height, 1);
 
           if (h > 1 && sprite.scale.y === 1) {
-            const ratio = (fontProperties.ascent / h) * ICON_SCALE_BASE;
+            const { iconScale = 1.0 } = style;
+            const ratio =
+              (fontProperties.ascent / h) * ICON_SCALE_BASE * iconScale;
             sprite.scale.set(ratio);
           }
 

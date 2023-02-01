@@ -61,6 +61,7 @@ The style objects are modified versions (supersets) of `PIXI.TextStyle` (referre
 - `paragraphSpacing` - Additional spacing between paragraphs that is added when you use an explicit carriage return rather than letting the text wrap at the end of a line. Default is `0`. Can also be negative.
 - `imgSrc` - ID of image to include in this tag (see `imgMap` under Options section)
 - `imgDisplay` - How should the image be displayed. `"block"` is no scaling, `"icon"` scales the image to match the text-size and appear inline.
+- `iconScale` - If you use `imgDisplay="icon"`, this value will scale the size of the icon relative to the text size. Default is `1.0` (or 100%)
 - `textDecoration` - (i.e. underlines) Adds lines under, over, or through your text. Possible values are either `"normal"` or one or more of `"underline"`, `"overline"`, `"line-through"` (as a space separated string). Can also be set using the more fine-grained properties below. By default, decorations have `color` that matches the `fill` color of the text, `thickness` of `1` and `offset` `0`. **Note: You may need to enabled the `drawWhitespace` option in `options` to avoid seeing gaps in your text decorations between words.**
 - `decorationColor` - overrides the default color (`fill`) for all decorations.
 - `decorationThickness` - overrides the default thickness (`1`) for all decorations.

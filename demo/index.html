@@ -109,21 +109,28 @@ and <ms>multistyle</ms> text for
 
 <img imgSrc="doot" imgDisplay="inline" /> <img imgSrc="thinking" imgDisplay="inline" />
 
-Or even put an icon <thinking imgDisplay="icon" /><thinking imgDisplay="icon" /><thinking imgDisplay="icon" /> in there, bro!
+Make it an icon <thinking imgDisplay="icon" /> with <code>imgDisplay="icon"</code>!
+
+Control the icon size with <code>iconScale=</code> <thinking imgDisplay="icon" /><thinking imgDisplay="icon" iconScale="1.5" /><thinking imgDisplay="icon" iconScale="2" /><thinking imgDisplay="icon" iconScale="1.5" /><thinking imgDisplay="icon" />
 
 You can even load images from a URL <url /> (if you can figure out the CORS stuff!)`;
             const imgStyle = {
               default: {
                 fontFamily: "Arial",
-                fontSize: "24px",
+                fontSize: "20px",
                 fill: "#FFFFCC",
                 align: "center",
                 lineSpacing: 0,
                 valign: "baseline",
+                iconScale: 1,
               },
               h2: {
                 fontSize: 36,
                 fill: "#44CC99",
+              },
+              code: {
+                fontFamily: "monospace",
+                color: "#66FF00",
               },
               img: {},
               doot: {},
@@ -154,7 +161,7 @@ You can even load images from a URL <url /> (if you can figure out the CORS stuf
             const emojiText = `<h2>🙆🏾‍♀️ EMOJI 🆗*</h2>
 <warning>*But unfortunately, will render differently on different browsers & OSes</warning>
 
-The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
+The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the 💤 🐶.
 
 <big>💯👯‍♂️🔥</big>
 
@@ -295,7 +302,7 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
             // Vertical Alignment
             const valignText = `<top><code>Top</code> <small>Vertical</small> <img/> Alignment.</top>
 
-<middle><code>Middle</code> <small>Vertical</small> Alignment.</middle>
+<middle><code>Middle</code> <small>Vertical</small> <img /> Alignment.</middle>
 
 <bottom><code>Bottom</code> <small>Vertical</small> <img/> Alignment.</bottom>
 
