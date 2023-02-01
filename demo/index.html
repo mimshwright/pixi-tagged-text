@@ -184,11 +184,16 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the lazy 🐶.
                 fontSize: 14,
                 fill: "#ff8888",
               },
+              __EMOJI__: {
+                fontSize: "150%",
+              },
             };
 
             const emojiTaggedText = new TaggedText(emojiText, emojiStyle, {
               wrapEmoji: true,
             });
+
+            console.log(emojiTaggedText.tagStyles);
 
             const emojiApp = createDemo("emoji", emojiTaggedText);
           </script>

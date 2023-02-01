@@ -326,7 +326,11 @@ export default class TaggedText extends PIXI.Sprite {
     tagStyles = { default: {}, ...tagStyles };
 
     if (this.options.wrapEmoji) {
-      tagStyles[EMOJI_TAG] = { fontFamily: "sans-serif" };
+      const userStyles = tagStyles[EMOJI_TAG];
+      tagStyles[EMOJI_TAG] = {
+        fontFamily: "sans-serif",
+        ...userStyles,
+      };
     }
     const mergedDefaultStyles = { ...DEFAULT_STYLE, ...tagStyles.default };
     tagStyles.default = mergedDefaultStyles;
