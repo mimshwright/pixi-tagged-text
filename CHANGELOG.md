@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.10.0...v3.10.1) (2023-02-01)
+
+### Bug Fixes
+
+- **emoji:** fixed an issue where user styles for emoji are overwritten ([ddbd5d5](https://github.com/mimshwright/pixi-tagged-text/commit/ddbd5d5916f839b1dd7bedf99437ee949f83d008)), closes [#329](https://github.com/mimshwright/pixi-tagged-text/issues/329)
+
 ## [3.10.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.9.1...v3.10.0) (2022-12-02)
 
 ### Features
