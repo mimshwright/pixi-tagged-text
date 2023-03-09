@@ -78,7 +78,10 @@ export const parseAttributes = (attributesString = ""): AttributesList => {
   }
 
   return [...attributes].reduce((obj: AttributesList, attribute: string) => {
-    const attributePair = attribute.split("=");
+    const attributePair: string[] = [
+      attribute.substring(0, attribute.indexOf("=")),
+      attribute.substring(attribute.indexOf("=") + 1),
+    ];
     const name = attributePair[0].trim();
     const valueStr: string = attributePair[1]
       .substring(1, attributePair[1].length - 1)
