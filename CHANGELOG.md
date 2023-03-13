@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.12.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.11.3...v3.12.0) (2023-03-13)
+
 ### [3.11.3](https://github.com/mimshwright/pixi-tagged-text/compare/v3.11.2...v3.11.3) (2023-03-13)
 
 ### Bug Fixes
