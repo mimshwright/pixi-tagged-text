@@ -248,6 +248,7 @@ The build process is slightly complex and some of the build dependencies are at 
 | package                    | max version |
 | -------------------------- | ----------- |
 | jest, @types/jest, ts-jest | 26          |
+| emoji-regex                | 9           |
 
 ## License
 
