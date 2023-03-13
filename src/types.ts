@@ -348,7 +348,7 @@ export const isNewlineToken = (t?: Nested<SegmentToken>): boolean =>
 
 export const isNotWhitespaceToken = complement(isWhitespaceToken);
 
-export const isEmptyObject = <T extends unknown>(a: T): boolean =>
+export const isEmptyObject = <T>(a: T): boolean =>
   a instanceof Object && Object.keys(a).length === 0;
 
 export const isPixel = (s: string): boolean => s.trim().endsWith("px");

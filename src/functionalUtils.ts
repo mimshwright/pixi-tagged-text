@@ -3,7 +3,7 @@ import { Nested } from "./types";
 /**
  * a -> boolean
  */
-type Predicate<T extends unknown> = (t: T) => boolean;
+type Predicate<T> = (t: T) => boolean;
 
 export const combineRecords = <
   A extends Record<string, unknown>,
@@ -35,7 +35,7 @@ export const isDefined: Predicate<unknown | undefined> = (a): boolean =>
  * Predicate p => p -> p
  */
 export const complement =
-  <T extends unknown>(predicate: Predicate<T>) =>
+  <T>(predicate: Predicate<T>) =>
   (input: T): boolean =>
     !predicate(input);
 
@@ -43,12 +43,12 @@ export const complement =
  * List f => string -> f {string: a} -> f a
  */
 export const pluck =
-  <T extends unknown, U extends unknown>(key: keyof U) =>
+  <T, U>(key: keyof U) =>
   (objects: U[]): T[] =>
     (objects as (U & Record<string, T>)[]).map<T>((o) => o[key]);
 
 export const assoc =
-  <T extends Record<string, U>, U extends unknown>(key: keyof T) =>
+  <T extends Record<string, U>, U>(key: keyof T) =>
   (value: U) =>
   (object: T): T => ({
     ...object,

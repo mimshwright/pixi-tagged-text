@@ -241,6 +241,14 @@ yarn demo
 
 This will start a simple HTTP server running locally on port 8080. Navigate to [http://localhost:8080/demo](http://localhost:8080/demo)
 
+## Dependencies
+
+The build process is slightly complex and some of the build dependencies are at the max major version that doesn't break. These depdencies seem to cause issues at certain versions...
+
+| package                    | max version |
+| -------------------------- | ----------- |
+| jest, @types/jest, ts-jest | 26          |
+
 ## License
 
 MIT, see [LICENSE.md](http://github.com/mimshwright/pixi-tagged-text/blob/main/LICENSE.md) for details.
