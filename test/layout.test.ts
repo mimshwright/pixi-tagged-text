@@ -1080,9 +1080,24 @@ aa bb aa`;
     describe("Stroked text", () => {
       const line: StyledTokens = {
         children: [
-          "A ",
+          "A",
+          " ",
           {
-            children: ["B C"],
+            children: [
+              "B",
+              " ",
+              "C",
+              " ",
+              {
+                children: ["D"],
+                style: {
+                  fontSize: 20,
+                  strokeThickness: 40,
+                  fontScaleHeight: 2,
+                },
+                tags: "stroke scaled",
+              },
+            ],
             style: { fontSize: 20, strokeThickness: 40 },
             tags: "stroke",
           },
@@ -1092,7 +1107,17 @@ aa bb aa`;
       };
       const tokens = layout.calculateTokens(line);
 
-      const [[[normal], , [stroked], , [alsoStroked]]] = tokens;
+      const [
+        [
+          [normal],
+          [spaceUnstroked],
+          [stroked],
+          [spaceStroked],
+          [alsoStroked],
+          ,
+          [strokeScaled],
+        ],
+      ] = tokens;
 
       it("Shouldn't affect non-strked text. ", () => {
         expect(normal.content).toBe("A");
@@ -1119,6 +1144,26 @@ aa bb aa`;
         toBeBetween(alsoStroked.fontProperties.ascent, 38, 39);
         expect(alsoStroked.fontProperties.descent).toBe(25);
         toBeBetween(alsoStroked.fontProperties.fontSize, 63, 64);
+      });
+
+      it("Should scale the stroke if fontScale is used. ", () => {
+        expect(strokeScaled.content).toBe("D");
+        expect(strokeScaled.style.strokeThickness).toBe(40);
+        expect(strokeScaled.style.fontScaleHeight).toBe(2);
+        toBeBetween(strokeScaled.fontProperties.fontSize, 120, 130);
+      });
+
+      it("Should not affect the size of spaces.", () => {
+        expect(spaceUnstroked.content).toBe(" ");
+        expect(spaceStroked.content).toBe(" ");
+        expect(spaceStroked.fontProperties.descent).toBe(
+          spaceUnstroked.fontProperties.descent
+        );
+        expect(spaceStroked.fontProperties.fontSize).toBe(
+          spaceUnstroked.fontProperties.fontSize
+        );
+        expect(spaceUnstroked.bounds.width).toBeLessThan(40);
+        expect(spaceStroked.bounds.width).toBe(spaceUnstroked.bounds.width);
       });
     });
 

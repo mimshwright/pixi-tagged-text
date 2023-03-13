@@ -905,6 +905,20 @@ Line 4`);
       });
     });
 
+    describe("stroke", () => {
+      describe("Stroke and whitespace", () => {
+        it("Shouldn't affeect whitespace (#303)", () => {
+          const t = new TaggedText("a b", {
+            default: { fontSize: 10, strokeThickness: 100 },
+          });
+          const [a, space, b] = t.tokensFlat;
+          expect(a.bounds.width).toBeGreaterThan(100);
+          expect(space.bounds.width).toBeLessThan(20);
+          expect(b.bounds.width).toBeGreaterThan(100);
+        });
+      });
+    });
+
     describe("fontScaleWidth & fontScaleHeight styles", () => {
       test("fontScaleWidth should scale the final text output horizontally.", () => {
         const wideStyle = {

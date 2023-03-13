@@ -1,5 +1,5 @@
 import { convertUnsupportedAlignment, extractDecorations } from "./style";
-import { capitalize } from "./stringUtil";
+import { capitalize, isOnlyWhitespace } from "./stringUtil";
 import {
   last,
   first,
@@ -327,13 +327,10 @@ const getTallestToken = (line: LineToken): SegmentToken =>
     return tallest;
   }, createEmptySegmentToken())(line);
 
-/**
- * @param If you want to override the valign from the styles object, set it here.
- */
 export const verticalAlignInLines = (
   lines: ParagraphToken,
   lineSpacing: number,
-  overrideValign?: VAlign
+  overrideValign?: VAlign // If you want to override the valign from the styles object, set it here.
 ): ParagraphToken => {
   let previousTallestToken: SegmentToken = createEmptySegmentToken();
   let previousLineBottom = 0;
@@ -659,6 +656,19 @@ export const calculateTokens = (
               sizer.text = str;
           }
 
+          fontProperties = { ...getFontPropertiesOfText(sizer, true) };
+
+          // Incorporate the size of the stroke into the size of the text.
+          if (isOnlyWhitespace(token) === false) {
+            const stroke = sizer.style.strokeThickness ?? 0;
+            if (stroke > 0) {
+              fontProperties.descent += stroke / 2;
+              fontProperties.ascent += stroke / 2;
+              fontProperties.fontSize =
+                fontProperties.ascent + fontProperties.descent;
+            }
+          }
+
           const sw = style.fontScaleWidth ?? 1.0;
           const sh = style.fontScaleHeight ?? 1.0;
           // clamp negative or NaN fontScales to 0
@@ -667,23 +677,12 @@ export const calculateTokens = (
 
           sizer.scale.set(scaleWidth, scaleHeight);
 
-          fontProperties = { ...getFontPropertiesOfText(sizer, true) };
-
           fontProperties.ascent *= scaleHeight;
           fontProperties.descent *= scaleHeight;
           fontProperties.fontSize *= scaleHeight;
 
           const bounds = rectFromContainer(sizer);
           // bounds.height = fontProperties.fontSize;
-
-          // Incorporate the size of the stroke into the size of the text.
-          const stroke = sizer.style.strokeThickness ?? 0;
-          if (stroke > 0) {
-            fontProperties.descent += stroke / 2;
-            fontProperties.ascent += stroke / 2;
-            fontProperties.fontSize =
-              fontProperties.ascent + fontProperties.descent;
-          }
 
           const textDecorations = extractDecorations(
             style,
@@ -703,7 +702,7 @@ export const calculateTokens = (
             bounds.width += letterSpacing;
           }
 
-          return {
+          const convertedToken = {
             content: str,
             style,
             tags,
@@ -711,6 +710,13 @@ export const calculateTokens = (
             fontProperties,
             textDecorations,
           };
+
+          // Required to remove extra stroke width from whitespace.
+          // to be totally honest, I'm not sure why this works / why it was being added.
+          if (isOnlyWhitespace(str)) {
+            bounds.width -= style.strokeThickness ?? 0;
+          }
+          return convertedToken;
         });
 
         output = output.concat(textTokens);

@@ -484,7 +484,11 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the 💤 🐶.
                 fontWeight: 700,
               },
             };
-            let attributes = new TaggedText(attributesText, attributesStyle);
+            let attributes = new TaggedText(
+              attributesText,
+              attributesStyle,
+              {}
+            );
 
             createDemo("attributes", attributes);
           </script>
