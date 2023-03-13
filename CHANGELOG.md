@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [3.12.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.11.3...v3.12.0) (2023-03-13)
 
-### [3.11.3](https://github.com/mimshwright/pixi-tagged-text/compare/v3.11.2...v3.11.3) (2023-03-13)
-
 ### Bug Fixes
 
 - **stroke:** fixes issue where size of whitespace increased with the size of the stroke ([ad6bd1d](https://github.com/mimshwright/pixi-tagged-text/commit/ad6bd1d63e9c5f2743a06e7af1743d578c88a746)), closes [#303](https://github.com/mimshwright/pixi-tagged-text/issues/303)
