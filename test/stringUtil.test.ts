@@ -1,9 +1,29 @@
+import { isOnlyWhitespace } from "./../src/stringUtil";
 import * as stringUtil from "../src/stringUtil";
 
 describe("srtingUtil", () => {
   describe("capitalize()", () => {
     it("should capitalize the first letter of a string.", () => {
       expect(stringUtil.capitalize("test")).toBe("Test");
+    });
+  });
+
+  describe("isOnlyWhitespace()", () => {
+    it("Should return true if all the text is whitespace.", () => {
+      expect(isOnlyWhitespace(" ")).toBeTruthy();
+      expect(isOnlyWhitespace("  ")).toBeTruthy();
+      expect(isOnlyWhitespace("\t")).toBeTruthy();
+      expect(isOnlyWhitespace("\n")).toBeTruthy();
+      expect(isOnlyWhitespace("\n \t \n")).toBeTruthy();
+    });
+    it("Should return false for strings containing non-whitespace", () => {
+      expect(isOnlyWhitespace("a")).toBeFalsy();
+      expect(isOnlyWhitespace(" a")).toBeFalsy();
+      expect(isOnlyWhitespace("\n a")).toBeFalsy();
+      expect(isOnlyWhitespace("a ")).toBeFalsy();
+    });
+    it("Should return false for empty strings", () => {
+      expect(isOnlyWhitespace("")).toBeFalsy();
     });
   });
 
