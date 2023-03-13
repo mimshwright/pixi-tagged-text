@@ -1399,7 +1399,7 @@ Line 4`);
       const taggedTextInstance = new TaggedText(
         `<test ${customPropertyName}='${testString}'>Test</test>`,
         {
-          "test": {}
+          test: {},
         }
       );
       taggedTextInstance.textFields.forEach((e) => {
