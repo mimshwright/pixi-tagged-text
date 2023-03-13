@@ -1,4 +1,3 @@
-import { DEFAULT_STYLE } from "./../src/defaultStyle";
 import { cloneSprite } from "./../src/pixiUtils";
 import {
   Align,
