@@ -1389,4 +1389,26 @@ Line 4`);
       });
     });
   });
+
+  // https://github.com/mimshwright/pixi-tagged-text/issues/338
+  describe("custom inline string property", () => {
+    it("Should propagate the string to the style object without modification.", () => {
+      const testString = "This/should=not!be!modified=";
+      const customPropertyName = "propertyTest";
+
+      const taggedTextInstance = new TaggedText(
+        `<test ${customPropertyName}='${testString}'>Test</test>`,
+        {
+          "test": {}
+        }
+      );
+      taggedTextInstance.textFields.forEach((e) => {
+        const style = e.style as {
+          [customPropertyName]: string;
+        };
+        const prop: string = style[customPropertyName];
+        expect(prop).toEqual(testString);
+      });
+    });
+  });
 });
