@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.2](https://github.com/mimshwright/pixi-tagged-text/compare/v3.11.1...v3.11.2) (2023-03-13)
+
+### Chore
+
+- **deps:** removed some unused deps ([916121c](https://github.com/mimshwright/pixi-tagged-text/commit/916121c74ef22b37f4fb413470bdf90d3d44f34c))
+- **deps:** updated js-dom ([47fdacf](https://github.com/mimshwright/pixi-tagged-text/commit/47fdacfac8f3f81a0e2861c81ebe8186193d5134))
+- **deps:** upgrade electron (for tests) ([f40cc79](https://github.com/mimshwright/pixi-tagged-text/commit/f40cc794393fa342bc1172cdbc765daa353cc0ee))
+- **deps:** upgraded typescript and eslint ([69fb1ad](https://github.com/mimshwright/pixi-tagged-text/commit/69fb1ad2df63955d29c8a5473fe350295a583852))
+
 ### [3.11.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.11.0...v3.11.1) (2023-03-13)
 
 ### Chore
