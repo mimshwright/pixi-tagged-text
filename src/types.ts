@@ -151,6 +151,7 @@ export interface ImageStyles {
   imgScaleY?: ImageDimensionPercentage;
   imgWidth?: ImageDimension;
   imgHeight?: ImageDimension;
+  iconScale?: number;
 }
 
 export interface UnderlineStyle {
@@ -192,6 +193,11 @@ export interface FontScaleStyles {
 export interface TextTransformStyles {
   textTransform?: TextTransform;
 }
+
+export interface LineBreakStyles {
+  breakLines?: boolean;
+}
+
 export interface TextStyleExtended
   extends Record<string, unknown>,
     Partial<Omit<PIXI.ITextStyle, "align">>,
@@ -200,14 +206,14 @@ export interface TextStyleExtended
     VerticalAlignStyles,
     VerticalSpacingStyles,
     FontScaleStyles,
-    TextTransformStyles {
+    TextTransformStyles,
+    LineBreakStyles {
   // Overridden properties
   align?: Align;
   fontStyle?: FontStyle;
   fontSize?: FontSize;
   // alias for `fill`
   color?: PIXI.TextStyleFill;
-  iconScale?: number;
 }
 
 export interface TextDecorationMetrics {
