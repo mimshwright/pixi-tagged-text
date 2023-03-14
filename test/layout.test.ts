@@ -1,3 +1,8 @@
+import {
+  nobreakStyle,
+  styledTokens as breakLinesStyledTokens,
+} from "./support/breakLinesExample";
+
 import { cloneSprite } from "./../src/pixiUtils";
 import {
   Align,
@@ -1689,6 +1694,72 @@ line1 <middle>goes</middle> <top>on</top> <bot>until</bot> it wraps <middle>to</
           });
         });
       });
+    });
+
+    describe("breakLines", () => {
+      // Example was super long so I'm importing it from an external file.
+      const tokens = layout.calculateTokens(breakLinesStyledTokens, "words");
+      nobreakStyle.breakLines = true;
+      const controlTokens = layout.calculateTokens(
+        breakLinesStyledTokens,
+        "words"
+      );
+
+      test("Confirm that without breakLines, the text wraps as expected", () => {
+        // lines if breakLines is not active
+        expect(controlTokens).toHaveLength(11);
+        expect(controlTokens[0][0][0].content).toBe("Really");
+        expect(controlTokens[1][0][0].content).toBe("next");
+        expect(controlTokens[2][0][0].content).toBe("Normal");
+        expect(controlTokens[3][0][0].content).toBe("Longer");
+        expect(controlTokens[3][12][0].content).toBe("doesn't");
+        expect(controlTokens[4][0][0].content).toBe("break");
+        expect(controlTokens[5][0][0].content).toBe("Really");
+        expect(controlTokens[6][0][0].content).toBe("too");
+        expect(controlTokens[7][0][0].content).toBe("Nobreak");
+        expect(controlTokens[8][0][0].content).toBe("an");
+        expect(controlTokens[9][0][0].content).toBe("text");
+        expect(controlTokens[10][0][0].content).toBe("Long");
+      });
+
+      describe("Causes a line to never break and be treated as a solid block.", () => {
+        // lines if breakLines is active
+        test("Check expected first words on each line", () => {
+          expect(tokens[0][0][0].content).toBe("Really");
+          expect(tokens[1][0][0].content).toBe("next");
+          expect(tokens[2][0][0].content).toBe("Normal");
+          expect(tokens[3][0][0].content).toBe("Longer");
+          expect(tokens[4][0][0].content).toBe("Text");
+          expect(tokens[5][0][0].content).toBe("Really");
+          expect(tokens[6][0][0].content).toBe("Nobreak");
+          expect(tokens[7][0][0].content).toBe("an");
+          expect(tokens[8][0][0].content).toBe("Long");
+          expect(tokens).toHaveLength(9);
+        });
+        it("Doesn't affect text with breakLines = true", () => {
+          expect(tokens[0][0][0].content).toBe("Really");
+          expect(tokens[1][0][0].content).toBe("next");
+        });
+        it("Shouldn't matter if the text is shorter than the line anyway.", () => {
+          expect(tokens[2][0][0].content).toBe("Normal");
+          expect(tokens[3][0][0].content).toBe("Longer");
+        });
+        it("Doesn't break when the text is too long", () => {
+          expect(tokens[5][0][0].content).toBe("Really");
+          expect(tokens[6][0][0].content).toBe("Nobreak");
+          expect(tokens[5]).toHaveLength(25);
+        });
+        it("Nested tags don't override the nobreak behaviour", () => {
+          expect(tokens[8][0][0].content).toBe("Long");
+          expect(tokens[8][8][0].content).toBe("nested");
+          expect(tokens[8][8][0].style.breakLines).toBe(true);
+        });
+      });
+
+      // If both breakWords is true and breakLines is false, there should be a warning and breakLines false should get the priority.
+      // Behavior of text that goes outside the bounding box (wordWrapWidth) is undefined. Use your best judgement and whatever existing defaults in Pixi.Text to determine how to handle it.
+      // It may be possible to treat the unbroken text as a single text field in implementation. But that may not be possible if there are tags nested inside.
+      // Explicit line-breaks (newline characters) should override the no-break style property
     });
   });
 
