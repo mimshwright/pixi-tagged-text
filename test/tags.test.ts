@@ -472,6 +472,12 @@ describe("tags module", () => {
           tags.parseTagsNew("<a></b>", ["a", "b"]);
         }).toThrow();
       });
+
+      it("Should throw an attribute syntax error when the attribute is badly formed. (#224)", () => {
+        expect(() => {
+          tags.parseTagsNew(`<red fontSize=="75">text</red>`, ["red"]);
+        }).toThrow(/.*attribute.*/g);
+      });
     });
   });
 });

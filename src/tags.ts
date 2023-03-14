@@ -28,32 +28,18 @@ export const getTagRegex = (tagNamesToMatch: string[] = ["\\w+"]): RegExp => {
   const captureGroup = (a: string) => `(${a})`;
   const noCaptureGroup = (a: string) => `(?:${a})`;
 
-  const OR = "|";
   const WHITESPACE = `\\s`;
   const S = WHITESPACE + "*";
   const SS = WHITESPACE + "+";
-  const CHAR = "[A-Za-z0-9_\\-]";
-  const QUOTE = noCaptureGroup(`"|'`);
-  const NOT_QUOTE = `[^${QUOTE}]`;
   const TAG_NAMES = captureGroup(matchingTagNames);
-  const ATTRIBUTE_NAME = CHAR + "+";
-  const ATTRIBUTE_VALUE = NOT_QUOTE + "+";
+  const NOT_CLOSING_TAG = `[^>]`;
 
   const ATTRIBUTES =
-    captureGroup(
-      noCaptureGroup(
-        SS +
-          noCaptureGroup(ATTRIBUTE_NAME) +
-          `=` +
-          QUOTE +
-          noCaptureGroup(ATTRIBUTE_VALUE) +
-          QUOTE
-      ) + "*"
-    ) + "+";
+    captureGroup(noCaptureGroup(`${SS}${NOT_CLOSING_TAG}*`) + "*") + "+";
   const TAG_OPEN = `<` + TAG_NAMES + ATTRIBUTES + S + `>`;
   const TAG_CLOSE = `</${TAG_NAMES}${S}>`;
 
-  const pattern = TAG_OPEN + OR + TAG_CLOSE;
+  const pattern = `${TAG_OPEN}|${TAG_CLOSE}`;
 
   return new RegExp(pattern, "g");
 };
