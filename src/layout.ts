@@ -461,6 +461,55 @@ const layout = (
   let line: LineToken = [];
   const allLines: ParagraphToken = [];
   let tallestHeightInLine = 0;
+  let token: SegmentToken;
+
+  for (let i = 0; i < tokens.length; i++) {
+    token = tokens[i];
+    // when using an unbroken line (breakLines === false), treat the entire line as one word
+    // unless you encounter one that isn't unbroken or a newline character
+    const normalLineBreaks = hasNormalLineBreaks(token);
+    const isWhitespace = isWhitespaceToken(token);
+    const isNewline = isNewlineToken(token);
+    const isImage = isSpriteToken(token);
+    const isWordEndingToken = isWhitespace || isImage;
+
+    if ((isWordEndingToken && normalLineBreaks) || isNewline) {
+      positionWordBufferAndAddToLine();
+    }
+
+    addTokenToWordAndUpdateWordWidth(token);
+    setTallestHeight(token);
+
+    // always immediately add whitespace to the line.
+    if ((isWhitespace && normalLineBreaks) || isNewline) {
+      positionWordBufferAndAddToLine();
+    }
+
+    // If the token is a newline character,
+    // move the cursor to next line immediately
+    if (isNewline || isBlockImage(token)) {
+      addLineToListOfLinesAndMoveCursorToNextLine(token);
+    } else if (wordInBufferExceedsLineLength()) {
+      // don't wrap if it's the first word in the line.
+      if (line.length > 0) {
+        addLineToListOfLinesAndMoveCursorToNextLine(token);
+      }
+    }
+  }
+
+  // After we reach the last token, add it to the word and finalize both buffers.
+  if (word.length > 0) {
+    positionWordBufferAndAddToLine();
+  }
+  if (line.length > 0) {
+    addLineToListOfLines();
+  }
+
+  const collapsedWhitespace = collapseWhitespacesOnEndOfLines(allLines);
+  const alignedLines = alignLines(align, maxWidth, collapsedWhitespace);
+  const valignedLines = verticalAlignInLines(alignedLines, lineSpacing);
+
+  return valignedLines;
 
   function addWordBufferToLineBuffer() {
     if (word !== undefined && word.length > 0) {
@@ -524,60 +573,20 @@ const layout = (
     return token.style[IMG_DISPLAY_PROPERTY] === "block";
   }
 
+  function hasNormalLineBreaks(token: SegmentToken): boolean {
+    return token.style.breakLines ?? true;
+  }
+
   function addTokenToWordAndUpdateWordWidth(token: SegmentToken): void {
     // add the token to the current word buffer.
     word.push(token);
     wordWidth += token.bounds.width;
   }
 
-  let token;
-  for (let i = 0; i < tokens.length; i++) {
-    token = tokens[i];
-    const isWhitespace = isWhitespaceToken(token);
-    const isNewline = isNewlineToken(token);
-    const isImage = isSpriteToken(token);
-    const isWordEndingToken = isWhitespace || isImage;
-
-    if (isWordEndingToken) {
-      positionWordBufferAtCursorAndAdvanceCursor();
-      addWordBufferToLineBuffer();
-    }
-
-    addTokenToWordAndUpdateWordWidth(token);
-    setTallestHeight(token);
-
-    // always immediately add whitespace to the line.
-    if (isWhitespace) {
-      positionWordBufferAtCursorAndAdvanceCursor();
-      addWordBufferToLineBuffer();
-    }
-
-    // If the token is a newline character,
-    // move the cursor to next line immediately
-    if (isNewline || isBlockImage(token)) {
-      addLineToListOfLinesAndMoveCursorToNextLine(token);
-    } else if (wordInBufferExceedsLineLength()) {
-      // don't wrap if it's the first word in the line.
-      if (line.length > 0) {
-        addLineToListOfLinesAndMoveCursorToNextLine(token);
-      }
-    }
-  }
-
-  // After we reach the last token, add it to the word and finalize both buffers.
-  if (word.length > 0) {
+  function positionWordBufferAndAddToLine() {
     positionWordBufferAtCursorAndAdvanceCursor();
     addWordBufferToLineBuffer();
   }
-  if (line.length > 0) {
-    addLineToListOfLines();
-  }
-
-  const collapsedWhitespace = collapseWhitespacesOnEndOfLines(allLines);
-  const alignedLines = alignLines(align, maxWidth, collapsedWhitespace);
-  const valignedLines = verticalAlignInLines(alignedLines, lineSpacing);
-
-  return valignedLines;
 };
 
 const notEmptyString = (s: string) => s !== "";

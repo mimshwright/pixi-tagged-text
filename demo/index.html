@@ -706,7 +706,8 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the 💤 🐶.
           </script>
         </div>
       </div-->
-      <div class="pixi" id="breakLines">
+
+      <!-- <div class="pixi" id="breakLines">
         <script>
           // BreakLines
 
@@ -714,21 +715,23 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the 💤 🐶.
           const breakLinesText = `<h1>Using breakLines</h1>
 (red text has style \`breakLines:false\`)
 
-Really long normal text that breaks to the
-next line.
+Really long normal text that breaks to the next line.
+
 Normal text + <nobreak>Text that doesn't break.</nobreak>
-Longer normal text +
-<nobreak>Text that doesn't break (wraps line)</nobreak>
+
+Longer normal text + <nobreak>Text that doesn't break (wraps line)</nobreak>
+
 <nobreak>Really long text that doesn't break but is too long for the line?</nobreak>
+
 <nobreak>Nobreak text that has
 an explicit line break in the middle.</nobreak>
-<nobreak>Long Nobreak text with <nested>nested breaking text</nested> in the middle.</nobreak>
-`;
+
+<nobreak>Long Nobreak text that extends too far with a <nested>nested breaking text tag</nested> in the middle.</nobreak>`;
           const breakLinesStyle = {
             default: {
               fontSize: "20px",
               fill: "#cccccc",
-              wordWrapWidth: 9999,
+              wordWrapWidth: 500,
               wordWrap: true,
               breakLines: true,
               fontFamily: "monospace",
@@ -752,7 +755,8 @@ an explicit line break in the middle.</nobreak>
           createDemo("breakLines", breakLines);
         </script>
       </div>
-    </div>
+    </div> -->
+
       <div class="example">
         <div class="code">
           <h2>Debug Mode</h2>
