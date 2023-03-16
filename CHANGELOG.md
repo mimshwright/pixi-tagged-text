@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.13.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.12.0...v3.13.0) (2023-03-16)
+
+### Features
+
+- **breaklines:** added a style that allows you to disable word wrapping for the text in a tag ([00745aa](https://github.com/mimshwright/pixi-tagged-text/commit/00745aa2f69b1431e6545d6269c194ce488ffdeb)), closes [#214](https://github.com/mimshwright/pixi-tagged-text/issues/214)
+
+### Bug Fixes
+
+- **tags:** made a more specific error in cases where attributes are badly formed ([6f0d416](https://github.com/mimshwright/pixi-tagged-text/commit/6f0d41625ab14c12cd03654c2ba649cdf5fa09d5)), closes [#224](https://github.com/mimshwright/pixi-tagged-text/issues/224)
+
 ## [3.12.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.11.3...v3.12.0) (2023-03-13)
 
 ### Bug Fixes
