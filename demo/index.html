@@ -706,6 +706,57 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the 💤 🐶.
           </script>
         </div>
       </div-->
+
+      <!-- <div class="pixi" id="breakLines">
+        <script>
+          // BreakLines
+
+          // prettier-ignore
+          const breakLinesText = `<h1>Using breakLines</h1>
+(red text has style \`breakLines:false\`)
+
+Really long normal text that breaks to the next line.
+
+Normal text + <nobreak>Text that doesn't break.</nobreak>
+
+Longer normal text + <nobreak>Text that doesn't break (wraps line)</nobreak>
+
+<nobreak>Really long text that doesn't break but is too long for the line?</nobreak>
+
+<nobreak>Nobreak text that has
+an explicit line break in the middle.</nobreak>
+
+<nobreak>Long Nobreak text that extends too far with a <nested>nested breaking text tag</nested> in the middle.</nobreak>`;
+          const breakLinesStyle = {
+            default: {
+              fontSize: "20px",
+              fill: "#cccccc",
+              wordWrapWidth: 500,
+              wordWrap: true,
+              breakLines: true,
+              fontFamily: "monospace",
+            },
+            h1: {
+              fontWeight: 700,
+              fontSize: 40,
+            },
+            nobreak: {
+              breakLines: false,
+              color: "#ff8888",
+            },
+            nested: {
+              breakLines: true,
+              color: "#8888ff",
+            },
+          };
+
+          const breakLines = new TaggedText(breakLinesText, breakLinesStyle, {});
+
+          createDemo("breakLines", breakLines);
+        </script>
+      </div>
+    </div> -->
+
       <div class="example">
         <div class="code">
           <h2>Debug Mode</h2>

@@ -1,3 +1,8 @@
+import {
+  nobreakStyle,
+  styledTokens as breakLinesStyledTokens,
+} from "./support/breakLinesExample";
+
 import { cloneSprite } from "./../src/pixiUtils";
 import {
   Align,
@@ -19,6 +24,7 @@ import * as layout from "../src/layout";
 import * as style from "../src/style";
 import * as tags from "../src/tags";
 import { icon } from "./support/testIcon";
+import { consoleLogLinesText } from "./support/testUtil";
 
 const R = (...args: number[]) => new PIXI.Rectangle(...args);
 
@@ -1689,6 +1695,118 @@ line1 <middle>goes</middle> <top>on</top> <bot>until</bot> it wraps <middle>to</
           });
         });
       });
+    });
+
+    describe("breakLines", () => {
+      // Example was super long so I'm importing it from an external file.
+      // The example matches the example used in the demo.
+      const tokens = layout.calculateTokens(breakLinesStyledTokens, "words");
+      nobreakStyle.breakLines = true;
+      const controlTokens = layout.calculateTokens(
+        breakLinesStyledTokens,
+        "words"
+      );
+
+      describe("Expected default behaviour of super long words", () => {
+        it("Should extend off the edge, not break or wrap when the first word of a line is super long.", () => {
+          expect(
+            layout.calculateTokens({
+              children: [
+                "A_really_long_word_just_goes_off_the_edge_if_it_doesn't_fit.",
+              ],
+              style: {
+                wordWrap: true,
+                wordWrapWidth: 200,
+              },
+              tags: "",
+            })
+          ).toHaveLength(1);
+        });
+        it("Should break to the next line but then extend off the edge when the not-first word on a line is super long.", () => {
+          expect(
+            layout.calculateTokens({
+              children: [
+                "A",
+                " ",
+                "really_long_word_wraps_then_just_goes_off_the_edge_if_it_isn't_the_first_word_in_the_line.",
+              ],
+              style: {
+                wordWrap: true,
+                wordWrapWidth: 200,
+              },
+              tags: "",
+            })
+          ).toHaveLength(2);
+        });
+      });
+
+      test("Confirm that without breakLines, the text wraps as expected", () => {
+        // console.info("CONTROL");
+        // consoleLogLinesText(controlTokens, true);
+
+        // lines if breakLines is not active
+        expect(controlTokens[0][0][0].content).toBe("Really");
+        expect(controlTokens[1][0][0].content).toBe("the");
+        expect(controlTokens[2][0][0].content).toBe("Normal");
+        expect(controlTokens[3][0][0].content).toBe("Longer");
+        expect(controlTokens[3][12][0].content).toBe("doesn't");
+        expect(controlTokens[4][0][0].content).toBe("break");
+        expect(controlTokens[5][0][0].content).toBe("Really");
+        expect(controlTokens[6][0][0].content).toBe("too");
+        expect(controlTokens[7][0][0].content).toBe("Nobreak");
+        expect(controlTokens[8][0][0].content).toBe("an");
+        expect(controlTokens[9][0][0].content).toBe("Long");
+        expect(controlTokens[10][0][0].content).toBe("with");
+        expect(controlTokens[11][0][0].content).toBe("middle.");
+        expect(controlTokens).toHaveLength(12);
+      });
+
+      describe("Causes a line to never break and be treated as a solid block.", () => {
+        // console.info("NOBREAK");
+        // consoleLogLinesText(tokens, true);
+
+        // lines if breakLines is active
+        test("Check expected first words on each line", () => {
+          expect(tokens[0][0][0].content).toBe("Really");
+          expect(tokens[1][0][0].content).toBe("the");
+          expect(tokens[2][0][0].content).toBe("Normal");
+          expect(tokens[3][0][0].content).toBe("Longer");
+          expect(tokens[4][0][0].content).toBe("Text");
+          expect(tokens[5][0][0].content).toBe("Really");
+          expect(tokens[6][0][0].content).toBe("Nobreak");
+          expect(tokens[7][0][0].content).toBe("an");
+          expect(tokens[8][0][0].content).toBe("Long");
+          expect(tokens[9][0][0].content).toBe("nested");
+          expect(tokens).toHaveLength(10);
+        });
+        it("Doesn't affect text with breakLines = true", () => {
+          expect(tokens[0][0][0].content).toBe("Really");
+          expect(tokens[1][0][0].content).toBe("the");
+        });
+        it("Shouldn't matter if the text is shorter than the line anyway.", () => {
+          expect(tokens[2][0][0].content).toBe("Normal");
+          expect(tokens[3][0][0].content).toBe("Longer");
+        });
+        it("Doesn't break when the text is too long", () => {
+          expect(tokens[5][0][0].content).toBe("Really");
+          expect(tokens[6][0][0].content).toBe("Nobreak");
+          // number of segments in this line (including line break at end of line.)
+          expect(tokens[5].flat()).toHaveLength(26);
+        });
+        it("Nested tags can override the nobreak behaviour", () => {
+          const line8Segments = tokens[8].flat();
+          expect(line8Segments[0].content).toBe("Long");
+          expect(line8Segments[line8Segments.length - 2].content).toBe("a");
+          expect(line8Segments[line8Segments.length - 1].content).toBe(" ");
+          expect(tokens[9][0][0].content).toBe("nested");
+          expect(tokens[9][0][0].style.breakLines).toBe(true);
+        });
+      });
+
+      // If both breakWords is true and breakLines is false, there should be a warning and breakLines false should get the priority.
+      // Behavior of text that goes outside the bounding box (wordWrapWidth) is undefined. Use your best judgement and whatever existing defaults in Pixi.Text to determine how to handle it.
+      // It may be possible to treat the unbroken text as a single text field in implementation. But that may not be possible if there are tags nested inside.
+      // Explicit line-breaks (newline characters) should override the no-break style property
     });
   });
 

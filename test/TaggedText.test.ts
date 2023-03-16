@@ -1115,6 +1115,13 @@ Line 4`);
     });
   });
 
+  describe("breakLines", () => {
+    it("There is a style called break lines which should default to true.", () => {
+      const t = new TaggedText("A");
+      expect(t.defaultStyle.breakLines).toBeTruthy();
+    });
+  });
+
   describe("valign", () => {
     describe("Specific issue with vertical text align", () => {
       describe("Should apply styles across the entire text field correctly.", () => {

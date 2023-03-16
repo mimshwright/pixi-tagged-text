@@ -59,6 +59,7 @@ The style objects are modified versions (supersets) of `PIXI.TextStyle` (referre
 - `fontScaleWidth` - Percentage to scale the font e.g. `0.5` = 50%
 - `fontScaleHeight` - Percentage to scale the font e.g. `1.25` = 125%
 - `paragraphSpacing` - Additional spacing between paragraphs that is added when you use an explicit carriage return rather than letting the text wrap at the end of a line. Default is `0`. Can also be negative.
+- `breakLines` - When `breakLines` is `false`, the text in the tag will ignore the `wordWrapWidth` property and never wrap to the next line unless you explicitly include a newline character. It essentially treats the whole tag as a single word. If a nested tag overrides this, only the text inside the nested tag will wrap. Default is `true`.
 - `imgSrc` - ID of image to include in this tag (see `imgMap` under Options section)
 - `imgDisplay` - How should the image be displayed. `"block"` is no scaling, `"icon"` scales the image to match the text-size and appear inline.
 - `iconScale` - If you use `imgDisplay="icon"`, this value will scale the size of the icon relative to the text size. Default is `1.0` (or 100%)

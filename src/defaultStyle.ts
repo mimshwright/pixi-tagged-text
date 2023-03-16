@@ -9,6 +9,7 @@ export const DEFAULT_STYLE: TextStyleExtended = {
   wordWrap: true,
   wordWrapWidth: 500,
   iconScale: 1.0,
+  breakLines: true,
 };
 Object.freeze(DEFAULT_STYLE);
 
