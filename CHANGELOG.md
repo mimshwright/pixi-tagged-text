@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.14.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.13.0...v3.14.0) (2023-06-09)
+
+### Bug Fixes
+
+- **breakwords:** improved bug is breakWords ([dc30a9d](https://github.com/mimshwright/pixi-tagged-text/commit/dc30a9dbad86df49957275760fc6918c38e064bb)), closes [#48](https://github.com/mimshwright/pixi-tagged-text/issues/48)
+
+### [3.13.2](https://github.com/mimshwright/pixi-tagged-text/compare/v3.13.0...v3.13.2) (2023-06-09)
+
+### Bug Fixes
+
+- **breakwords:** improved bug is breakWords ([dc30a9d](https://github.com/mimshwright/pixi-tagged-text/commit/dc30a9dbad86df49957275760fc6918c38e064bb)), closes [#48](https://github.com/mimshwright/pixi-tagged-text/issues/48)
+
+### [3.13.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.13.0...v3.13.1) (2023-06-09)
+
+### Bug Fixes
+
+- **breakwords:** improved bug is breakWords ([dc30a9d](https://github.com/mimshwright/pixi-tagged-text/commit/dc30a9dbad86df49957275760fc6918c38e064bb)), closes [#48](https://github.com/mimshwright/pixi-tagged-text/issues/48)
+
 ## [3.13.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.12.0...v3.13.0) (2023-03-16)
 
 ### Features
