@@ -453,7 +453,8 @@ const layout = (
   tokens: SegmentToken[],
   maxWidth: number,
   lineSpacing: number,
-  align: Align
+  align: Align,
+  splitStyle: SplitStyle
 ): ParagraphToken => {
   const cursor = { x: 0, y: 0 };
   let wordWidth = 0;
@@ -473,7 +474,11 @@ const layout = (
     const isImage = isSpriteToken(token);
     const isWordEndingToken = isWhitespace || isImage;
 
-    if ((isWordEndingToken && normalLineBreaks) || isNewline) {
+    if (
+      (isWordEndingToken && normalLineBreaks) ||
+      isNewline ||
+      token.style.breakWords
+    ) {
       positionWordBufferAndAddToLine();
     }
 
@@ -812,7 +817,7 @@ export const calculateTokens = (
   const lineSpacing = defaultStyle.lineSpacing ?? 0;
   const align = defaultStyle.align ?? "left";
 
-  const lines = layout(finalTokens, maxWidth, lineSpacing, align);
+  const lines = layout(finalTokens, maxWidth, lineSpacing, align, splitStyle);
 
   return lines;
 };

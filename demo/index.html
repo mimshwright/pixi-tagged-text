@@ -671,41 +671,52 @@ The 🏃‍♀️, 🟫, 🦊 jumps ⤵️ the 💤 🐶.
           </script>
         </div>
       </div>
-      <!--div class="example">
+      <div class="example">
         <div class="code">
-          <h2>Wrapping and Alignment II - splitStyle = "characters"</h2>
+          <h2>Wrapping and Alignment II - breakWords</h2>
           <pre><code class="js"></code></pre>
         </div>
-        <div class="pixi" id="wrapping2">
+        <div class="pixi" id="breakWords">
           <script>
-            // Wrapping and Alignment II
-            const wrappingText2 = `Use splitStyle:"characters" to allow line breaks between characters. Can be useful for languages such as chinese.
+            const breakWordsText = `Use <code>splitStyle: "characters"</code> and <code>breakWords: true</code> to allow line breaks between characters. Can be useful for languages such as chinese.
+
+<big>Selbstständigkeitserklärung</big>
+
 全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。`;
-            const wrappingStyle2 = {
+            const breakWordsStyle = {
               default: {
                 fontFamily: "Arial",
                 fontSize: "16px",
                 fill: "#cccccc",
                 wordWrap: true,
-                wordWrapWidth: 250,
+                wordWrapWidth: 260,
               },
-              blue: { fill: 0x4488ff, stroke: 0x2244cc, fontSize: "24px" },
-              red: { fill: 0xff8888, stroke: 0xcc4444 },
-              big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
+              code: { fontFamily: "Courier" },
+              blue: {
+                fill: 0x4488ff,
+                stroke: 0x2244cc,
+                fontSize: "24px",
+                breakWords: true,
+              },
+              red: { fill: 0xff8888, stroke: 0xcc4444, breakWords: true },
+              big: {
+                fill: 0x88ff88,
+                stroke: 0x44cc44,
+                fontSize: "36px",
+                breakWords: true,
+              },
             };
-
-            let TaggedTextWrapping2 = new TaggedText(
-              wrappingText2,
-              wrappingStyle2,
-              {
-                splitStyle: "characters",
-                debug: true,
-              }
+            const breakWordsOptions = {
+              // debug: true,
+              splitStyle: "characters",
+            };
+            createDemo(
+              "breakWords",
+              new TaggedText(breakWordsText, breakWordsStyle, breakWordsOptions)
             );
-            createDemo("wrapping2", TaggedTextWrapping2);
           </script>
         </div>
-      </div-->
+      </div>
 
       <!-- <div class="pixi" id="breakLines">
         <script>

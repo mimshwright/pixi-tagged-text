@@ -1,5 +1,5 @@
 import { expectToBeBetween } from "./support/testUtil";
-import { DEFAULT_KEY } from "./../src/types";
+import { DEFAULT_KEY, TaggedTextOptions } from "./../src/types";
 import * as PIXI from "pixi.js";
 import { pluck } from "../src/functionalUtils";
 import TaggedText from "../src/TaggedText";
@@ -1121,7 +1121,50 @@ Line 4`);
       expect(t.defaultStyle.breakLines).toBeTruthy();
     });
   });
+  describe("breakWords", () => {
+    it("When true, the text will break in the middle of a word to wrap to the next line when the text is very long.", () => {
+      const charsText = `全局设置的<blue>对齐</blue>属性由「默认」来<big>控制</big>。而且不能被<blue>别的样式</blue>所<red>覆盖</red>。`;
+      const charsStyle = {
+        default: {
+          fontFamily: "Arial",
+          fontSize: "16px",
+          fill: "#cccccc",
+          wordWrap: true,
+          wordWrapWidth: 260,
+          breakWords: true,
+        },
+        blue: { fill: 0x4488ff, stroke: 0x2244cc, fontSize: "24px" },
+        red: { fill: 0xff8888, stroke: 0xcc4444 },
+        big: { fill: 0x88ff88, stroke: 0x44cc44, fontSize: "36px" },
+      };
+      const opts: TaggedTextOptions = { splitStyle: "characters" };
 
+      const control = new TaggedText(
+        charsText,
+        {
+          ...charsStyle,
+          default: { ...charsStyle.default, breakWords: false },
+        },
+        opts
+      );
+      const chars = new TaggedText(charsText, charsStyle, opts);
+      const chars2 = new TaggedText(
+        "<big>Selbstständigkeitserklärung</big>",
+        charsStyle,
+        opts
+      );
+      const chars3 = new TaggedText(
+        `<big>Die Selbstständigkeitserklärung ist noch nicht fertig.</big>`,
+        charsStyle,
+        opts
+      );
+
+      expect(control.tokens).toHaveLength(1);
+      expect(chars.tokens).toHaveLength(3);
+      expect(chars2.tokens).toHaveLength(2);
+      expect(chars3.tokens).toHaveLength(4);
+    });
+  });
   describe("valign", () => {
     describe("Specific issue with vertical text align", () => {
       describe("Should apply styles across the entire text field correctly.", () => {
