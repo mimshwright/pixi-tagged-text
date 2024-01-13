@@ -57,6 +57,8 @@ const DEBUG = {
   },
 };
 
+type PixiTextType = PIXI.BitmapText | PIXI.Text;
+
 const DEFAULT_STYLE_SET = { default: DEFAULT_STYLE };
 Object.freeze(DEFAULT_STYLE_SET);
 Object.freeze(DEFAULT_STYLE);
@@ -259,8 +261,8 @@ export default class TaggedText extends PIXI.Sprite {
   }
 
   // References to internal elements.
-  private _textFields: PIXI.Text[] = [];
-  public get textFields(): PIXI.Text[] {
+  private _textFields: PixiTextType[] = [];
+  public get textFields(): PixiTextType[] {
     return this._textFields;
   }
   private _sprites: PIXI.Sprite[] = [];
@@ -619,12 +621,12 @@ export default class TaggedText extends PIXI.Sprite {
       if (isTextToken(t)) {
         displayObject = this.createTextFieldForToken(t as TextSegmentToken);
         textContainer.addChild(displayObject);
-        this.textFields.push(displayObject as PIXI.Text);
+        this.textFields.push(displayObject as PixiTextType);
 
         if (t.textDecorations && t.textDecorations.length > 0) {
           for (const d of t.textDecorations) {
             const drawing = this.createDrawingForTextDecoration(d);
-            (displayObject as PIXI.Text).addChild(drawing);
+            (displayObject as PixiTextType).addChild(drawing);
             this._decorations.push(drawing);
           }
           drewDecorations = true;
@@ -689,7 +691,11 @@ export default class TaggedText extends PIXI.Sprite {
     return drawing;
   }
 
-  private createTextFieldForToken(token: TextSegmentToken): PIXI.Text {
+  protected createTextField(token: TextSegmentToken, text: string, style: Partial<PIXI.ITextStyle>): PixiTextType {
+    return new PIXI.Text(text, style);
+  }
+
+  private createTextFieldForToken(token: TextSegmentToken): PixiTextType {
     const { textTransform = "" } = token.style;
 
     let text = token.content;
@@ -709,7 +715,7 @@ export default class TaggedText extends PIXI.Sprite {
     const alignClassic = convertUnsupportedAlignment(token.style.align);
     const sanitizedStyle = { ...token.style, align: alignClassic };
 
-    const textField = new PIXI.Text(text, sanitizedStyle);
+    const textField = this.createTextField(token, text, sanitizedStyle);
 
     let { fontScaleWidth = 1.0, fontScaleHeight = 1.0 } = token.style;
     fontScaleWidth =
@@ -730,12 +736,16 @@ export default class TaggedText extends PIXI.Sprite {
         finalScaleWidth = 1.0;
       }
 
-      const fs = textField.style.fontSize ?? 0;
+      const fs = textField instanceof PIXI.Text ? textField.style.fontSize ?? 0 : textField.fontSize;
       const fontSizePx =
         (typeof fs === "string" ? fontSizeStringToNumber(fs) : fs) *
         largerScale;
 
-      textField.style.fontSize = fontSizePx;
+      if (textField instanceof PIXI.Text) {
+        textField.style.fontSize = fontSizePx;
+      } else {
+        textField.fontSize = fontSizePx;
+      }
     }
 
     textField.scale.set(finalScaleWidth, finalScaleHeight);
