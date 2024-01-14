@@ -24,11 +24,11 @@ export const getFontPropertiesOfText = (
     return measureFont(textField.context);
   } else {
     const props = measureFont(textField.context);
-    const fs = textField.style.fontSize ?? NaN;
+    const fs = Number(textField.style.fontSize) ?? NaN;
     if (
       props.ascent === INITIAL_FONT_PROPS.ascent &&
       props.descent === INITIAL_FONT_PROPS.descent &&
-      (isNaN(Number(fs)) || fs > INITIAL_FONT_PROPS.fontSize)
+      (isNaN(fs) || fs > INITIAL_FONT_PROPS.fontSize)
     ) {
       throw new Error(
         "getFontPropertiesOfText() returned metrics associated with a Text field that has not been updated yet. Please try using the forceUpdate parameter when you call this function."

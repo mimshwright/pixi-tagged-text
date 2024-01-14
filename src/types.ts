@@ -95,6 +95,7 @@ export const DEFAULT_KEY = "default";
 
 export enum MeasurementUnit {
   default = "px",
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   px = "px",
   em = "em",
   rem = "rem",
