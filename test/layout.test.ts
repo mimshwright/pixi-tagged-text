@@ -1662,7 +1662,7 @@ line1 <middle>goes</middle> <top>on</top> <bot>until</bot> it wraps <middle>to</
               tags: "icon",
               children: [cloneSprite(icon)],
               style: { imgDisplay: "icon", letterSpacing },
-            } as StyledTokens);
+            }) as StyledTokens;
 
           const createTokens = (letterSpacing: number): ParagraphToken =>
             layout.calculateTokens({
