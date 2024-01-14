@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.14.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.14.0...v3.14.1) (2024-01-14)
+
+### Bug Fixes
+
+- **layout:** fixed a linter warning ([e7c2dd3](https://github.com/mimshwright/pixi-tagged-text/commit/e7c2dd38d608937e696c17d4bfdcca280e3f4752))
+
+### Chore
+
+- **deps:** updated all other dependencies including prettier and jest ([39d5037](https://github.com/mimshwright/pixi-tagged-text/commit/39d5037735dd427a1682e3bd0842511d13dc1775))
+- **deps:** updated dependencies ([83a430b](https://github.com/mimshwright/pixi-tagged-text/commit/83a430b83d949c6abb1f1326405e4c4fe0eddc25))
+- **deps:** upgraded electron ([f6c7c7c](https://github.com/mimshwright/pixi-tagged-text/commit/f6c7c7c1ffc6505d84ce89e87b2365ba83f851d9))
+- **deps:** upgraded typescript and other dependencies ([996c384](https://github.com/mimshwright/pixi-tagged-text/commit/996c3841360f118c0b78b8a1e24dbd3a6fc3c7ed))
+
 ## [3.14.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.13.0...v3.14.0) (2023-06-09)
 
 ### Bug Fixes
