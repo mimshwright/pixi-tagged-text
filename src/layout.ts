@@ -454,7 +454,7 @@ const layout = (
   maxWidth: number,
   lineSpacing: number,
   align: Align,
-  splitStyle: SplitStyle
+  _splitStyle: SplitStyle
 ): ParagraphToken => {
   const cursor = { x: 0, y: 0 };
   let wordWidth = 0;
