@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.15.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.14.1...v3.15.0) (2024-01-29)
+
+### Refactors
+
+- **bitmaptext:** added ability to extend class to use BitmapText ([67985b3](https://github.com/mimshwright/pixi-tagged-text/commit/67985b3c2559b4c5bed3570f678997ad3929f58b)), closes [#393](https://github.com/mimshwright/pixi-tagged-text/issues/393)
+
 ### [3.14.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.14.0...v3.14.1) (2024-01-14)
 
 ### Bug Fixes
