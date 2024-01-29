@@ -18,6 +18,8 @@ export type Bounds = Rectangle;
 
 export type Nested<T> = T | Array<Nested<T>>;
 
+export type PixiTextTypes = PIXI.Text | PIXI.BitmapText;
+
 ///// OPTIONS
 
 export type SpriteSource =
@@ -201,6 +203,7 @@ export interface LineBreakStyles {
 
 export interface TextStyleExtended
   extends Record<string, unknown>,
+    Partial<Omit<Omit<PIXI.IBitmapTextStyle, "align">, "fontSize">>,
     Partial<Omit<PIXI.ITextStyle, "align">>,
     ImageStyles,
     TextDecorationStyles,

@@ -21,6 +21,7 @@ import {
   isSpriteSource,
   isTextureSource,
   DEFAULT_KEY,
+  PixiTextTypes,
 } from "./types";
 
 import { parseTagsNew, removeTags, EMOJI_TAG } from "./tags";
@@ -66,7 +67,9 @@ const DEFAULT_DESTROY_OPTIONS: PIXI.IDestroyOptions = {
   texture: true,
 };
 
-export default class TaggedText extends PIXI.Sprite {
+export default class TaggedText<
+  TextType extends PixiTextTypes = PIXI.Text,
+> extends PIXI.Sprite {
   public static get defaultStyles(): TextStyleSet {
     return DEFAULT_STYLE_SET;
   }
@@ -259,8 +262,8 @@ export default class TaggedText extends PIXI.Sprite {
   }
 
   // References to internal elements.
-  private _textFields: PIXI.Text[] = [];
-  public get textFields(): PIXI.Text[] {
+  private _textFields: TextType[] = [];
+  public get textFields(): TextType[] {
     return this._textFields;
   }
   private _sprites: PIXI.Sprite[] = [];
@@ -385,7 +388,7 @@ export default class TaggedText extends PIXI.Sprite {
    * Removes all PIXI children from this component's containers.
    * Deletes references to sprites and text fields.
    */
-  private resetChildren() {
+  protected resetChildren() {
     if (this._textContainer) {
       this._textContainer.removeChildren();
       this.removeChild(this._textContainer);
@@ -424,7 +427,7 @@ export default class TaggedText extends PIXI.Sprite {
    * image Sprite objects which are included in the text.
    * @param imgMap
    */
-  private createSpriteTemplatesFromSourceMap(imgMap: ImageSourceMap) {
+  protected createSpriteTemplatesFromSourceMap(imgMap: ImageSourceMap) {
     this._spriteTemplates = {};
 
     Object.entries(imgMap).forEach(([key, spriteSource]) => {
@@ -489,8 +492,7 @@ export default class TaggedText extends PIXI.Sprite {
     });
   }
 
-  private onImageTextureUpdate(baseTexture: PIXI.BaseTexture): void {
-    baseTexture;
+  private onImageTextureUpdate(_baseTexture: PIXI.BaseTexture): void {
     this._needsUpdate = true;
     this._needsDraw = true;
     this.updateIfShould();
@@ -619,12 +621,12 @@ export default class TaggedText extends PIXI.Sprite {
       if (isTextToken(t)) {
         displayObject = this.createTextFieldForToken(t as TextSegmentToken);
         textContainer.addChild(displayObject);
-        this.textFields.push(displayObject as PIXI.Text);
+        this.textFields.push(displayObject as TextType);
 
         if (t.textDecorations && t.textDecorations.length > 0) {
           for (const d of t.textDecorations) {
             const drawing = this.createDrawingForTextDecoration(d);
-            (displayObject as PIXI.Text).addChild(drawing);
+            (displayObject as TextType).addChild(drawing);
             this._decorations.push(drawing);
           }
           drewDecorations = true;
@@ -655,7 +657,7 @@ export default class TaggedText extends PIXI.Sprite {
     this._needsDraw = false;
   }
 
-  private createDrawingForTextDecoration(
+  protected createDrawingForTextDecoration(
     textDecoration: TextDecorationMetrics
   ): PIXI.Graphics {
     const { overdrawDecorations: overdraw = 0 } = this.options;
@@ -689,7 +691,11 @@ export default class TaggedText extends PIXI.Sprite {
     return drawing;
   }
 
-  private createTextFieldForToken(token: TextSegmentToken): PIXI.Text {
+  protected createTextField(text: string, style: TextStyleExtended): TextType {
+    return new PIXI.Text(text, style as Partial<PIXI.ITextStyle>) as TextType;
+  }
+
+  protected createTextFieldForToken(token: TextSegmentToken): TextType {
     const { textTransform = "" } = token.style;
 
     let text = token.content;
@@ -707,9 +713,12 @@ export default class TaggedText extends PIXI.Sprite {
     }
 
     const alignClassic = convertUnsupportedAlignment(token.style.align);
-    const sanitizedStyle = { ...token.style, align: alignClassic };
+    const sanitizedStyle = {
+      ...token.style,
+      align: alignClassic,
+    } as TextStyleExtended;
 
-    const textField = new PIXI.Text(text, sanitizedStyle);
+    const textField = this.createTextField(text, sanitizedStyle) as PIXI.Text;
 
     let { fontScaleWidth = 1.0, fontScaleHeight = 1.0 } = token.style;
     fontScaleWidth =
@@ -739,7 +748,7 @@ export default class TaggedText extends PIXI.Sprite {
     }
 
     textField.scale.set(finalScaleWidth, finalScaleHeight);
-    return textField;
+    return textField as TextType;
   }
 
   /**

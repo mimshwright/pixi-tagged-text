@@ -1,9 +1,9 @@
-import TaggedText from "./TaggedText";
+import * as PIXI from "pixi.js";
 import { ErrorHandler, ErrorMessage, ErrorMessageType } from "./types";
 
 const log =
   (type: ErrorMessageType) =>
-  (handler?: ErrorHandler, supressConsole = false, target?: TaggedText) =>
+  (handler?: ErrorHandler, supressConsole = false, target?: PIXI.Sprite) =>
   (code: string, message: string): void => {
     if (supressConsole !== true) {
       const method = type === "warning" ? console.warn : console.error;
