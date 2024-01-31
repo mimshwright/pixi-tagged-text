@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.15.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.15.0...v3.15.1) (2024-01-31)
+
+### Chore
+
+- **deps-dev:** bump husky from 8.0.3 to 9.0.7 ([8868e80](https://github.com/mimshwright/pixi-tagged-text/commit/8868e8014537ce78012ecf6e94980eb4ea0e1eb6))
+- **deps-dev:** bump jsdom from 23.2.0 to 24.0.0 ([ac88ee7](https://github.com/mimshwright/pixi-tagged-text/commit/ac88ee7a8b4d38309cea12de53723ce55a5a1200))
+- **deps:** bump @babel/traverse from 7.17.3 to 7.23.9 ([8b39b5d](https://github.com/mimshwright/pixi-tagged-text/commit/8b39b5dc1706d2c0156e2ec44657cb0271f78351))
+- **deps:** bump decode-uri-component from 0.2.0 to 0.2.2 ([28756c9](https://github.com/mimshwright/pixi-tagged-text/commit/28756c995870841e251c9ebab3cf22d05ad9553c))
+- **deps:** bump follow-redirects from 1.14.9 to 1.15.5 ([92a4551](https://github.com/mimshwright/pixi-tagged-text/commit/92a45513f32698dc844676836c21c5887f5e8a8f))
+- **deps:** bump json5 from 2.2.0 to 2.2.3 ([a19f4fa](https://github.com/mimshwright/pixi-tagged-text/commit/a19f4faf6a0c87ba151f9650dd27fac990ac0a66))
+- **deps:** bump postcss from 8.4.6 to 8.4.33 ([ca4ffdc](https://github.com/mimshwright/pixi-tagged-text/commit/ca4ffdc2887f7a0a350ea6c4490006888bff4be9))
+- **deps:** bump semver from 5.7.1 to 5.7.2 ([4969ed3](https://github.com/mimshwright/pixi-tagged-text/commit/4969ed3f1809f946ddda49ae4611f3dde798f7aa))
+- **deps:** bump word-wrap from 1.2.3 to 1.2.5 ([d8f7cf8](https://github.com/mimshwright/pixi-tagged-text/commit/d8f7cf8ff1c97c295f405e91e3fa3ce1c466b1d3))
+- **deps:** downgraded ts to v4. Upgraded other deps ([67faf5a](https://github.com/mimshwright/pixi-tagged-text/commit/67faf5a0d3e3a7f1b7949da3bb2cc350e9f556fd))
+
 ## [3.15.0](https://github.com/mimshwright/pixi-tagged-text/compare/v3.14.1...v3.15.0) (2024-01-29)
 
 ### Refactors
