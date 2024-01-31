@@ -13,9 +13,9 @@
     "declaration": true,
     "pretty": true,
     "lib": ["ES2021", "DOM"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
   },
   "exclude": ["node_modules", "dist", "bower_components"],
   "compileOnSave": true,
-  "baseUrl": "."
+  "baseUrl": ".",
 }
