@@ -46,7 +46,9 @@ export const addChildrenToContainer = (
 export const cloneSprite = (sprite: PIXI.Sprite): PIXI.Sprite =>
   new PIXI.Sprite(sprite.texture);
 
-export const fontSizeStringToNumber = (size: string): number => {
+export const fontSizeStringToNumber = (size: string | number): number => {
+  if (typeof size === "number") return size;
+
   const [valueString, unit] = size.split(/(%|pt|px|r?em)/);
   const value = parseFloat(valueString);
 
