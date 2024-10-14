@@ -149,7 +149,9 @@ export const mapTagsToStyles = (
   styles: TextStyleSet,
   spriteTemplates?: ImageMap
 ): StyledTokens => {
-  const defaultStyle: TextStyleExtended = styles.default ?? {};
+  const defaultStyle: TextStyleExtended = convertDecorationToLineProps(
+    styles.default ?? {}
+  );
   const tagStack: TagWithAttributes[] = [];
   const fontSizeStack: FontSize[] = [];
   const styleCache = {};
@@ -242,7 +244,11 @@ export const convertDecorationToLineProps = (
 ): TextStyleExtended => {
   const { textDecoration } = style;
 
-  if (textDecoration === undefined || textDecoration === "normal") {
+  if (
+    textDecoration === undefined ||
+    textDecoration === "normal" ||
+    textDecoration === "none"
+  ) {
     return style;
   }
 

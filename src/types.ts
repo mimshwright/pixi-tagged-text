@@ -142,6 +142,7 @@ export type FontStyle = "normal" | "italic" | "oblique";
 export type TextDecorationValue = "underline" | "overline" | "line-through";
 export type TextDecoration =
   | "normal"
+  | "none"
   | TextDecorationValue
   | `${TextDecorationValue} ${TextDecorationValue}`
   | `${TextDecorationValue} ${TextDecorationValue} ${TextDecorationValue}`;
