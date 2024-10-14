@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.15.2](https://github.com/mimshwright/pixi-tagged-text/compare/v3.15.1...v3.15.2) (2024-10-14)
+
+### Bug Fixes
+
+- **textdecoration:** fixes text decorations on default style ([dd246db](https://github.com/mimshwright/pixi-tagged-text/commit/dd246dbc289015a26862d7023084efcda8afc0b0)), closes [#436](https://github.com/mimshwright/pixi-tagged-text/issues/436)
+
 ### [3.15.1](https://github.com/mimshwright/pixi-tagged-text/compare/v3.15.0...v3.15.1) (2024-01-31)
 
 ### Chore
