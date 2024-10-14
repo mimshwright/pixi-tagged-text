@@ -226,6 +226,8 @@ yarn install
 yarn build
 ```
 
+The [node-canvas](https://www.npmjs.com/package/canvas) package, used for testing, has some additional dependencies. For Mac users, there's a homebrew Brewfile that you can install using `brew bundle`. For other users, see [the instructions for the package](https://www.npmjs.com/package/canvas). On Apple Silicon, [this issue](https://github.com/Automattic/node-canvas/issues/2433) was helpful with troubleshooting.
+
 Yarn should automatically install peer dependencies (including the very important pixi.js) but in my experience, you may have to run `yarn install` again after adding any additional packages.
 
 ### VSCode Users

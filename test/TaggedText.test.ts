@@ -20,6 +20,7 @@ import {
   ErrorMessage,
 } from "../src/types";
 import { Graphics } from "pixi.js";
+import DEFAULT_STYLE from "../src/defaultStyle";
 
 describe("TaggedText", () => {
   const style: TextStyleSet = {
@@ -789,6 +790,18 @@ Line 4`);
         expect(textFields[0].getChildAt(0)).toBe(t.decorations[0]);
       });
 
+      it("Should pass the text decoration to the tokens", () => {
+        const firstWord = t.tokensFlat[0];
+        expect(firstWord.textDecorations).toBeDefined();
+        expect(
+          firstWord.textDecorations &&
+            firstWord.textDecorations[0].bounds.height
+        ).toBe(1);
+        expect(
+          firstWord.textDecorations && firstWord.textDecorations[0].color
+        ).toBe(0);
+      });
+
       describe("overdrawDecorations", () => {
         const control = t.textFields[0].getChildAt(0) as Graphics;
         const { x: controlX, width: controlWidth } = control.getBounds();
@@ -902,6 +915,34 @@ Line 4`);
         expect(noDefault.decorations).toHaveLength(1);
         expect(decMetrics).toHaveLength(1);
         expect(decMetrics?.[0].color).toBe(0x000000);
+      });
+
+      describe("textDecorations on default style (issue 436)", () => {
+        const style = {
+          default: { textDecoration: "underline" },
+          override: { textDecoration: "none" },
+        } as TextStyleSet;
+        const text = "Underline <override>NoUnerline</override>";
+        const t = new TaggedText(text, style);
+        const { decorations, tokensFlat } = t;
+        const underline = tokensFlat[0];
+        const noUnderline = tokensFlat[2];
+
+        it("Should create textDecorations correctly when you use this property on the default style.", () => {
+          expect(underline.textDecorations).toBeDefined;
+          expect(underline.textDecorations).toHaveLength(1);
+          expect(
+            underline.textDecorations &&
+              underline.textDecorations[0].bounds.height
+          ).toBe(1);
+          expect(
+            underline.textDecorations && underline.textDecorations[0].color
+          ).toBe(DEFAULT_STYLE.fill);
+          expect(decorations).toHaveLength(1);
+        });
+        it("Should override the default text decoration when you use a tag.", () => {
+          expect(noUnderline.textDecorations).toHaveLength(0);
+        });
       });
     });
 
