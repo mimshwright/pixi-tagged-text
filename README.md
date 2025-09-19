@@ -1,3 +1,5 @@
+If you're looking for a version of this package for Pixi v8 then use the spiritual successor [Pixi-Glyphs](https://github.com/rizen/pixi-glyphs).
+
 # pixi-tagged-text
 
 [![NPM](https://nodei.co/npm/pixi-tagged-text.png)](https://nodei.co/npm/pixi-tagged-text/)
